@@ -1,0 +1,29 @@
+# Fastlane lanes for MeetingNotes.
+# `test` and `build` work today; screenshots/distribution are scaffolded TODOs
+# wired up in later milestones (M4 snapshot, M5 distribution).
+
+default_platform(:mac)
+
+platform :mac do
+  desc "Run the Swift package test suites (SharedKit, pipeline, Diagnostics)"
+  lane :test do
+    sh("cd .. && swift test")
+  end
+
+  desc "Generate the Xcode project and build the Mac app (unsigned dev build)"
+  lane :build do
+    sh("cd .. && xcodegen generate")
+    build_mac_app(
+      project: "../MeetingNotes.xcodeproj",
+      scheme: "MeetingNotes-Mac",
+      skip_package_pkg: true,
+      skip_codesigning: true,
+      export_method: "developer-id",
+      xcargs: "CODE_SIGNING_ALLOWED=NO"
+    )
+  end
+
+  # TODO (M4): snapshot lane for localized screenshots (fastlane snapshot).
+  # TODO (M5): distribution lane (gym + notarize + Developer ID) — requires a
+  #            Developer ID certificate and an Apple Developer account.
+end

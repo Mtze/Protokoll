@@ -317,3 +317,63 @@ zwei Geräten → iCloud-Konflikt auf `session.json`. Solche Edits sind selten u
 meist einseitig; im Konfliktfall gewinnt der neuere Stand (mtime), die App zeigt
 es an, dank iCloud-Versionshaltung geht nichts verloren. Für ein persönliches
 Tool akzeptabel.
+
+### ADR-3 — Aufnahme in streambares CAF, Konvertierung zu m4a beim Stopp
+
+**Status:** akzeptiert (Umsetzung M1).
+
+**Entscheidung:** Die Mikrofonaufnahme wird inkrementell in eine streambare
+CAF-PCM-Datei (`audio/mic.caf`) geschrieben und beim Stopp nach `audio/mic.m4a`
+(AAC) konvertiert (via `AVAssetExportSession`, ohne ffmpeg-Shell-out). Beim
+App-Start werden verwaiste `mic.caf` ohne zugehörige `mic.m4a` erkannt und
+nachträglich konvertiert.
+
+**Kontext & Begründung:**
+
+- *Für CAF-dann-Konvertieren:* Ein `.m4a`/MPEG-4-Container wird erst beim
+  ordnungsgemäßen Schließen finalisiert (moov-Atom am Ende). Stürzt die App ab
+  oder ist der Akku leer, ist eine direkt geschriebene `.m4a` unbrauchbar. CAF
+  mit LPCM wird Frame für Frame auf die Platte geschrieben und übersteht einen
+  Absturz - genau die von N5 geforderte Robustheit. Die verlustfreie
+  Wiederherstellung beim nächsten Start macht den Absturz zum Nicht-Ereignis.
+- *Gegen CAF:* CAF-PCM ist groß (unkomprimiert). Akzeptabel, weil die Datei nur
+  bis zum Stopp existiert und sofort in kompaktes AAC überführt wird; der Nutzen
+  (keine verlorene Aufnahme) überwiegt die kurzlebige Plattenlast deutlich.
+
+**Verworfene Alternative:** Direkt nach `.m4a` schreiben (kleinere Dateien, kein
+Konvertierungsschritt) - verworfen, weil ein Absturz die gesamte Aufnahme
+vernichtet und N5 damit verletzt wäre.
+
+### ADR-4 — Ressourcenbewusster Scheduler mit Claim/Lease statt globaler Queue
+
+**Status:** akzeptiert (Umsetzung M1, voll ausgereizt ab M2).
+
+**Entscheidung:** Verarbeitung läuft nicht über eine einzige globale serielle
+Queue, sondern über einen ressourcenbewussten Scheduler: **Transkription = 1
+global**, **eine Zusammenfassung darf eine laufende Transkription überlappen**.
+Der Scheduler-Kern liegt hinter einer Schnittstelle, entkoppelt von der App-UI,
+sodass später ein launchd-Daemon oder ein *zweiter Mac* denselben Kern hosten
+kann (NH2). Jeder laufende Schritt trägt einen **Claim/Lease** in `session.json`
+(`deviceId`, `step`, `startedAt`, `heartbeat`); ein Lease gilt als abgelaufen,
+wenn der Heartbeat älter als 120 s ist, und darf dann übernommen werden.
+
+**Kontext & Begründung:**
+
+- *Für zwei Slots statt seriell:* `large-v3`-Transkription sättigt die
+  Neural-Engine/GPU; zwei parallele Transkriptionen thrashen nur (daher = 1).
+  Die Zusammenfassung ist dagegen `claude`-gebunden (Netz/CLI) und konkurriert
+  nicht um dieselbe Ressource - sie darf eine Transkription überlappen und
+  verkürzt so die Gesamtlaufzeit spürbar.
+- *Für Claim/Lease ab Tag 1:* Der Container ist geräteübergreifend (iCloud).
+  Ohne Lease könnten Mac und ein späterer zweiter Host dieselbe Session doppelt
+  verarbeiten. Der Lease mit Heartbeat und Ablauf deckt zugleich den Absturzfall
+  ab (ein abgestürzter Host blockiert die Session nicht dauerhaft) und ist die
+  Grundlage für den entkoppelten Daemon aus NH2.
+- *Konsequenz (bewusst):* Der Scheduler lebt nur, solange die App läuft (ADR-1).
+  Ein beim Beenden abgebrochener Job hinterlässt einen Checkpoint und ist
+  wiederholbar (N6); Confirm-on-Quit warnt vor laufender Arbeit.
+
+**Verworfene Alternative:** Globale serielle Queue (ein Job nach dem anderen) -
+einfacher, aber sie verschenkt die kostenlose Überlappung Zusammenfassung/
+Transkription und trägt keine Mehrhost-Sicherheit. Der Lease-Zustand ließe sich
+nicht nachrüsten, ohne das Statusmodell zu ändern.
