@@ -377,3 +377,35 @@ wenn der Heartbeat älter als 120 s ist, und darf dann übernommen werden.
 einfacher, aber sie verschenkt die kostenlose Überlappung Zusammenfassung/
 Transkription und trägt keine Mehrhost-Sicherheit. Der Lease-Zustand ließe sich
 nicht nachrüsten, ohne das Statusmodell zu ändern.
+
+### ADR-5 — Suchindex über das System-SQLite (FTS5) statt GRDB
+
+**Status:** akzeptiert (Umsetzung M3). Ersetzt die Werkzeugwahl aus
+Plan-Entscheidung #13 (GRDB), nicht die Architektur (ADR-2 bleibt unverändert).
+
+**Entscheidung:** Der lokale, wegwerfbare FTS5-Index (ADR-2) nutzt direkt die
+in macOS/iOS enthaltene `libsqlite3` (`import SQLite3`) über einen dünnen
+eigenen Wrapper, statt die externe SPM-Abhängigkeit GRDB einzuziehen.
+
+**Kontext & Begründung:**
+
+- *Für System-SQLite:* Der Index braucht genau drei Dinge - eine Metadaten-
+  Tabelle, eine FTS5-Volltexttabelle und parametrisierte Queries. Das
+  System-SQLite auf Apple-Plattformen bringt FTS5 bereits mit; der nötige
+  Wrapper ist wenige Dutzend Zeilen. Das hält die Zusage aus Entscheidung #13
+  ein, bis M3 überhaupt keine Abhängigkeit einzuziehen, und darüber hinaus:
+  **null externe Abhängigkeiten** für das gesamte Projekt. Kein Netzwerk-Fetch
+  beim Build, kein Versions-Pinning, keine fremde Concurrency-Semantik im Weg
+  der Swift-6-Strict-Concurrency. „Einfachste korrekte Lösung" (harte
+  Projektvorgabe) spricht klar dafür.
+- *Gegen System-SQLite (bewusst):* GRDB böte typsichere Query-Builder,
+  Migrations-Helfer und Record-Mapping. Für einen wegwerfbaren Index mit einer
+  Tabelle und einer FTS5-View ist das Overhead ohne Gegenwert; der Index wird
+  bei Schemaänderung ohnehin neu gebaut (ADR-2), also braucht es keine
+  Migrationsmaschinerie.
+
+**Verworfene Alternative:** GRDB als SPM-Abhängigkeit (Plan #13). Zurückgestellt,
+weil sie für den minimalen Indexbedarf überdimensioniert ist und die
+Null-Abhängigkeits-Eigenschaft des Projekts aufgäbe. Ein späterer Wechsel bliebe
+lokal möglich, da der Index hinter der `SearchIndex`-Actor-Schnittstelle liegt
+und jederzeit neu baubar ist.
