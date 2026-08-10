@@ -50,3 +50,25 @@ targets:
         # Non-sandboxed (Developer ID, not App Store): the pipeline execs
         # user-installed CLIs (claude, whisper, ffmpeg) which the sandbox forbids.
         ENABLE_APP_SANDBOX: "NO"
+
+  MeetingNotes-iOS:
+    type: application
+    platform: iOS
+    sources:
+      - path: Apps/iOS
+      - path: Apps/Shared/Localizable.xcstrings
+    dependencies:
+      - package: SharedKit
+        product: SharedKit
+      - package: SharedKit
+        product: SearchIndex
+    settings:
+      base:
+        PRODUCT_NAME: MeetingNotes
+        PRODUCT_BUNDLE_IDENTIFIER: com.meetingnotes.ios
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_CFBundleDisplayName: MeetingNotes
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "MeetingNotes records your microphone to capture meeting audio."
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "MeetingNotes can tag a recording with where it was made."
+        TARGETED_DEVICE_FAMILY: "1,2"

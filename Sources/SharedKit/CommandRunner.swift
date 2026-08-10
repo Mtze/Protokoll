@@ -39,7 +39,9 @@ extension CommandRunning {
     }
 }
 
-/// Runs commands for real via `Process`.
+#if os(macOS)
+/// Runs commands for real via `Process` (macOS only; iOS/watch never spawn
+/// subprocesses - all processing happens on the Mac, F11).
 public struct ProcessCommandRunner: CommandRunning {
     public init() {}
 
@@ -135,3 +137,4 @@ private final class OutputCollector: @unchecked Sendable {
         return String(data: data, encoding: .utf8) ?? ""
     }
 }
+#endif
