@@ -6,6 +6,10 @@ import SharedKit
 // Standalone pipeline CLI (ADR-1: the menubar app runs this as a subprocess).
 // Also runnable by hand for debugging or re-running an individual step (N6).
 
+// Ignore SIGPIPE process-wide: writing a subprocess's stdin after it exited
+// must surface as an error, not kill this process with a signal.
+signal(SIGPIPE, SIG_IGN)
+
 func fail(_ message: String) -> Never {
     FileHandle.standardError.write(Data("error: \(message)\n".utf8))
     exit(1)

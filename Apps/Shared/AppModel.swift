@@ -23,14 +23,19 @@ final class AppModel {
 
     private let recorder = Recorder()
 
+    /// Shared reference so the `NSApplicationDelegate` can gate quit on active
+    /// work (confirm-on-quit, ADR-4).
+    static weak var shared: AppModel?
+
     init(container: Container = AppEnvironment.makeContainer()) {
         self.container = container
         self.deviceId = AppEnvironment.deviceId
-        let device = AppEnvironment.deviceId
+        let device = self.deviceId
         self.scheduler = Scheduler(container: container) {
             guard let binary = HelperLocator.processSessionBinary() else { return nil }
             return PipelineRunner(binary: binary, deviceId: device)
         }
+        AppModel.shared = self
     }
 
     /// Loads the session list and recovers any crashed recordings (ADR-3).
@@ -104,7 +109,9 @@ final class AppModel {
     func runDiagnostics() async {
         isRunningDiagnostics = true
         let root = try? container.root()
-        let checks = DiagnosticsRunner.standardChecks(containerRoot: root)
+        // Append the app-evaluated microphone permission check (the shell runner
+        // can't resolve TCC).
+        let checks = DiagnosticsRunner.standardChecks(containerRoot: root) + [MicrophoneCheck()]
         let runner = DiagnosticsRunner(checks: checks)
         let results = await Task.detached { runner.runAll() }.value
         checkResults = results
@@ -113,7 +120,7 @@ final class AppModel {
     }
 
     func remediation(for id: CheckID) -> Remediation {
-        DiagnosticsRunner(checks: DiagnosticsRunner.standardChecks(containerRoot: try? container.root()))
-            .remediation(for: id)
+        let checks = DiagnosticsRunner.standardChecks(containerRoot: try? container.root()) + [MicrophoneCheck()]
+        return DiagnosticsRunner(checks: checks).remediation(for: id)
     }
 }

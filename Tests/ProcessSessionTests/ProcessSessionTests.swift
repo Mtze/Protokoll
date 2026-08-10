@@ -133,6 +133,21 @@ private func vendoredScriptEnv() -> ToolLocator {
         #expect(updated.metadata.title == "My Title")
     }
 
+    @Test func regenerateRotatesOldProtocol() throws {
+        let (container, session) = try makeSession()
+        try Data("body".utf8).write(to: session.transcriptURL)
+        let runner = FakeCommandRunner()
+        runner.stub(when: { exe, _ in exe == "claude" }, return: CommandResult(exitCode: 0, stdout: "---\ntitle: V1\n---\n\nfirst", stderr: ""))
+        let summarizer = Summarizer(runner: runner, tools: vendoredScriptEnv(), store: container.store)
+        _ = try summarizer.summarize(session: session)
+        // A second summarize rotates protocol.md → protocol.v1.md (N10).
+        let runner2 = FakeCommandRunner()
+        runner2.stub(when: { exe, _ in exe == "claude" }, return: CommandResult(exitCode: 0, stdout: "---\ntitle: V2\n---\n\nsecond", stderr: ""))
+        _ = try Summarizer(runner: runner2, tools: vendoredScriptEnv(), store: container.store).summarize(session: session)
+        #expect(FileManager.default.fileExists(atPath: session.rotatedProtocolURL(version: 1).path))
+        #expect(try String(contentsOf: session.protocolURL, encoding: .utf8).contains("second"))
+    }
+
     @Test func missingTranscriptThrows() throws {
         let (container, session) = try makeSession()
         let summarizer = Summarizer(runner: FakeCommandRunner(), tools: vendoredScriptEnv(), store: container.store)

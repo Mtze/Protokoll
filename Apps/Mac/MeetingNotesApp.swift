@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 import SharedKit
 
@@ -8,6 +9,7 @@ import SharedKit
 /// (ADR-4: killed jobs leave a checkpoint and are re-runnable).
 @main
 struct MeetingNotesApp: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = AppModel()
 
     var body: some Scene {
@@ -31,5 +33,23 @@ struct MeetingNotesApp: App {
         }
         .defaultSize(width: 520, height: 480)
         .windowResizability(.contentMinSize)
+
+        Settings {
+            SettingsView()
+        }
+    }
+}
+
+/// App delegate for confirm-on-quit (ADR-4): if the scheduler has active work,
+/// warn before terminating so an in-flight transcription isn't killed silently.
+final class AppDelegate: NSObject, NSApplicationDelegate {
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard AppModel.shared?.scheduler.hasActiveWork == true else { return .terminateNow }
+        let alert = NSAlert()
+        alert.messageText = String(localized: "quit.confirm.title")
+        alert.informativeText = String(localized: "quit.confirm.message")
+        alert.addButton(withTitle: String(localized: "quit.confirm.quit"))
+        alert.addButton(withTitle: String(localized: "common.cancel"))
+        return alert.runModal() == .alertFirstButtonReturn ? .terminateNow : .terminateCancel
     }
 }

@@ -7,6 +7,8 @@ import SharedKit
 struct MenuContentView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
+    @AppStorage(SettingsKeys.consentReminder) private var consentReminder = true
+    @State private var showingConsent = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -44,7 +46,13 @@ struct MenuContentView: View {
 
     private var recordButton: some View {
         Button {
-            Task { await model.toggleRecording() }
+            if model.isRecording {
+                Task { await model.stopRecording() }
+            } else if consentReminder {
+                showingConsent = true
+            } else {
+                Task { await model.startRecording() }
+            }
         } label: {
             if model.isRecording {
                 Label("menu.stop", systemImage: "stop.circle.fill")
@@ -58,6 +66,12 @@ struct MenuContentView: View {
         .tint(model.isRecording ? .red : .accentColor)
         .controlSize(.large)
         .frame(maxWidth: .infinity)
+        .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
+            Button("consent.confirm") { Task { await model.startRecording() } }
+            Button("common.cancel", role: .cancel) {}
+        } message: {
+            Text("consent.message")
+        }
     }
 
     private var jobsSection: some View {

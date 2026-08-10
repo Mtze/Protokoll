@@ -5,10 +5,16 @@ import SharedKit
 /// local folder in Application Support; M3 swaps in the iCloud ubiquity
 /// container behind the same ``ContainerLocating`` seam.
 enum AppEnvironment {
-    /// A stable per-machine device id used for claims/leases (ADR-4).
+    /// A stable per-machine device id used for claims/leases (ADR-4). Persisted
+    /// so it survives a machine rename (unlike the host name).
     static var deviceId: String {
-        if let name = Host.current().localizedName, !name.isEmpty { return name }
-        return "mac"
+        let key = "deviceId"
+        if let existing = UserDefaults.standard.string(forKey: key), !existing.isEmpty {
+            return existing
+        }
+        let generated = "mac-\(UUID().uuidString.prefix(8))"
+        UserDefaults.standard.set(generated, forKey: key)
+        return generated
     }
 
     /// The dev container root: `~/Library/Application Support/MeetingNotes/Container`.

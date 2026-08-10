@@ -97,7 +97,11 @@ public struct ProcessCommandRunner: CommandRunning {
         try process.run()
 
         if let stdin {
-            inputPipe.fileHandleForWriting.write(Data(stdin.utf8))
+            // Use the throwing write and ignore failures: if the child already
+            // exited (e.g. `claude` missing → exit 127), writing its stdin would
+            // otherwise raise an uncatchable broken-pipe exception. The caller
+            // sees the non-zero exit code instead of a crash (verification #8).
+            try? inputPipe.fileHandleForWriting.write(contentsOf: Data(stdin.utf8))
             try? inputPipe.fileHandleForWriting.close()
         }
 

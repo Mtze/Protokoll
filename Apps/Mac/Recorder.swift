@@ -123,7 +123,11 @@ actor Recorder {
         try? FileManager.default.removeItem(at: m4a)
         export.outputURL = m4a
         export.outputFileType = .m4a
-        await export.export()
+        // Use the completion-handler API (available on the macOS 14 floor); the
+        // no-argument async `export()` is macOS 15+.
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            export.exportAsynchronously { continuation.resume() }
+        }
         if export.status != .completed {
             throw RecorderError.conversionFailed(export.error?.localizedDescription ?? "export failed")
         }

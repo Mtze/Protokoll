@@ -91,7 +91,9 @@ public struct Pipeline: Sendable {
         _ = try store.acquireClaim(step: .transcribe, deviceId: deviceId, in: session.folder)
         _ = try store.setStatus(.transcribing, in: session.folder)
         do {
-            var updated = try transcriber.transcribe(session: session, onProgress: onProgress)
+            var updated = try withHeartbeat(folder: session.folder) {
+                try transcriber.transcribe(session: session, onProgress: onProgress)
+            }
             updated.metadata.pipeline.status = .transcribed
             updated.metadata.pipeline.claim = nil
             try store.save(updated)
@@ -107,7 +109,9 @@ public struct Pipeline: Sendable {
         _ = try store.acquireClaim(step: .summarize, deviceId: deviceId, in: session.folder)
         _ = try store.setStatus(.summarizing, in: session.folder)
         do {
-            var updated = try summarizer.summarize(session: session, onProgress: onProgress)
+            var updated = try withHeartbeat(folder: session.folder) {
+                try summarizer.summarize(session: session, onProgress: onProgress)
+            }
             updated.metadata.pipeline.status = .done
             updated.metadata.pipeline.claim = nil
             try store.save(updated)
@@ -116,6 +120,21 @@ public struct Pipeline: Sendable {
             try? recordFailure(folder: session.folder, error: error)
             throw error
         }
+    }
+
+    /// Runs `body` while renewing the claim heartbeat on a background timer, so
+    /// a long step (minutes of `large-v3`) never lets the lease go stale and get
+    /// taken over by another host (ADR-4).
+    private func withHeartbeat<T>(folder: URL, _ body: () throws -> T) rethrows -> T {
+        let store = container.store
+        let device = deviceId
+        let interval = Claim.leaseDuration / 3
+        let timer = DispatchSource.makeTimerSource(queue: .global(qos: .utility))
+        timer.schedule(deadline: .now() + interval, repeating: interval)
+        timer.setEventHandler { _ = try? store.renewClaim(deviceId: device, in: folder) }
+        timer.resume()
+        defer { timer.cancel() }
+        return try body()
     }
 
     private func recordFailure(folder: URL, error: Error) throws {

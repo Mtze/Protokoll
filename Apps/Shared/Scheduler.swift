@@ -40,7 +40,10 @@ final class Scheduler {
     private var transcribeBusy = false
     private var summarizeBusy = false
     private var transcribeQueue: [(folder: URL, job: ProcessingJob)] = []
-    private var summarizeQueue: [(folder: URL, job: ProcessingJob)] = []
+    // `force` travels with the queued job so a regenerate isn't dequeued by a
+    // later default-force pump (which would see protocol.md and skip, breaking
+    // N10 rotation).
+    private var summarizeQueue: [(folder: URL, job: ProcessingJob, force: Bool)] = []
 
     private let container: Container
     private let makeRunner: @Sendable () -> PipelineRunner?
@@ -67,8 +70,8 @@ final class Scheduler {
     func enqueueSummarize(_ session: Session, force: Bool = false) {
         let job = ProcessingJob(sessionID: session.id, title: session.displayTitle, step: .summarize)
         jobs.append(job)
-        summarizeQueue.append((session.folder, job))
-        pumpSummarize(force: force)
+        summarizeQueue.append((session.folder, job, force))
+        pumpSummarize()
     }
 
     // MARK: Pumps (two independent slots)
@@ -95,9 +98,9 @@ final class Scheduler {
         }
     }
 
-    private func pumpSummarize(force: Bool = false) {
+    private func pumpSummarize() {
         guard !summarizeBusy, !summarizeQueue.isEmpty else { return }
-        let (folder, job) = summarizeQueue.removeFirst()
+        let (folder, job, force) = summarizeQueue.removeFirst()
         summarizeBusy = true
         job.state = .running
         runStep(folder: folder, step: .summarize, force: force, job: job) { [weak self] outcome in

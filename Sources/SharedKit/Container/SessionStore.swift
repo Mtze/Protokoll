@@ -117,8 +117,8 @@ public struct SessionStore: Sendable {
         return session
     }
 
-    /// Updates the pipeline status (clearing any claim when reaching a terminal
-    /// state) and persists.
+    /// Updates the pipeline status and persists. The claim is left untouched
+    /// here; the pipeline clears it explicitly on completion/failure.
     @discardableResult
     public func setStatus(_ status: PipelineStatus, in folder: URL) throws -> Session {
         var session = try load(folder: folder)
@@ -130,11 +130,11 @@ public struct SessionStore: Sendable {
     // MARK: Atomic write helper
 
     func atomicWrite(_ data: Data, to url: URL) throws {
-        let directory = url.deletingLastPathComponent()
-        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let temp = directory.appendingPathComponent(".\(UUID().uuidString).tmp")
-        try data.write(to: temp, options: .atomic)
-        // Replace in place so readers never see a half-written file.
-        _ = try FileManager.default.replaceItemAt(url, withItemAt: temp)
+        try FileManager.default.createDirectory(
+            at: url.deletingLastPathComponent(), withIntermediateDirectories: true
+        )
+        // `.atomic` writes to a temp file in the same directory then renames, so
+        // readers never observe a half-written file.
+        try data.write(to: url, options: .atomic)
     }
 }

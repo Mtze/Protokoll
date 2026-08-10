@@ -128,6 +128,20 @@ private func makeTempContainer() throws -> Container {
         #expect(body == "# Just a heading\n\nno frontmatter")
     }
 
+    @Test func unterminatedFrontmatterTreatedAsBody() throws {
+        let (parsed, body) = Frontmatter.split("---\ntitle: X\n# no closing delimiter\nmore")
+        #expect(parsed.pairs.isEmpty)
+        #expect(body == "---\ntitle: X\n# no closing delimiter\nmore")
+    }
+
+    @Test func valueWithHashIsQuotedAndRoundTrips() throws {
+        var frontmatter = Frontmatter()
+        frontmatter["color"] = "#FF0000"
+        let doc = frontmatter.render(body: "body")
+        #expect(doc.contains("\"#FF0000\""))
+        #expect(Frontmatter.split(doc).frontmatter["color"] == "#FF0000")
+    }
+
     @Test func statusEncodesFailureMessage() throws {
         let status = PipelineStatus.failed(message: "boom")
         let data = try JSONEncoder().encode(status)
