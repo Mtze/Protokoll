@@ -13,11 +13,11 @@ model and container access, reused unchanged by Mac/iOS/watch.
   `Project` (F7), `AudioTrack`/`Device`/`GeoCoordinate`.
 - **Container** (`Container/`): `ContainerLocating` seam
   (`LocalFolderContainer` for dev/tests, `UbiquityContainer` for iCloud at M3);
-  `Container` (create/list/projects); `SessionStore` — the **sole** reader/
+  `Container` (create/list/projects); `SessionStore` - the **sole** reader/
   writer of `session.json`, with atomic writes, protocol rotation (N10), and
   claim acquire/renew/release with staleness takeover.
-- `Frontmatter` — a tiny dependency-free YAML frontmatter reader/writer.
-- `CommandRunner` — the `CommandRunning` subprocess boundary (fakeable) reused
+- `Frontmatter` - a tiny dependency-free YAML frontmatter reader/writer.
+- `CommandRunner` - the `CommandRunning` subprocess boundary (fakeable) reused
   by the pipeline and Diagnostics.
 
 ## ProcessSession (`Sources/ProcessSession`)
@@ -40,12 +40,12 @@ bootstrap gate. `SystemTest` runs a bundled clip through the real
 
 ## Mac app (`Apps/Mac`, `Apps/Shared`)
 
-- `MeetingNotesApp` — `MenuBarExtra` + Library/Diagnostics windows.
-- `Recorder` (actor) — AVAudioEngine → CAF, convert to m4a on stop, orphan
+- `MeetingNotesApp` - `MenuBarExtra` + Library/Diagnostics windows.
+- `Recorder` (actor) - AVAudioEngine → CAF, convert to m4a on stop, orphan
   recovery (ADR-3).
-- `Scheduler` (`@Observable`) — resource-aware (transcribe=1, summarize overlaps;
+- `Scheduler` (`@Observable`) - resource-aware (transcribe=1, summarize overlaps;
   ADR-4), runs the pipeline binary via `PipelineRunner`.
-- `AppModel` — ties container + recorder + scheduler + diagnostics for the UI.
+- `AppModel` - ties container + recorder + scheduler + diagnostics for the UI.
 - Views: `MenuContentView`, `LibraryView`, `SessionDetailView`,
   `DiagnosticsView`, `HealthDot`. Strings in `Localizable.xcstrings` (EN+DE).
 - `HelperLocator`/`AppEnvironment`/`SampleClip` resolve binaries, the container,

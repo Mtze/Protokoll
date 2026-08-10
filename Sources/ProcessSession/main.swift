@@ -84,7 +84,7 @@ let progress: @Sendable (String) -> Void = { line in
 
 do {
     let session = try pipeline.run(folder: folder, step: stepSelection, force: force, onProgress: progress)
-    print("done: \(session.metadata.pipeline.status.name) — \(session.displayTitle)")
+    print("done: \(session.metadata.pipeline.status.name) - \(session.displayTitle)")
 } catch {
     let message = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
     fail(message)

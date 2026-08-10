@@ -1,7 +1,7 @@
 import Foundation
 import SQLite3
 
-/// A thin wrapper over the system `libsqlite3` (dependency-free — see ADR-5).
+/// A thin wrapper over the system `libsqlite3` (dependency-free - see ADR-5).
 /// Not thread-safe by itself; ``SearchIndex`` serializes access via an actor.
 final class SQLiteDatabase {
     private var handle: OpaquePointer?

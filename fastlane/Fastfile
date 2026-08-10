@@ -24,6 +24,6 @@ platform :mac do
   end
 
   # TODO (M4): snapshot lane for localized screenshots (fastlane snapshot).
-  # TODO (M5): distribution lane (gym + notarize + Developer ID) — requires a
+  # TODO (M5): distribution lane (gym + notarize + Developer ID) - requires a
   #            Developer ID certificate and an Apple Developer account.
 end

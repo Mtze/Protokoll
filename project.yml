@@ -35,6 +35,8 @@ targets:
         product: SharedKit
       - package: SharedKit
         product: Diagnostics
+      - package: SharedKit
+        product: SearchIndex
     settings:
       base:
         PRODUCT_NAME: MeetingNotes

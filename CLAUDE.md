@@ -1,4 +1,4 @@
-# CLAUDE.md — AI onboarding for MeetingNotes
+# CLAUDE.md - AI onboarding for MeetingNotes
 
 Authoritative spec: `ARCHITECTURE.md` (German). Milestone plan:
 `docs/IMPLEMENTATION_PLAN.md`. Read both before non-trivial work.
@@ -11,16 +11,16 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
 
 ## Architecture at a glance
 
-- `Sources/SharedKit/` — **platform-agnostic, Foundation-only** model + container
+- `Sources/SharedKit/` - **platform-agnostic, Foundation-only** model + container
   access. `SessionStore` is the *sole* reader/writer of `session.json`. Value
-  types are `Sendable`. No AppKit/UIKit/SwiftUI here — Mac/iOS/watch reuse it.
-- `Sources/ProcessSession/` — the `process-session` pipeline CLI: transcribe
+  types are `Sendable`. No AppKit/UIKit/SwiftUI here - Mac/iOS/watch reuse it.
+- `Sources/ProcessSession/` - the `process-session` pipeline CLI: transcribe
   (shells out to `scripts/transcribe.sh`) → summarize (`claude -p`, print mode).
   The **pipeline owns all file writes** (rotation N10, title lift F9).
-- `Sources/Diagnostics/` — preflight checks, tiered remediation, System-Test.
+- `Sources/Diagnostics/` - preflight checks, tiered remediation, System-Test.
   UI-free and testable.
-- `Apps/Mac/` — `MenuBarExtra` app + `Recorder` actor (CAF→m4a, ADR-3).
-- `Apps/Shared/` — SwiftUI views, `Scheduler` (ADR-4), `Localizable.xcstrings`.
+- `Apps/Mac/` - `MenuBarExtra` app + `Recorder` actor (CAF→m4a, ADR-3).
+- `Apps/Shared/` - SwiftUI views, `Scheduler` (ADR-4), `Localizable.xcstrings`.
 
 ## Hard rules (do not violate)
 
@@ -34,7 +34,7 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
 - **`session.json` is canonical.** Only `SessionStore` reads/writes it.
 - **`transcript.md` is immutable** once written (N10); regen rotates
   `protocol.md` → `protocol.vN.md`.
-- **Subprocess boundary is `CommandRunning`** (in SharedKit) — fake it in tests,
+- **Subprocess boundary is `CommandRunning`** (in SharedKit) - fake it in tests,
   never shell out for real in unit tests.
 - **Deviations from the spec** get a short ADR appended to `ARCHITECTURE.md`
   *first*.
@@ -62,5 +62,5 @@ Dev env overrides: see the table in `README.md`.
 ## Milestone status
 
 - **M1 (done):** SharedKit, pipeline, Diagnostics, Mac app, i18n, ADR-3/ADR-4.
-- **M2–M6:** see `docs/IMPLEMENTATION_PLAN.md`. `chunkTranscript()` in
+- **M2-M6:** see `docs/IMPLEMENTATION_PLAN.md`. `chunkTranscript()` in
   ProcessSession is the M2 map-reduce seam (N9).

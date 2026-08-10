@@ -8,7 +8,7 @@ import SharedKit
 /// written frame-by-frame and survives, N5).
 ///
 /// Modeled as an `actor` (plan: recorder is an actor). The realtime tap writes
-/// through a lock-guarded, non-isolated ``AudioFileWriter`` — the standard way
+/// through a lock-guarded, non-isolated ``AudioFileWriter`` - the standard way
 /// to bridge AVAudioEngine's realtime callback into structured concurrency.
 actor Recorder {
     enum RecorderError: Error, LocalizedError {

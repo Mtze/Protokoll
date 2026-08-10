@@ -7,16 +7,26 @@ import SharedKit
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
     @State private var selection: Session.ID?
+    @State private var searchText = ""
+
+    /// Sessions to show: full list, or the FTS-matched subset when searching.
+    private var visibleSessions: [Session] {
+        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return model.sessions }
+        let matchedIDs = Set(model.searchResults.map(\.sessionID))
+        return model.sessions.filter { matchedIDs.contains($0.id) }
+    }
 
     var body: some View {
         NavigationSplitView {
-            List(model.sessions, selection: $selection) { session in
-                SessionRow(session: session).tag(session.id)
+            List(visibleSessions, selection: $selection) { session in
+                SessionRow(session: session, snippet: snippet(for: session.id)).tag(session.id)
             }
             .navigationTitle("library.title")
             .overlay {
                 if model.sessions.isEmpty {
                     ContentUnavailableView("library.empty.title", systemImage: "waveform", description: Text("library.empty.subtitle"))
+                } else if !searchText.isEmpty && visibleSessions.isEmpty {
+                    ContentUnavailableView.search(text: searchText)
                 }
             }
         } detail: {
@@ -26,14 +36,27 @@ struct LibraryView: View {
                 ContentUnavailableView("library.selectPrompt", systemImage: "sidebar.left")
             }
         }
+        .searchable(text: $searchText, prompt: Text("library.search.prompt"))
+        .task(id: searchText) { await model.search(searchText) }
         .toolbar {
-            ToolbarItem { Button { model.reloadSessions() } label: { Label("library.refresh", systemImage: "arrow.clockwise") } }
+            ToolbarItem {
+                Button {
+                    model.reloadSessions()
+                    Task { await model.rebuildIndex() }
+                } label: { Label("library.refresh", systemImage: "arrow.clockwise") }
+            }
         }
+    }
+
+    private func snippet(for id: String) -> String? {
+        guard !searchText.isEmpty else { return nil }
+        return model.searchResults.first { $0.sessionID == id }?.snippet
     }
 }
 
 private struct SessionRow: View {
     let session: Session
+    var snippet: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -44,6 +67,9 @@ private struct SessionRow: View {
                 if let duration = session.metadata.duration {
                     Text(Self.durationText(duration)).font(.caption).foregroundStyle(.secondary)
                 }
+            }
+            if let snippet, !snippet.isEmpty {
+                Text(snippet).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
             }
         }
         .padding(.vertical, 2)

@@ -30,7 +30,7 @@ plan.
   pip install mlx-whisper          # Apple Silicon, primary engine
   # or: brew install whisper-cpp && scripts/setup.sh --model large-v3
   ```
-- `claude` CLI installed and logged in (`claude login`) — no API key (N1).
+- `claude` CLI installed and logged in (`claude login`) - no API key (N1).
 
 ## Build & run
 
@@ -81,7 +81,7 @@ fastlane/              build/test lanes
 
 Dev builds here are **unsigned** (`CODE_SIGNING_ALLOWED=NO`). For distribution
 the Mac app is **non-sandboxed, Developer ID-signed, notarized** (it execs
-user-installed CLIs which the App Sandbox forbids — decision #3). That requires
+user-installed CLIs which the App Sandbox forbids - decision #3). That requires
 a Developer ID certificate and an Apple Developer account and is a manual step
 outside this automated build.
 

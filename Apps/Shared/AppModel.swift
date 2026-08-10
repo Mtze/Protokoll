@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import SharedKit
 import Diagnostics
+import SearchIndex
 
 /// The app-wide observable model shared by the menubar and the library window.
 /// Owns the container, the session list, the scheduler, and diagnostics state.
@@ -15,6 +16,11 @@ final class AppModel {
     private(set) var sessions: [Session] = []
     private(set) var isRecording = false
     private(set) var activeRecordingID: String?
+
+    // Search (F10)
+    private(set) var searchResults: [SearchHit] = []
+    private let index: SearchIndex? = try? SearchIndex(path: SearchIndex.defaultURL())
+    private(set) var projects: [Project] = []
 
     // Diagnostics
     private(set) var checkResults: [CheckResult] = []
@@ -42,11 +48,29 @@ final class AppModel {
     func bootstrap() async {
         await Recorder.recoverOrphans(in: container)
         reloadSessions()
+        await rebuildIndex()
         await runDiagnostics()
     }
 
     func reloadSessions() {
         sessions = (try? container.allSessions()) ?? []
+        projects = (try? container.loadProjects()) ?? []
+    }
+
+    /// Rebuilds the local FTS index from the files (ADR-2).
+    func rebuildIndex() async {
+        guard let index else { return }
+        let container = self.container
+        try? await index.rebuild(from: container)
+    }
+
+    /// Full-text search across transcript + protocol (F10).
+    func search(_ text: String, filter: SearchFilter = .none) async {
+        guard let index, !text.trimmingCharacters(in: .whitespaces).isEmpty else {
+            searchResults = []
+            return
+        }
+        searchResults = (try? await index.search(text, filter: filter)) ?? []
     }
 
     // MARK: Recording

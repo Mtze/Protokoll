@@ -11,7 +11,7 @@ public enum PipelineStep: String, Codable, Sendable, CaseIterable {
 ///
 /// A claim is *live* while its `heartbeat` is recent; a host renews the
 /// heartbeat while it works. A claim whose heartbeat is older than
-/// ``Claim/leaseDuration`` is considered stale and may be taken over — this
+/// ``Claim/leaseDuration`` is considered stale and may be taken over - this
 /// covers a host that crashed mid-step (ADR-4).
 public struct Claim: Codable, Sendable, Equatable, Hashable {
     /// Stable identifier of the machine holding the claim.

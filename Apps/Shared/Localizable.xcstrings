@@ -308,6 +308,23 @@
         }
       }
     },
+    "library.search.prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search transcripts and protocols"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkripte und Protokolle durchsuchen"
+          }
+        }
+      }
+    },
     "status.recorded": {
       "extractionState": "manual",
       "localizations": {
@@ -654,13 +671,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Passed — generated title: %@"
+            "value": "Passed - generated title: %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bestanden — erzeugter Titel: %@"
+            "value": "Bestanden - erzeugter Titel: %@"
           }
         }
       }
@@ -705,13 +722,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Used to write the protocol via your existing login — no API key."
+            "value": "Used to write the protocol via your existing login - no API key."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erzeugt das Protokoll über deine bestehende Anmeldung — kein API-Schlüssel."
+            "value": "Erzeugt das Protokoll über deine bestehende Anmeldung - kein API-Schlüssel."
           }
         }
       }
@@ -1079,13 +1096,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This needs %@ installed first — a larger, separate step."
+            "value": "This needs %@ installed first - a larger, separate step."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dafür muss zuerst %@ installiert werden — ein größerer, separater Schritt."
+            "value": "Dafür muss zuerst %@ installiert werden - ein größerer, separater Schritt."
           }
         }
       }
@@ -1215,13 +1232,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Everyone agreed — record"
+            "value": "Everyone agreed - record"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Alle stimmen zu — aufnehmen"
+            "value": "Alle stimmen zu - aufnehmen"
           }
         }
       }
@@ -1249,13 +1266,13 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A recording is still being processed. Quitting now stops it — you can re-run the step later."
+            "value": "A recording is still being processed. Quitting now stops it - you can re-run the step later."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Eine Aufnahme wird noch verarbeitet. Beenden stoppt sie — du kannst den Schritt später erneut ausführen."
+            "value": "Eine Aufnahme wird noch verarbeitet. Beenden stoppt sie - du kannst den Schritt später erneut ausführen."
           }
         }
       }

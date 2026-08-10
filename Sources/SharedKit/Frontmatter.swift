@@ -2,7 +2,7 @@ import Foundation
 
 /// A minimal YAML frontmatter reader/writer for the small, flat key/value
 /// subset the Markdown files mirror (title, language, date, …). Foundation-only
-/// by design — SharedKit takes no YAML dependency for a handful of scalar keys.
+/// by design - SharedKit takes no YAML dependency for a handful of scalar keys.
 ///
 /// Frontmatter is delimited by `---` lines at the very top of the document:
 /// ```

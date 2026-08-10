@@ -1,6 +1,6 @@
 import Foundation
 
-/// Resolves the container root — the single source of truth folder that holds
+/// Resolves the container root - the single source of truth folder that holds
 /// `sessions/` and `projects/`.
 ///
 /// This seam lets dev builds and tests run against a plain local folder while
@@ -12,7 +12,7 @@ public protocol ContainerLocating: Sendable {
 }
 
 /// A container backed by an ordinary local folder. Used in dev and tests, and
-/// as the M1–M2 default before real iCloud is wired up (M3).
+/// as the M1-M2 default before real iCloud is wired up (M3).
 public struct LocalFolderContainer: ContainerLocating {
     public let root: URL
 

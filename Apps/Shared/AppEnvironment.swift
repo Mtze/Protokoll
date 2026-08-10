@@ -1,7 +1,7 @@
 import Foundation
 import SharedKit
 
-/// Resolves the container the app reads and writes. In dev (M1–M2) this is a
+/// Resolves the container the app reads and writes. In dev (M1-M2) this is a
 /// local folder in Application Support; M3 swaps in the iCloud ubiquity
 /// container behind the same ``ContainerLocating`` seam.
 enum AppEnvironment {

@@ -5,7 +5,7 @@ import Foundation
 /// `meeting-notes` skill's `agenda-format.md` (generic no-agenda case; F5
 /// agenda integration is descoped per decision #12).
 ///
-/// The pipeline — not `claude` — owns all file writes, so the prompt asks only
+/// The pipeline - not `claude` - owns all file writes, so the prompt asks only
 /// for text on stdout: YAML frontmatter (with an auto-title, F9) followed by the
 /// protocol Markdown.
 public enum SummarizePrompt {
@@ -18,7 +18,7 @@ public enum SummarizePrompt {
             """
         } else {
             titleInstruction = """
-            No title has been set. Invent a short, specific, meaningful title (F9) — never \
+            No title has been set. Invent a short, specific, meaningful title (F9) - never \
             a bare date. Put it in the `title` frontmatter field.
             """
         }
@@ -27,7 +27,7 @@ public enum SummarizePrompt {
         You are a meticulous meeting-minutes writer. You are given the raw transcript of a \
         meeting on stdin. Produce a PROTOCOL (not a verbatim transcript) in Markdown.
 
-        Output format — emit EXACTLY this and nothing else:
+        Output format - emit EXACTLY this and nothing else:
         1. A YAML frontmatter block delimited by `---` lines containing:
            - `title:` (see the title rule below)
            - `language:` the ISO code of the meeting language you detect
@@ -48,7 +48,7 @@ public enum SummarizePrompt {
         ## Action Items
         | Was / What | Owner | Bis wann / Due |
         |------------|-------|----------------|
-        - One row per assigned task. Always name an owner if one was named; leave "—" if not.
+        - One row per assigned task. Always name an owner if one was named; leave "-" if not.
 
         ## Themen / Topics
         ### <topic>
@@ -72,11 +72,11 @@ public enum SummarizePrompt {
     public static func map(chunkIndex: Int, chunkCount: Int) -> String {
         """
         You are extracting meeting notes from PART \(chunkIndex + 1) OF \(chunkCount) of a long \
-        transcript (on stdin). This is an intermediate step — do NOT write a polished protocol yet.
+        transcript (on stdin). This is an intermediate step - do NOT write a polished protocol yet.
 
         In the meeting's language, list under these headings (omit an empty one):
         - Decisions: any decision actually made, one bullet each.
-        - Action items: task — owner — due (use "—" if unnamed).
+        - Action items: task - owner - due (use "-" if unnamed).
         - Discussed-but-undecided: open points raised here, with what blocks them.
         - Key context: facts needed to make sense of later parts.
 
@@ -90,7 +90,7 @@ public enum SummarizePrompt {
         if let currentTitle, !currentTitle.isEmpty {
             titleRule = "Keep the existing title \"\(currentTitle)\" unless it is a placeholder date."
         } else {
-            titleRule = "Invent a short, specific title (F9) — never a bare date."
+            titleRule = "Invent a short, specific title (F9) - never a bare date."
         }
         return """
         You are given, on stdin, the concatenated intermediate notes from all parts of one meeting \

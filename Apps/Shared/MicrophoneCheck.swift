@@ -3,7 +3,7 @@ import Foundation
 import Diagnostics
 import SharedKit
 
-/// An app-evaluated diagnostic for microphone permission (TCC) — the runner
+/// An app-evaluated diagnostic for microphone permission (TCC) - the runner
 /// can't resolve this via a shell probe, so the app appends it (as the
 /// Diagnostics core anticipates). Guides the user to the exact Settings pane.
 struct MicrophoneCheck: DiagnosticCheck {

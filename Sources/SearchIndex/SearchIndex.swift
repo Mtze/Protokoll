@@ -38,7 +38,7 @@ public struct SearchFilter: Sendable, Equatable {
 
 /// The local, rebuildable FTS5 search index (ADR-2). Lives in Application
 /// Support **outside** the container, is never synced, and can be regenerated
-/// from the files at any time — so index corruption is a non-event.
+/// from the files at any time - so index corruption is a non-event.
 ///
 /// An `actor` (plan: indexer is an actor) serializing all SQLite access.
 public actor SearchIndex {

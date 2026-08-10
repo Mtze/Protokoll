@@ -1,7 +1,7 @@
 import Foundation
 import SharedKit
 
-/// A single preflight check. Value types, `Sendable`, no UI — the app renders
+/// A single preflight check. Value types, `Sendable`, no UI - the app renders
 /// results via the String Catalog keyed on ``CheckID``.
 public protocol DiagnosticCheck: Sendable {
     var id: CheckID { get }

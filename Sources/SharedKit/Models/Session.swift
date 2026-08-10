@@ -2,7 +2,7 @@ import Foundation
 
 /// A session bound to its on-disk folder. Value type: cheap to pass around and
 /// `Sendable` across actor boundaries. The folder is the unit of portability
-/// (N3) — everything about a meeting lives inside it.
+/// (N3) - everything about a meeting lives inside it.
 public struct Session: Sendable, Equatable, Identifiable {
     /// The session's folder, e.g. `…/sessions/2026-08-10T14-30_a1b2c3/`.
     public var folder: URL
