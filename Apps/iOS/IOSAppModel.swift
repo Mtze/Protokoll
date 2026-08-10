@@ -17,9 +17,12 @@ final class IOSAppModel {
     private let recorder = IOSRecorder()
     private let index: SearchIndex? = try? SearchIndex(path: SearchIndex.defaultURL())
     private let location = LocationProvider()
+    private var watchReceiver: WatchReceiver?
 
     init(container: Container = IOSAppModel.makeContainer()) {
         self.container = container
+        // Receive watch recordings and file them into the container (ADR-6).
+        self.watchReceiver = WatchReceiver(container: container)
     }
 
     static func makeContainer() -> Container {

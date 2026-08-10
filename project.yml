@@ -72,3 +72,20 @@ targets:
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "MeetingNotes records your microphone to capture meeting audio."
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "MeetingNotes can tag a recording with where it was made."
         TARGETED_DEVICE_FAMILY: "1,2"
+
+  MeetingNotes-Watch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: Apps/Watch
+    dependencies:
+      - package: SharedKit
+        product: SharedKit
+    settings:
+      base:
+        PRODUCT_NAME: MeetingNotes
+        PRODUCT_BUNDLE_IDENTIFIER: com.meetingnotes.watch
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_CFBundleDisplayName: MeetingNotes
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "MeetingNotes records your microphone to capture meeting audio."
+        INFOPLIST_KEY_WKApplication: "YES"

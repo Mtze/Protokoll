@@ -409,3 +409,34 @@ weil sie für den minimalen Indexbedarf überdimensioniert ist und die
 Null-Abhängigkeits-Eigenschaft des Projekts aufgäbe. Ein späterer Wechsel bliebe
 lokal möglich, da der Index hinter der `SearchIndex`-Actor-Schnittstelle liegt
 und jederzeit neu baubar ist.
+
+### ADR-6 - watchOS synchronisiert über WatchConnectivity zum iPhone, nicht direkt
+
+**Status:** akzeptiert (offene Entscheidung vor M6, wie im Plan gefordert).
+
+**Entscheidung:** Die Apple-Watch-App nimmt lokal auf und überträgt die fertige
+Audiodatei per **WatchConnectivity** (`WCSession.transferFile`) an die
+iPhone-App; diese legt daraus eine neue Session im iCloud-Container an (Gerät
+`watch`). Die Watch schreibt **nicht** direkt in den Ubiquity-Container.
+
+**Kontext & Begründung:**
+
+- *Warum nicht direkt:* watchOS hat keinen Zugriff auf den iCloud-Ubiquity-
+  Container des Nutzers wie macOS/iOS. Ein direkter Containerzugriff von der
+  Uhr ist schlicht nicht verfügbar - die Uhr braucht einen Vermittler.
+- *Für WatchConnectivity (gewählt):* Es ist der native, kostenfreie Pfad
+  Uhr-zu-iPhone, überträgt Dateien auch im Hintergrund (`transferFile` läuft
+  opportunistisch weiter) und braucht **kein zusätzliches Cloud-Schema**. Es
+  wiederverwendet den bereits gebauten iOS-zu-Container-Pfad (M4): die
+  iPhone-App muss die empfangene Datei nur in `createSession(device: .watch)`
+  ablegen. Das hält N1/N2 (kostenlos, lokal) ein.
+- *Gegen CloudKit:* Ein CloudKit-Pfad Uhr-zu-Cloud-zu-Mac würde einen zweiten
+  Speicher und ein Record-Schema einführen (dieselbe Redundanz, die ADR-2 für
+  die Suchschicht ablehnt) und wäre für ein persönliches Tool überdimensioniert.
+- *Konsequenz (bewusst):* Die Übertragung landet erst im Container, wenn die
+  iPhone-App die Datei empfangen hat (Uhr in Reichweite bzw. später beim
+  nächsten Sync). Für eine Aufnahme, die ohnehin erst am Mac verarbeitet wird,
+  ist diese Latenz unkritisch.
+
+**Verworfene Alternative:** CloudKit als Uhr-Sync-Schicht. Zurückgestellt wegen
+Mehrkomplexität und Redundanz zum dateibasierten Wahrheitsmodell (N3).

@@ -1498,6 +1498,23 @@
         }
       }
     },
+    "watch.sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to iPhone"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An iPhone gesendet"
+          }
+        }
+      }
+    },
     "scheduler.error.noBinary": {
       "extractionState": "manual",
       "localizations": {
