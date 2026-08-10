@@ -13,6 +13,7 @@ enum CheckPresentation {
         case .path: return "diag.path.title"
         case .containerWritable: return "diag.container.title"
         case .microphone: return "diag.microphone.title"
+        case .screenRecording: return "diag.screen.title"
         }
     }
 
@@ -25,6 +26,7 @@ enum CheckPresentation {
         case .path: return "diag.path.explanation"
         case .containerWritable: return "diag.container.explanation"
         case .microphone: return "diag.microphone.explanation"
+        case .screenRecording: return "diag.screen.explanation"
         }
     }
 

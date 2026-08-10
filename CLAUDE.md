@@ -61,6 +61,22 @@ Dev env overrides: see the table in `README.md`.
 
 ## Milestone status
 
-- **M1 (done):** SharedKit, pipeline, Diagnostics, Mac app, i18n, ADR-3/ADR-4.
-- **M2-M6:** see `docs/IMPLEMENTATION_PLAN.md`. `chunkTranscript()` in
-  ProcessSession is the M2 map-reduce seam (N9).
+- **M1 (done):** SharedKit, pipeline, Diagnostics + System-Test, Mac app
+  (recorder/scheduler/library), i18n, ADR-3/ADR-4. Fresh-review folded.
+- **M2 (mostly done):** map-reduce for long transcripts (N9); consent reminder +
+  Settings (N4); system-audio capture via ScreenCaptureKit (F2) + Screen
+  Recording check. Per-step retry UX is basic.
+- **M3 (core done):** local FTS5 index over the system SQLite (ADR-5, replaces
+  GRDB) with rebuild-from-files; live library search (F10). Real iCloud
+  container is stood up behind the `UbiquityContainer` seam (entitlement/
+  provisioning is a manual step).
+- **M4 (done):** iOS app (Apps/iOS) - lean recorder (F11), geotag (F8), viewer +
+  FTS search (F12), reuses SharedKit + SearchIndex + the String Catalog.
+- **M5 (done):** new-recording notifications with a Process action (F13).
+- **M6 (foundation):** watchOS target + ADR-6 (WatchConnectivity -> iPhone ->
+  container); iOS `WatchReceiver` files watch recordings into the container.
+
+Targets build via XcodeGen: `MeetingNotes-Mac`, `MeetingNotes-iOS`,
+`MeetingNotes-Watch`. See "Manual verification required" in the PR/report for
+what can't be checked headlessly (live mic, permissions, real iCloud, signing).
+Projects UI (group/filter chips) and F5 agenda integration remain future work.

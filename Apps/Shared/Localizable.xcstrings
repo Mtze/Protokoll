@@ -1515,6 +1515,40 @@
         }
       }
     },
+    "diag.screen.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording access"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirmaufnahme-Zugriff"
+          }
+        }
+      }
+    },
+    "diag.screen.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needed only to capture system audio for calls (F2)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur nötig, um System-Ton für Calls aufzunehmen (F2)."
+          }
+        }
+      }
+    },
     "scheduler.error.noBinary": {
       "extractionState": "manual",
       "localizations": {

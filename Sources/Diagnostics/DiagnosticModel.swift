@@ -11,6 +11,7 @@ public enum CheckID: String, Sendable, CaseIterable {
     case path
     case containerWritable
     case microphone
+    case screenRecording
 }
 
 /// The outcome of a single check.

@@ -28,6 +28,10 @@ final class AppModel {
     private(set) var isRunningDiagnostics = false
 
     private let recorder = Recorder()
+    #if os(macOS)
+    private let systemRecorder = SystemAudioRecorder()
+    private var capturingSystemAudio = false
+    #endif
 
     /// Shared reference so the `NSApplicationDelegate` can gate quit on active
     /// work (confirm-on-quit, ADR-4).
@@ -105,6 +109,17 @@ final class AppModel {
             try await recorder.start(session: session)
             isRecording = true
             activeRecordingID = session.id
+            #if os(macOS)
+            // Optionally capture system audio in parallel (F2).
+            if UserDefaults.standard.bool(forKey: SettingsKeys.captureSystemAudio) {
+                do {
+                    try await systemRecorder.start(to: session.systemAudioURL)
+                    capturingSystemAudio = true
+                } catch {
+                    capturingSystemAudio = false  // Mic-only if permission/display unavailable.
+                }
+            }
+            #endif
             reloadSessions()
         } catch {
             isRecording = false
@@ -113,9 +128,22 @@ final class AppModel {
 
     func stopRecording() async {
         guard isRecording else { return }
+        #if os(macOS)
+        var hadSystemAudio = false
+        if capturingSystemAudio {
+            await systemRecorder.stop()
+            capturingSystemAudio = false
+            hadSystemAudio = true
+        }
+        #endif
         do {
             var session = try await recorder.stop()
             session.metadata.pipeline.status = .recorded
+            #if os(macOS)
+            if hadSystemAudio, FileManager.default.fileExists(atPath: session.systemAudioURL.path) {
+                session.metadata.audioTracks = [.mic, .system]
+            }
+            #endif
             try container.store.save(session)
         } catch {
             // Leave whatever was captured; recovery handles the CAF on relaunch.
@@ -147,7 +175,11 @@ final class AppModel {
         let root = try? container.root()
         // Append the app-evaluated microphone permission check (the shell runner
         // can't resolve TCC).
-        let checks = DiagnosticsRunner.standardChecks(containerRoot: root) + [MicrophoneCheck()]
+        var appChecks: [any DiagnosticCheck] = [MicrophoneCheck()]
+        #if os(macOS)
+        appChecks.append(ScreenRecordingCheck())
+        #endif
+        let checks = DiagnosticsRunner.standardChecks(containerRoot: root) + appChecks
         let runner = DiagnosticsRunner(checks: checks)
         let results = await Task.detached { runner.runAll() }.value
         checkResults = results
@@ -156,7 +188,11 @@ final class AppModel {
     }
 
     func remediation(for id: CheckID) -> Remediation {
-        let checks = DiagnosticsRunner.standardChecks(containerRoot: try? container.root()) + [MicrophoneCheck()]
+        var appChecks: [any DiagnosticCheck] = [MicrophoneCheck()]
+        #if os(macOS)
+        appChecks.append(ScreenRecordingCheck())
+        #endif
+        let checks = DiagnosticsRunner.standardChecks(containerRoot: try? container.root()) + appChecks
         return DiagnosticsRunner(checks: checks).remediation(for: id)
     }
 }
