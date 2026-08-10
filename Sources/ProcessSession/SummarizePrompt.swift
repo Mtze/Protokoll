@@ -66,4 +66,48 @@ public enum SummarizePrompt {
         - Be concise. Omit a section only if it would be genuinely empty.
         """
     }
+
+    /// Map step (N9): extract structured notes from one chunk of a long
+    /// transcript. Output is an intermediate, not the final protocol.
+    public static func map(chunkIndex: Int, chunkCount: Int) -> String {
+        """
+        You are extracting meeting notes from PART \(chunkIndex + 1) OF \(chunkCount) of a long \
+        transcript (on stdin). This is an intermediate step — do NOT write a polished protocol yet.
+
+        In the meeting's language, list under these headings (omit an empty one):
+        - Decisions: any decision actually made, one bullet each.
+        - Action items: task — owner — due (use "—" if unnamed).
+        - Discussed-but-undecided: open points raised here, with what blocks them.
+        - Key context: facts needed to make sense of later parts.
+
+        Do not invent content. Mark unreconstructable passages `[unklar: ~HH:MM:SS]`.
+        """
+    }
+
+    /// Reduce step (N9): synthesize the per-chunk notes into the final protocol.
+    public static func reduce(currentTitle: String?) -> String {
+        let titleRule: String
+        if let currentTitle, !currentTitle.isEmpty {
+            titleRule = "Keep the existing title \"\(currentTitle)\" unless it is a placeholder date."
+        } else {
+            titleRule = "Invent a short, specific title (F9) — never a bare date."
+        }
+        return """
+        You are given, on stdin, the concatenated intermediate notes from all parts of one meeting \
+        (in order). Synthesize them into ONE final protocol. Merge duplicates, resolve overlaps, and \
+        keep chronological sense.
+
+        Output EXACTLY: a YAML frontmatter block (`title:` and `language:`), a blank line, then the \
+        protocol body with these sections (omit an empty one), in the meeting's language (N8):
+
+        # <title>
+        ## Beschlüsse / Decisions
+        ## Action Items   (table: Was/What | Owner | Bis wann/Due)
+        ## Themen / Topics
+        ## Offene Punkte / Open items   (discussed-but-not-decided, F4)
+
+        \(titleRule)
+        Put Beschlüsse and Action Items first. Never invent facts to fill a gap.
+        """
+    }
 }

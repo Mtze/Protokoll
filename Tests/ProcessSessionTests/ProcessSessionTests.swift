@@ -183,4 +183,49 @@ private func vendoredScriptEnv() -> ToolLocator {
         #expect(chunks.count == 1)
         #expect(chunks[0].index == 0)
     }
+
+    @Test func chunkerSplitsLongTranscriptAtPauses() throws {
+        // 10 paragraphs of ~30 chars; a 100-char budget forces multiple chunks.
+        let paragraphs = (0..<10).map { "**[00:00:0\($0)]** sentence number \($0) here" }
+        let transcript = paragraphs.joined(separator: "\n\n")
+        let chunks = TranscriptChunker(characterBudget: 100).chunk(transcript)
+        #expect(chunks.count > 1)
+        // No chunk splits a paragraph (each chunk starts at a segment marker).
+        for chunk in chunks { #expect(chunk.text.hasPrefix("**[")) }
+        // Reassembling yields the original content.
+        let reassembled = chunks.map(\.text).joined(separator: "\n\n")
+        #expect(reassembled == transcript)
+    }
+
+    @Test func mapReduceRunsPerChunkThenSynthesis() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("mn-mr-\(UUID().uuidString)")
+        let container = Container(locator: LocalFolderContainer(root: root))
+        let session = try container.createSession(device: .mac)
+        let longBody = (0..<20).map { "**[00:0\($0):00]** paragraph \($0) with enough words to matter here" }
+            .joined(separator: "\n\n")
+        try Data(longBody.utf8).write(to: session.transcriptURL)
+
+        let runner = FakeCommandRunner()
+        // Map calls: prompt contains "PART". Reduce: prompt contains "final protocol".
+        runner.stub(when: { exe, _ in exe == "claude" }, return: CommandResult(exitCode: 0, stdout: "partial notes", stderr: "")) { _ in }
+
+        // Distinguish reduce output so we can assert synthesis ran.
+        final class Tracking: CommandRunning, @unchecked Sendable {
+            var mapCalls = 0; var reduceCalls = 0
+            let lock = NSLock()
+            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
+                lock.lock(); defer { lock.unlock() }
+                let prompt = arguments.count > 1 ? arguments[1] : ""
+                if prompt.contains("PART") { mapCalls += 1; return CommandResult(exitCode: 0, stdout: "notes", stderr: "") }
+                reduceCalls += 1
+                return CommandResult(exitCode: 0, stdout: "---\ntitle: Long Meeting\n---\n\n# Long Meeting\n\nDone.", stderr: "")
+            }
+        }
+        let tracking = Tracking()
+        let summarizer = Summarizer(runner: tracking, tools: vendoredScriptEnv(), store: container.store, chunker: TranscriptChunker(characterBudget: 200))
+        let updated = try summarizer.summarize(session: session)
+        #expect(tracking.mapCalls > 1)
+        #expect(tracking.reduceCalls == 1)
+        #expect(updated.metadata.title == "Long Meeting")
+    }
 }

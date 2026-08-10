@@ -31,9 +31,29 @@ public struct TranscriptChunker: Sendable {
         if transcript.count <= characterBudget {
             return [TranscriptChunk(index: 0, text: transcript)]
         }
-        // M1 behavior: single chunk. When it exceeds the budget the summarizer
-        // still runs single-shot (decision #5: M1 is single-shot; long
-        // transcripts get real map-reduce in M2). This method is the seam.
-        return [TranscriptChunk(index: 0, text: transcript)]
+        // Break at speech pauses: paragraphs (blank-line-separated segments in
+        // our transcript format) are natural pause boundaries. Greedily fill
+        // each chunk up to the budget without splitting a paragraph.
+        let paragraphs = transcript.components(separatedBy: "\n\n")
+        var chunks: [TranscriptChunk] = []
+        var current = ""
+        for paragraph in paragraphs {
+            let addition = current.isEmpty ? paragraph : "\n\n" + paragraph
+            if !current.isEmpty, current.count + addition.count > characterBudget {
+                chunks.append(TranscriptChunk(index: chunks.count, text: current))
+                current = paragraph
+            } else {
+                current += addition
+            }
+            // A single paragraph larger than the budget becomes its own chunk.
+            if current.count >= characterBudget {
+                chunks.append(TranscriptChunk(index: chunks.count, text: current))
+                current = ""
+            }
+        }
+        if !current.isEmpty {
+            chunks.append(TranscriptChunk(index: chunks.count, text: current))
+        }
+        return chunks.isEmpty ? [TranscriptChunk(index: 0, text: transcript)] : chunks
     }
 }
