@@ -44,12 +44,24 @@ final class AppModel {
         AppModel.shared = self
     }
 
+    #if os(macOS)
+    @ObservationIgnored private var notifier: NewSessionNotifier?
+    #endif
+
     /// Loads the session list and recovers any crashed recordings (ADR-3).
     func bootstrap() async {
         await Recorder.recoverOrphans(in: container)
         reloadSessions()
         await rebuildIndex()
         await runDiagnostics()
+        #if os(macOS)
+        // Watch for new/iCloud-arrived sessions (F13).
+        let notifier = NewSessionNotifier(container: container) { [weak self] session in
+            self?.process(session)
+        }
+        notifier.start()
+        self.notifier = notifier
+        #endif
     }
 
     func reloadSessions() {

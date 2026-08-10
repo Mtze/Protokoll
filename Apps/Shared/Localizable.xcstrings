@@ -1464,6 +1464,40 @@
         }
       }
     },
+    "notify.new.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New recording"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufnahme"
+          }
+        }
+      }
+    },
+    "notify.new.body %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is ready to process."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kann verarbeitet werden."
+          }
+        }
+      }
+    },
     "scheduler.error.noBinary": {
       "extractionState": "manual",
       "localizations": {
