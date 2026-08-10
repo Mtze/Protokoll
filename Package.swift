@@ -10,11 +10,17 @@ let package = Package(
     ],
     products: [
         .library(name: "SharedKit", targets: ["SharedKit"]),
+        .library(name: "Diagnostics", targets: ["Diagnostics"]),
         .executable(name: "process-session", targets: ["ProcessSession"]),
     ],
     targets: [
         .target(
             name: "SharedKit",
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .target(
+            name: "Diagnostics",
+            dependencies: ["SharedKit"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .executableTarget(
@@ -30,6 +36,11 @@ let package = Package(
         .testTarget(
             name: "ProcessSessionTests",
             dependencies: ["ProcessSession", "SharedKit"],
+            swiftSettings: [.swiftLanguageMode(.v6)]
+        ),
+        .testTarget(
+            name: "DiagnosticsTests",
+            dependencies: ["Diagnostics", "SharedKit"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
     ]
