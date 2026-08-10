@@ -1,0 +1,319 @@
+# Meeting Recorder & Protokoll-Pipeline — Architektur
+
+> Lokale, kostenfreie Aufnahme-, Transkriptions- und Protokoll-Pipeline für
+> macOS und iOS. Diese Datei ist die maßgebliche Spezifikation für die
+> Umsetzung (u. a. durch Claude Code) und dokumentiert die getroffenen
+> Entscheidungen samt Begründung.
+
+## Leitidee
+
+Es gibt drei Akteure, die sich alle um dieselben Dateien in einem
+iCloud-Container drehen:
+
+- **Apps** — macOS-Menübar-App mit Bibliotheksansicht, iOS-Recorder mit Viewer.
+  Sie nehmen auf, zeigen an, durchsuchen und stoßen Verarbeitung an.
+- **Container** — die einzige Quelle der Wahrheit: ein Ordner aus offenen Dateien.
+- **Pipeline** — ein Verarbeitungsschritt auf dem Mac, der aus Audio ein
+  Transkript und daraus ein Protokoll macht.
+
+Grundprinzip: **Die Apps besitzen keine Daten.** Sie sind Ansichten auf den
+Container. Jede lokale Datenbank ist nur ein Index und jederzeit aus den
+Dateien neu aufbaubar.
+
+---
+
+## Requirements
+
+### Funktionale Anforderungen
+
+- **F1 — Aufnahme (macOS):** Menübar-App, die auf Knopfdruck eine Aufnahme mit
+  dem aktuell gewählten Eingabegerät startet und die Audiodatei ablegt.
+- **F2 — System-Audio (macOS):** Optionale, getrennte Aufnahme des System-Tons
+  (für Video-Calls), zusätzlich zur Mikrofonspur.
+- **F3 — Transkription:** Lokale Transkription mit einem hochwertigen Modell;
+  Qualität vor Geschwindigkeit.
+- **F4 — Protokoll statt Wortprotokoll:** Zusammenfassung mit klar
+  dokumentierten Entscheidungen. Diskutierte, aber **nicht** entschiedene Punkte
+  werden explizit als solche markiert, damit man sie manuell nachtragen kann.
+- **F5 — Agenda-Integration (optional):** Ist eine Agenda vorhanden (Markdown,
+  Outline o. ä.), wird das Protokoll an ihr entlang strukturiert — die Agenda
+  wird zum ausgefüllten Protokoll.
+- **F6 — Bibliothek (macOS):** Vollansicht aller vergangenen Aufnahmen und
+  Transkripte für den Überblick.
+- **F7 — Projekte/Tags:** Sessions können einem oder mehreren Projekten
+  zugeordnet werden (z. B. pro Team, dienstlich/privat), gruppier- und filterbar.
+- **F8 — Metadaten:** Datum, Uhrzeit, Dauer, Sprache je Session; auf iOS
+  zusätzlich optionaler Geotag.
+- **F9 — Benennung:** Sessions manuell benennbar (optional). Ist kein Titel
+  gesetzt, vergibt die Pipeline nach der Verarbeitung automatisch einen
+  aussagekräftigen Titel — nie eine reine Datums-Wüste.
+- **F10 — Volltextsuche:** Auf **beiden** Plattformen, über Transkript **und**
+  Protokoll.
+- **F11 — iOS-Aufnahme:** Schlanke Aufnahme in denselben iCloud-Container,
+  optional mit Titel und Geotag. Keine Verarbeitung auf dem Gerät.
+- **F12 — iOS-Ergebnisansicht:** Nach Durchlauf der Mac-Pipeline sind
+  Transkript und Protokoll auf iOS sicht-, durchsuch- und weiterverwendbar.
+- **F13 — Verarbeitung anstoßen:** Am Mac auf Anfrage; neue (auch per iCloud
+  vom iPhone eingegangene) Aufnahmen werden per Notification gemeldet und per
+  Klick verarbeitet.
+
+### Nicht-funktionale Anforderungen
+
+- **N1 — Kostenfrei:** Keine API-Keys, keine bezahlten Dienste. Transkription
+  lokal; Aufbereitung über die vorhandene Claude-Code-Anmeldung.
+- **N2 — Privatsphäre:** Alles bleibt lokal auf den Geräten des Nutzers. Keine
+  Uploads an Dritte. Sync ausschließlich über den eigenen iCloud-Container.
+- **N3 — Dateien zuerst:** Alles Wichtige liegt als offene Datei vor (Audio +
+  Markdown mit Metadaten). Die Dateien sind außerhalb der App voll nutzbar; ein
+  einzeln herausgezogener Session-Ordner ergibt für sich Sinn.
+- **N4 — Einwilligung/Recht:** Bewusstsein für § 201 StGB (heimliches Aufnehmen
+  des gesprochenen Wortes ist strafbar). Sichtbarer Aufnahme-Indikator; optional
+  eine Erinnerung vor Aufnahmestart, die Zustimmung einzuholen.
+- **N5 — Robuste Aufnahme:** Inkrementelles Schreiben auf die Platte, damit
+  Absturz oder leerer Akku nicht die ganze Aufnahme vernichten.
+- **N6 — Klare Pipeline-Zustände:** Pro Session nachvollziehbarer Status; jeder
+  Schritt einzeln wiederholbar.
+- **N7 — iCloud-Verfügbarkeit:** Die Pipeline wartet, bis eine per iCloud
+  eingegangene Datei tatsächlich lokal heruntergeladen ist, bevor sie startet.
+- **N8 — Mehrsprachigkeit:** Deutsch/Englisch/gemischt. Die Zusammenfassung
+  erfolgt in der Sprache des Meetings (oder einer festgelegten Zielsprache).
+- **N9 — Lange Transkripte:** Umgang mit sehr langen Transkripten (z. B.
+  2-stündige Meetings), ohne den Kontext zu sprengen.
+- **N10 — Schonende Versionierung:** Das Rohtranskript bleibt unangetastet.
+  Neu generierte Protokolle überschreiben alte nicht verlustbehaftet.
+
+### Nice-to-have (bewusst zurückgestellt)
+
+- **NH1 — Sprechertrennung/Diarisierung:** Nicht ausschlaggebend für die erste
+  Version. Getrennte Mic-/System-Spuren liefern später eine grobe Zuordnung
+  praktisch geschenkt.
+- **NH2 — Ausgelagerte Hintergrundverarbeitung:** Ein späterer Umzug der
+  Pipeline in einen Hintergrunddienst bleibt möglich (siehe ADR-1), ist aber
+  nicht Teil der ersten Version.
+- **NH3 — Pause/Resume der Verarbeitung:** Anhalten laufender Verarbeitung, wenn
+  der Nutzer die Ressourcen selbst braucht. An die Chunk-Struktur der Pipeline
+  angelehnt (Checkpoint nach Block).
+
+---
+
+## Container-Layout
+
+Jedes Meeting ist eine **Session** mit eigenem Ordner — Audio, Transkript,
+Protokoll und Metadaten bleiben zusammen und portabel.
+
+```
+Meetings/                              (iCloud ubiquity container)
+├── sessions/
+│   ├── 2026-08-10T14-30_a1b2c3/       (Ordnername = sortierbar + eindeutig)
+│   │   ├── audio/
+│   │   │   ├── mic.m4a                (Mikrofonspur)
+│   │   │   └── system.m4a            (System-Audio, nur bei Calls)
+│   │   ├── transcript.md             (Rohtranskript — wird NIE überschrieben)
+│   │   ├── protocol.md               (aktuelles Protokoll)
+│   │   ├── protocol.v1.md            (überschriebene Versionen bleiben erhalten)
+│   │   ├── agenda.md                 (optional, falls vorhanden)
+│   │   └── session.json             (kanonische Metadaten)
+│   └── …
+└── projects/
+    └── projects.json                 (Projekt-/Tag-Definitionen)
+```
+
+Der Ordnername beginnt mit dem ISO-Zeitstempel (sortierbar) plus kurzer ID
+(kollisionsfrei bei parallelen Aufnahmen auf Mac und iPhone). Der **Anzeigetitel
+ist nicht der Ordnername** — der Ordner bleibt stabil, der Titel ist reine
+Metadatenschicht, damit Umbenennen keine Referenzen bricht.
+
+---
+
+## Metadatenmodell
+
+Die **kanonischen Metadaten liegen pro Session in `session.json`** und werden
+als YAML-Frontmatter in die Markdown-Dateien gespiegelt. Diese Dateien liegen im
+Container und synchronisieren sich normal — dadurch *sind* iOS und Mac synchron,
+über viele kleine Dateien statt über eine geteilte DB.
+
+`session.json` (Auszug der Felder):
+
+- `id` — stabile Session-ID (entspricht Ordner-Suffix)
+- `title` — nullable; von Pipeline gesetzt, wenn nicht manuell vergeben
+- `startedAt` / `endedAt` / `duration`
+- `device` — `mac` | `ios`
+- `geo` — optional (iOS), Koordinaten
+- `projects` — Array von Projekt-IDs (referenziert `projects.json`)
+- `language` — erkannte/gewählte Sprache
+- `consentNote` — optionaler Vermerk zur Einwilligung
+- `audioTracks` — vorhandene Spuren (`mic`, ggf. `system`)
+- `pipeline` — Statusblock je Schritt (siehe unten)
+
+`projects.json`: Liste aus `id`, `name`, `color`.
+
+---
+
+## Pipeline
+
+Eigenständiges Skript, auch von Hand aufrufbar:
+
+```
+process-session <ordner> [--step transcribe|summarize|all] [--force]
+```
+
+Ablauf:
+
+1. **Auf iCloud warten (N7).** Sicherstellen, dass die Audiodatei lokal
+   heruntergeladen ist (`startDownloadingUbiquitousItem`, dann pollen).
+2. **Transkribieren (F3).** `whisper.cpp` mit `large-v3` → `transcript.md` mit
+   Zeitstempeln und erkannter Sprache. Danach unveränderlich (N10).
+3. **Zusammenfassen (F4/F5/F9).** `claude -p "<prompt>"` im Print-Modus liest
+   Transkript (+ optional `agenda.md`) und schreibt `protocol.md`: kein
+   Wortprotokoll, Entscheidungen dokumentiert, „diskutiert aber nicht
+   entschieden" explizit markiert, Agenda ausgefüllt, Titelvorschlag falls kein
+   manueller Titel.
+4. **Status schreiben (N6).** Nach jedem Schritt `session.json` aktualisieren.
+
+Zustände: `recorded → transcribing → transcribed → summarizing → done`, plus
+`failed` (mit Fehlertext). Jeder Schritt einzeln wiederholbar (`--force`).
+
+**Lange Transkripte (N9)** per Map-Reduce: Transkript in Blöcke teilen (nach
+Token-Budget, möglichst an Sprechpausen), jeden Block einzeln zusammenfassen,
+finaler Synthese-Durchlauf erzeugt Protokoll, Entscheidungen, offene Punkte und
+Titel. Diese Blockgrenzen sind zugleich die Checkpoints für ein späteres
+Pause/Resume (NH3).
+
+---
+
+## Audio-Capture
+
+- **Mikrofon (F1):** `AVAudioEngine` auf das gewählte Eingabegerät → `mic.m4a`,
+  inkrementell auf die Platte (N5).
+- **System-Audio (F2):** `ScreenCaptureKit` (Audio-only `SCStream`) →
+  `system.m4a`, nur bei Bedarf. Kommt ohne BlackHole/Kernel-Extension aus.
+
+Getrennte Spuren kosten kaum Mehraufwand und liefern die spätere
+Sprechertrennung (NH1) praktisch geschenkt. Das Menübar-Icon signalisiert die
+laufende Aufnahme sichtbar (N4).
+
+---
+
+## iOS-Seite
+
+Bewusst schlank (F11/F12): Aufnahme nach `mic.m4a` in denselben Container,
+optional Titel und Geotag (`CLLocation` → `geo`). Keine Verarbeitung auf dem
+Gerät. Nach Durchlauf der Mac-Pipeline synchronisiert sich `protocol.md` zurück;
+der iOS-Viewer zeigt Transkript und Protokoll, durchsuchbar und
+weiterverwendbar. Die Mac-App kann neue iOS-Sessions automatisch übernehmen oder
+erst auf Klick (F13).
+
+---
+
+## Übersicht, Tags und Suche
+
+Bibliothek am Mac und Liste auf iOS lesen aus dem lokalen Index (siehe ADR-2):
+**FTS5-Volltextsuche über Transkript und Protokoll (F10)** auf beiden
+Plattformen, plus Filter nach Projekt/Tag, Datum und Status. Projekte in
+`projects.json`, Sessions referenzieren Projekt-IDs. Automatisch gesetzte Titel
+(F9) verhindern die reine Datums-Wüste.
+
+---
+
+## Versionierung
+
+`transcript.md` ist unveränderlich, sobald geschrieben. Beim Neu-Generieren wird
+das aktuelle `protocol.md` nach `protocol.vN.md` rotiert und ein neues
+geschrieben — nichts geht verloren (N10).
+
+---
+
+## Tech-Stack
+
+- **Apps:** Swift/SwiftUI (macOS + iOS), gemeinsames Swift-Package für das
+  Datenmodell (Container-Zugriff, `session.json` lesen/schreiben).
+- **Index:** SQLite mit FTS5 (z. B. via GRDB), lokal, wegwerfbar.
+- **Pipeline:** eigenständiges Skript, von der Menübar-App als Subprozess
+  gestartet (ADR-1).
+- **Transkription:** `whisper.cpp`, `large-v3` (alternativ `large-v3-turbo`,
+  falls Geschwindigkeit wichtiger wird).
+- **Aufbereitung:** Claude Code CLI (`claude -p`, Print-Modus), über die
+  bestehende Anmeldung — kein API-Key (N1).
+
+Harte Abhängigkeit: `claude` ist auf dem Mac installiert und eingeloggt;
+`whisper.cpp` mit heruntergeladenem Modell verfügbar.
+
+---
+
+## Architekturentscheidungen (ADRs)
+
+### ADR-1 — Verarbeitung als Subprozess, nicht als Hintergrund-Daemon
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Die Menübar-App startet `process-session` als Kindprozess.
+Kein launchd-LaunchAgent, kein IPC.
+
+**Kontext & Begründung:**
+
+- *Für den Subprozess:* deutlich einfacher — kein Daemon, kein IPC-Overhead,
+  weniger bewegliche Teile für ein persönliches Tool. Er fügt sich in das
+  Framing „Verarbeitung ist eine bewusste Nutzerentscheidung" ein: Neue
+  Aufnahmen (v. a. per iCloud vom iPhone) melden sich per lokaler Notification
+  mit Action-Button („Neue Aufnahme, jetzt verarbeiten?"); ein Klick startet den
+  Lauf. So wird nicht unerwartet CPU abgezogen. Laufen mehrere Aufträge, werden
+  sie seriell in eine Queue gehängt (paralleles `large-v3` thrasht nur).
+- *Gegen den Subprozess (bekannte Konsequenz):* Die Verarbeitung lebt nur,
+  solange die App läuft. Beenden mitten in der Transkription bricht den Lauf ab.
+  Akzeptabel, weil Schritte wiederholbar sind (N6) und die Map-Reduce-Blöcke als
+  Checkpoints dienen können (NH3).
+
+**Verworfene Alternative:** launchd-LaunchAgent (überlebt App-Beendigung, läuft
+im Hintergrund). Zurückgestellt als NH2 — kann später nachgezogen werden, ohne
+die Datei-/Container-Struktur zu ändern.
+
+### ADR-2 — Lokaler, wegwerfbarer Index statt geteilter DB im Container
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Kanonische Metadaten liegen in den Dateien (`session.json` +
+Frontmatter). Sync läuft über diese Dateien im iCloud-Container. Suche/Übersicht
+speist sich aus einem **rein lokalen SQLite-Index pro Gerät** (im
+App-Support-Ordner, außerhalb des Containers), der aus den Dateien aufgebaut und
+bei Bedarf neu erzeugt wird.
+
+**Kontext & Begründung:**
+
+Die halbe Entscheidung erzwingt N3 („Dateien zuerst"): Sobald die Identität
+einer Session nur in einer DB stünde, wäre ein herausgezogener Ordner wertlos.
+Also *muss* die Wahrheit in den Dateien liegen. Bleibt die Frage nach der Sync-
+und Suchschicht obendrauf. Drei Kandidaten:
+
+- **Geteilte SQLite im Container.**
+  *Dafür:* ein einziger Speicher, keine Rebuild-Logik.
+  *Dagegen:* iCloud synchronisiert ganze Dateien und kann zwei schreibende
+  Geräte nicht zeilenweise mergen → Konfliktkopien; SQLites `-wal`/`-shm`-
+  Sidecars syncen nicht atomar mit. Dokumentiertes Anti-Pattern. Zudem
+  redundant, da die Dateien die Wahrheit ohnehin tragen.
+- **Lokaler wegwerfbarer Index pro Gerät (gewählt).**
+  *Dafür:* kein geräteübergreifender DB-Konflikt, da der Index privat ist und
+  nie synchronisiert. Aus den Dateien wiederaufbaubar — Korruption wird zum
+  Nicht-Ereignis. FTS5 liefert schnelle Volltextsuche.
+  *Dagegen:* braucht einen Indexer, der den Container beobachtet; gleichzeitige
+  Metadaten-Edits derselben Session auf zwei Geräten können einen iCloud-Konflikt
+  auf *dieser einen* `session.json` erzeugen — isoliert, selten, verlustfrei
+  (iCloud behält beide Versionen).
+- **CloudKit als Sync-/Indexschicht (Dateien bleiben kanonisch).**
+  *Dafür:* echtes Record-Level-Sync mit Konfliktauflösung, skaliert.
+  *Dagegen:* deutlich mehr Komplexität (Schema, Subscriptions, Merge) und zwei
+  abzugleichende Speicher. Für ein persönliches Tool überdimensioniert und
+  redundant, da die Dateien die Wahrheit tragen.
+
+**Begründung der Wahl:** Weil die Dateien ohnehin die Wahrheit tragen, ist der
+einzige Job der Sync-Schicht, eine schnelle, lokale, wegwerfbare Ansicht zu
+sein. Das Billigste, was das erfüllt, ist ein pro Gerät neu baubarer Index. Er
+eliminiert die gesamte Fehlerklasse „synchronisierte DB korrumpiert", indem er
+nie eine DB synchronisiert. CloudKit wäre die Antwort, wenn die Dateien die
+Wahrheit *nicht* trügen; die geteilte DB im Container bekäme das Schlechteste
+beider Welten (fragiles Sync *und* redundante Wahrheit).
+
+**Vorbehalt & Mitigation:** Gleichzeitige Metadaten-Edits derselben Session auf
+zwei Geräten → iCloud-Konflikt auf `session.json`. Solche Edits sind selten und
+meist einseitig; im Konfliktfall gewinnt der neuere Stand (mtime), die App zeigt
+es an, dank iCloud-Versionshaltung geht nichts verloren. Für ein persönliches
+Tool akzeptabel.

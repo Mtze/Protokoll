@@ -1,0 +1,32 @@
+# Xcode / build artifacts
+*.xcodeproj/
+*.xcworkspace/
+!default.xcworkspace
+DerivedData/
+build/
+.build/
+*.o
+*.swiftmodule
+
+# XcodeGen output (project is generated, not committed)
+# (kept explicit so the generated .xcodeproj never lands in git)
+
+# macOS
+.DS_Store
+
+# SwiftPM
+Package.resolved
+
+# fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output/
+
+# User Xcode settings
+xcuserdata/
+*.xcuserstate
+
+# Scratch / local
+*.log
+.env
