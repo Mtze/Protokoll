@@ -25,11 +25,44 @@ struct SessionDetailView: View {
             processingSection
             if hasMicAudio {
                 GroupBox { audioPlayers.padding(4) }
+                    // Seek keys fire only while the player holds focus, so they
+                    // never fight the search field or scrolling (F: keyboard).
+                    .focusable()
+                    .onKeyPress(.leftArrow) {
+                        audioModel.seek(to: audioModel.currentTime - 10); return .handled
+                    }
+                    .onKeyPress(.rightArrow) {
+                        audioModel.seek(to: audioModel.currentTime + 10); return .handled
+                    }
             }
             documentSection
         }
         .padding()
         .navigationTitle(session.displayTitle)
+        .focusedSceneValue(\.detailActions, detailActions)
+    }
+
+    /// Actions the menu-bar Session commands drive for this session. Rebuilt each
+    /// body pass so labels/state track the current status and pane.
+    private var detailActions: DetailActions {
+        let action = SessionAction.forDetail(status: status, hasActiveJob: model.activeJob(for: session.id) != nil)
+        let primary: DetailActions.Primary?
+        switch action {
+        case .process: primary = .init(label: "action.process") { model.process(session) }
+        case .retry: primary = .init(label: "action.retry") { model.retry(session) }
+        case .regenerate: primary = .init(label: "action.regenerate") { model.regenerateProtocol(session) }
+        case .none: primary = nil
+        }
+        let playPause: (() -> Void)? = hasMicAudio ? { audioModel.playPause() } : nil
+        return DetailActions(
+            primary: primary,
+            delete: { onDelete(session) },
+            reveal: { revealInFinder() },
+            copyDocument: { if let body = documentBody { DocumentPasteboard.copy(body) } },
+            showProtocol: { pane = .protocolDoc },
+            showTranscript: { pane = .transcript },
+            playPause: playPause
+        )
     }
 
     /// Live feedback for the processing chain (F13/N6): queued, running with the

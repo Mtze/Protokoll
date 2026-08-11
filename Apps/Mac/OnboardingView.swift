@@ -111,8 +111,10 @@ struct OnboardingView: View {
             if step == 0 {
                 Button("onboarding.skip") { finish() }
                     .buttonStyle(.plain).foregroundStyle(.secondary)
+                    .keyboardShortcut(.cancelAction)
             } else if step > 0 && step < lastStep {
                 Button("onboarding.back") { step -= 1 }
+                    .keyboardShortcut(.cancelAction)
             }
             Spacer()
             PageDots(count: lastStep + 1, index: step)
@@ -120,9 +122,11 @@ struct OnboardingView: View {
             if step < lastStep {
                 Button(step == 0 ? "onboarding.getStarted" : "onboarding.continue") { step += 1 }
                     .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
             } else {
                 Button("onboarding.finish") { finish() }
                     .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
             }
         }
     }
