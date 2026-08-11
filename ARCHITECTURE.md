@@ -192,6 +192,12 @@ Getrennte Spuren kosten kaum Mehraufwand und liefern die spätere
 Sprechertrennung (NH1) praktisch geschenkt. Das Menübar-Icon signalisiert die
 laufende Aufnahme sichtbar (N4).
 
+Die Live-Wellenform (N4) spiegelt beide Quellen: Neben dem Mikrofonpegel
+berechnet der System-Audio-Recorder pro `CMSampleBuffer` einen RMS-Pegel
+(0...1), und `AppModel` kombiniert Mikrofon- und System-Pegel per Maximum
+(`RecordingLevel.combined`), solange System-Audio aufgenommen wird - so leuchtet
+die Wellenform auch bei der Gegenseite eines Calls.
+
 ---
 
 ## iOS-Seite
