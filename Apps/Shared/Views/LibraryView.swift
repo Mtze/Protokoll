@@ -32,6 +32,11 @@ struct LibraryView: View {
                             Label("action.delete", systemImage: "trash")
                         }
                     }
+                    .swipeActions(edge: .trailing) {
+                        Button(role: .destructive) { sessionToDelete = session } label: {
+                            Label("action.delete", systemImage: "trash")
+                        }
+                    }
             }
             // Wide enough that title, state, date and duration all show without resizing.
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 440)
