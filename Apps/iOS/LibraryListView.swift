@@ -92,31 +92,70 @@ struct IOSDetailView: View {
     let session: Session
     enum Pane: String, CaseIterable, Identifiable { case protocolDoc, transcript; var id: String { rawValue } }
     @State private var pane: Pane = .protocolDoc
+    /// One player shared by the audio control and the tap-to-seek transcript list.
+    @State private var audioModel = AudioPlayerModel()
+
+    private var hasMicAudio: Bool {
+        FileManager.default.fileExists(atPath: session.micAudioURL.path)
+    }
 
     var body: some View {
         VStack {
-            if FileManager.default.fileExists(atPath: session.micAudioURL.path) {
-                AudioPlayerView(url: session.micAudioURL, title: "player.mic")
+            if hasMicAudio {
+                // Single combined mic+system track (ADR-7) - no "Microphone" label.
+                AudioPlayerView(url: session.micAudioURL, model: audioModel, title: "player.recording")
                     .padding(.horizontal)
             }
-            Picker("detail.pane", selection: $pane) {
-                Text("detail.pane.protocol").tag(Pane.protocolDoc)
-                Text("detail.pane.transcript").tag(Pane.transcript)
+            HStack {
+                Picker("detail.pane", selection: $pane) {
+                    Text("detail.pane.protocol").tag(Pane.protocolDoc)
+                    Text("detail.pane.transcript").tag(Pane.transcript)
+                }
+                .pickerStyle(.segmented).labelsHidden()
+                if let body = documentBody, !body.isEmpty {
+                    DocumentActions(bodyText: body, fileURL: currentDocumentURL, exportName: exportName)
+                }
             }
-            .pickerStyle(.segmented).labelsHidden().padding(.horizontal)
+            .padding(.horizontal)
             ScrollView {
-                Text(text).frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled).padding()
+                documentContent.padding()
             }
         }
         .navigationTitle(session.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private var text: String {
-        let url = pane == .protocolDoc ? session.protocolURL : session.transcriptURL
-        guard let raw = try? String(contentsOf: url, encoding: .utf8) else {
-            return String(localized: pane == .protocolDoc ? "detail.noProtocol" : "detail.noTranscript")
-        }
+    private var currentDocumentURL: URL {
+        pane == .protocolDoc ? session.protocolURL : session.transcriptURL
+    }
+
+    private var documentBody: String? {
+        guard let raw = try? String(contentsOf: currentDocumentURL, encoding: .utf8) else { return nil }
         return Frontmatter.split(raw).body
+    }
+
+    @ViewBuilder private var documentContent: some View {
+        if let body = documentBody, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            switch pane {
+            case .protocolDoc:
+                MarkdownText(markdown: body)
+            case .transcript:
+                let segments = TranscriptParser.parse(body)
+                if segments.isEmpty {
+                    MarkdownText(markdown: body)
+                } else {
+                    TranscriptSegmentList(segments: segments, model: audioModel, canSeek: hasMicAudio)
+                }
+            }
+        } else {
+            Text(pane == .protocolDoc ? "detail.noProtocol" : "detail.noTranscript")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var exportName: String {
+        let kind = String(localized: pane == .protocolDoc ? "detail.pane.protocol" : "detail.pane.transcript")
+        return "\(session.displayTitle) - \(kind).md"
     }
 }
