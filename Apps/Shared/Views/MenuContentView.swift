@@ -16,6 +16,11 @@ struct MenuContentView: View {
             Divider()
             recordButton
 
+            if model.isRecording {
+                RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt)
+                    .frame(height: 28)
+            }
+
             if !model.scheduler.jobs.isEmpty {
                 Divider()
                 jobsSection

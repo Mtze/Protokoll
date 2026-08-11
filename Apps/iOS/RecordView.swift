@@ -34,6 +34,12 @@ struct RecordView: View {
                     }
                     .controlSize(.large)
                 }
+                if model.isRecording {
+                    Section {
+                        RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt)
+                            .frame(height: 32)
+                    }
+                }
             }
             .navigationTitle("app.name")
             .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {

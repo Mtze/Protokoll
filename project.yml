@@ -30,6 +30,7 @@ targets:
     sources:
       - path: Apps/Mac
       - path: Apps/Shared
+      - path: Apps/Common
     dependencies:
       - package: SharedKit
         product: SharedKit
@@ -41,7 +42,8 @@ targets:
       base:
         PRODUCT_NAME: MeetingNotes
         PRODUCT_BUNDLE_IDENTIFIER: com.meetingnotes.mac
-        INFOPLIST_KEY_LSUIElement: "YES"
+        # Full app: Dock icon + Library as the main window, plus a MenuBarExtra
+        # for quick record. (Was LSUIElement/menubar-only.)
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "MeetingNotes records your microphone to capture meeting audio locally on this Mac."
         INFOPLIST_KEY_NSHumanReadableCopyright: "Local, private meeting recorder."
         ENABLE_HARDENED_RUNTIME: "YES"
@@ -56,6 +58,7 @@ targets:
     platform: iOS
     sources:
       - path: Apps/iOS
+      - path: Apps/Common
       - path: Apps/Shared/Localizable.xcstrings
     dependencies:
       - package: SharedKit
@@ -78,6 +81,8 @@ targets:
     platform: watchOS
     sources:
       - path: Apps/Watch
+      - path: Apps/Common
+      - path: Apps/Shared/Localizable.xcstrings
     dependencies:
       - package: SharedKit
         product: SharedKit

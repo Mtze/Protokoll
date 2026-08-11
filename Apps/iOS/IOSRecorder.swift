@@ -17,6 +17,13 @@ actor IOSRecorder {
         }
     }
 
+    /// Current normalized input level (0...1) for the recording meter.
+    func currentLevel() -> Float {
+        guard let recorder, isRecording else { return 0 }
+        recorder.updateMeters()
+        return AudioLevels.normalize(db: recorder.averagePower(forChannel: 0))
+    }
+
     func start(session: Session) throws {
         guard !isRecording else { return }
         let audioSession = AVAudioSession.sharedInstance()
@@ -32,6 +39,7 @@ actor IOSRecorder {
             AVLinearPCMBitDepthKey: 16,
         ]
         let recorder = try AVAudioRecorder(url: session.micCaptureURL, settings: settings)
+        recorder.isMeteringEnabled = true
         recorder.record()
 
         self.recorder = recorder

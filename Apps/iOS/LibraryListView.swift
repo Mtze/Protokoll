@@ -78,6 +78,10 @@ struct IOSDetailView: View {
 
     var body: some View {
         VStack {
+            if FileManager.default.fileExists(atPath: session.micAudioURL.path) {
+                AudioPlayerView(url: session.micAudioURL, title: "player.mic")
+                    .padding(.horizontal)
+            }
             Picker("detail.pane", selection: $pane) {
                 Text("detail.pane.protocol").tag(Pane.protocolDoc)
                 Text("detail.pane.transcript").tag(Pane.transcript)

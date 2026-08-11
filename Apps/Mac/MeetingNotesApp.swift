@@ -13,20 +13,24 @@ struct MeetingNotesApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {
+        // Primary window: the full Library app. Opens at launch and drives
+        // bootstrap (session load, crash recovery, index rebuild, diagnostics).
+        Window(Text("library.title"), id: WindowID.library) {
+            LibraryView()
+                .environment(model)
+                .task { await model.bootstrap() }
+        }
+        .defaultSize(width: 900, height: 600)
+
+        // Quick-access recorder in the menu bar, alongside the full app.
         MenuBarExtra {
             MenuContentView()
                 .environment(model)
-                .task { await model.bootstrap() }
         } label: {
             Image(systemName: model.isRecording ? "waveform.badge.mic" : "mic")
                 .symbolRenderingMode(.hierarchical)
         }
         .menuBarExtraStyle(.window)
-
-        Window(Text("library.title"), id: WindowID.library) {
-            LibraryView().environment(model)
-        }
-        .defaultSize(width: 900, height: 600)
 
         Window(Text("diag.title"), id: WindowID.diagnostics) {
             DiagnosticsView().environment(model)

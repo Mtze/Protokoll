@@ -17,6 +17,12 @@ final class AppModel {
     private(set) var isRecording = false
     private(set) var activeRecordingID: String?
 
+    // Live recording meter (N4 visible indicator).
+    private(set) var recordingLevels: [Float] = []
+    private(set) var recordingStartedAt: Date?
+    @ObservationIgnored private var levelTask: Task<Void, Never>?
+    @ObservationIgnored private let levelBarCount = 48
+
     // Search (F10)
     private(set) var searchResults: [SearchHit] = []
     private let index: SearchIndex? = try? SearchIndex(path: SearchIndex.defaultURL())
@@ -52,8 +58,13 @@ final class AppModel {
     @ObservationIgnored private var notifier: NewSessionNotifier?
     #endif
 
+    @ObservationIgnored private var didBootstrap = false
+
     /// Loads the session list and recovers any crashed recordings (ADR-3).
+    /// Idempotent: safe if the primary window reopens after being closed.
     func bootstrap() async {
+        guard !didBootstrap else { return }
+        didBootstrap = true
         await Recorder.recoverOrphans(in: container)
         reloadSessions()
         await rebuildIndex()
@@ -109,6 +120,7 @@ final class AppModel {
             try await recorder.start(session: session)
             isRecording = true
             activeRecordingID = session.id
+            startLevelMonitoring()
             #if os(macOS)
             // Optionally capture system audio in parallel (F2).
             if UserDefaults.standard.bool(forKey: SettingsKeys.captureSystemAudio) {
@@ -150,7 +162,35 @@ final class AppModel {
         }
         isRecording = false
         activeRecordingID = nil
+        stopLevelMonitoring()
         reloadSessions()
+    }
+
+    // MARK: Recording meter
+
+    private func startLevelMonitoring() {
+        recordingStartedAt = Date()
+        recordingLevels = Array(repeating: 0, count: levelBarCount)
+        let barCount = levelBarCount
+        levelTask?.cancel()
+        levelTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self, self.isRecording else { break }
+                let level = self.recorder.meter.value
+                var levels = self.recordingLevels
+                levels.append(level)
+                if levels.count > barCount { levels.removeFirst(levels.count - barCount) }
+                self.recordingLevels = levels
+                try? await Task.sleep(nanoseconds: 55_000_000)
+            }
+        }
+    }
+
+    private func stopLevelMonitoring() {
+        levelTask?.cancel()
+        levelTask = nil
+        recordingLevels = []
+        recordingStartedAt = nil
     }
 
     // MARK: Processing

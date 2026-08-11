@@ -15,6 +15,13 @@ final class WatchRecorder {
     private(set) var isRecording = false
     private(set) var lastStatus: String = ""
 
+    // Live recording meter (N4) + the last clip, kept for native playback.
+    private(set) var levels: [Float] = []
+    private(set) var recordingStartedAt: Date?
+    private(set) var lastRecordingURL: URL?
+    private var levelTask: Task<Void, Never>?
+    private let levelBarCount = 28
+
     static func requestMicrophoneAccess() async -> Bool {
         await withCheckedContinuation { continuation in
             AVAudioApplication.requestRecordPermission { granted in continuation.resume(returning: granted) }
@@ -39,11 +46,15 @@ final class WatchRecorder {
                 AVNumberOfChannelsKey: 1,
             ]
             let recorder = try AVAudioRecorder(url: url, settings: settings)
+            recorder.isMeteringEnabled = true
             recorder.record()
             self.recorder = recorder
             self.fileURL = url
             self.startedAt = Date()
             self.isRecording = true
+            self.recordingStartedAt = Date()
+            self.lastRecordingURL = nil
+            startLevelMonitoring()
         } catch {
             lastStatus = error.localizedDescription
         }
@@ -53,12 +64,41 @@ final class WatchRecorder {
         recorder?.stop()
         recorder = nil
         isRecording = false
+        stopLevelMonitoring()
         guard let fileURL, let startedAt else { return }
         let duration = Date().timeIntervalSince(startedAt)
         WatchTransfer.shared.send(audio: fileURL, startedAt: startedAt, duration: duration)
         lastStatus = String(localized: "watch.sent")
+        lastRecordingURL = fileURL  // keep for local playback
         self.fileURL = nil
         self.startedAt = nil
+    }
+
+    // MARK: Recording meter
+
+    private func startLevelMonitoring() {
+        levels = Array(repeating: 0, count: levelBarCount)
+        let barCount = levelBarCount
+        levelTask?.cancel()
+        levelTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self, self.isRecording, let recorder = self.recorder else { break }
+                recorder.updateMeters()
+                let level = AudioLevels.normalize(db: recorder.averagePower(forChannel: 0))
+                var levels = self.levels
+                levels.append(level)
+                if levels.count > barCount { levels.removeFirst(levels.count - barCount) }
+                self.levels = levels
+                try? await Task.sleep(nanoseconds: 60_000_000)
+            }
+        }
+    }
+
+    private func stopLevelMonitoring() {
+        levelTask?.cancel()
+        levelTask = nil
+        levels = []
+        recordingStartedAt = nil
     }
 }
 

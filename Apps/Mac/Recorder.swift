@@ -31,6 +31,10 @@ actor Recorder {
     private var startedAt: Date?
     private(set) var isRecording = false
 
+    /// Live input level, updated from the realtime tap and read by the meter UI.
+    /// A `let` of a `Sendable` type, so the main actor can read it without hops.
+    nonisolated let meter = AudioLevelMeter()
+
     /// Requests microphone access (TCC). Returns `true` if granted.
     static func requestMicrophoneAccess() async -> Bool {
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -54,8 +58,11 @@ actor Recorder {
             throw RecorderError.engineFailure(error.localizedDescription)
         }
 
+        let meter = self.meter
+        meter.reset()
         input.installTap(onBus: 0, bufferSize: 4096, format: format) { buffer, _ in
             writer.write(buffer)
+            meter.update(buffer)
         }
         do {
             engine.prepare()
@@ -81,6 +88,7 @@ actor Recorder {
         engine.stop()
         writer?.close()
         writer = nil
+        meter.reset()
         isRecording = false
 
         try await Self.convertCAFToM4A(caf: session.micCaptureURL, m4a: session.micAudioURL)

@@ -14,6 +14,12 @@ final class IOSAppModel {
     private(set) var isRecording = false
     private(set) var searchResults: [SearchHit] = []
 
+    // Live recording meter (N4 visible indicator).
+    private(set) var recordingLevels: [Float] = []
+    private(set) var recordingStartedAt: Date?
+    @ObservationIgnored private var levelTask: Task<Void, Never>?
+    @ObservationIgnored private let levelBarCount = 40
+
     private let recorder = IOSRecorder()
     private let index: SearchIndex? = try? SearchIndex(path: SearchIndex.defaultURL())
     private let location = LocationProvider()
@@ -64,6 +70,7 @@ final class IOSAppModel {
             if let geo { session.metadata.geo = geo; try container.store.save(session) }
             try await recorder.start(session: session)
             isRecording = true
+            startLevelMonitoring()
             reload()
         } catch { isRecording = false }
     }
@@ -76,7 +83,35 @@ final class IOSAppModel {
             try? container.store.save(updated)
         }
         isRecording = false
+        stopLevelMonitoring()
         reload()
+    }
+
+    // MARK: Recording meter
+
+    private func startLevelMonitoring() {
+        recordingStartedAt = Date()
+        recordingLevels = Array(repeating: 0, count: levelBarCount)
+        let barCount = levelBarCount
+        levelTask?.cancel()
+        levelTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self, self.isRecording else { break }
+                let level = await self.recorder.currentLevel()
+                var levels = self.recordingLevels
+                levels.append(level)
+                if levels.count > barCount { levels.removeFirst(levels.count - barCount) }
+                self.recordingLevels = levels
+                try? await Task.sleep(nanoseconds: 55_000_000)
+            }
+        }
+    }
+
+    private func stopLevelMonitoring() {
+        levelTask?.cancel()
+        levelTask = nil
+        recordingLevels = []
+        recordingStartedAt = nil
     }
 }
 
