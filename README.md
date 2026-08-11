@@ -10,6 +10,29 @@ container (N2). See [`ARCHITECTURE.md`](ARCHITECTURE.md) for the full spec and
 [`docs/IMPLEMENTATION_PLAN.md`](docs/IMPLEMENTATION_PLAN.md) for the milestone
 plan.
 
+## Install via Homebrew
+
+The easiest way to get the Mac app onto any Mac:
+
+```bash
+brew tap mtze/protokoll https://github.com/Mtze/Protokoll
+brew install --cask protokoll
+```
+
+The tap URL is required because the cask lives in this app repo rather than a
+`homebrew-protokoll` repo, so the one-argument `brew tap mtze/protokoll` form
+won't resolve. Each tagged release (`v*`) publishes a zipped app to GitHub
+Releases and auto-bumps [`Casks/protokoll.rb`](Casks/protokoll.rb).
+
+Until the release is Developer ID-signed and notarized (see below), the app is
+unsigned and macOS Gatekeeper blocks the first launch. Either approve it under
+**System Settings > Privacy & Security** ("Open Anyway"), or install with
+quarantine skipped:
+
+```bash
+brew install --cask --no-quarantine protokoll
+```
+
 ## What works today (M1)
 
 - **Mac menubar app** (`MenuBarExtra`): record the microphone, see a live
@@ -77,15 +100,38 @@ Apps/Mac/              menubar app + Recorder actor (ADR-3)
 Apps/Shared/           SwiftUI views, scheduler (ADR-4), String Catalog
 scripts/               vendored transcribe.sh (+ setup.sh)
 fastlane/              build/test lanes
+Casks/                 Homebrew cask (protokoll.rb) for `brew install --cask` (ADR-8)
 ```
 
-## Signing & notarization (manual)
+## Releases, signing & notarization
 
-Dev builds here are **unsigned** (`CODE_SIGNING_ALLOWED=NO`). For distribution
-the Mac app is **non-sandboxed, Developer ID-signed, notarized** (it execs
-user-installed CLIs which the App Sandbox forbids - decision #3). That requires
-a Developer ID certificate and an Apple Developer account and is a manual step
-outside this automated build.
+Distribution is automated by [`.github/workflows/release.yml`](.github/workflows/release.yml).
+Pushing a version tag builds the Mac app, zips it, publishes a GitHub Release,
+and bumps the Homebrew cask:
+
+```bash
+git tag v0.1.0 && git push origin v0.1.0
+```
+
+Dev and default release builds are **unsigned** (`CODE_SIGNING_ALLOWED=NO`). For
+a clean first launch the Mac app should be **non-sandboxed, Developer ID-signed,
+notarized** (it execs user-installed CLIs which the App Sandbox forbids -
+decision #3, ADR-8). The release workflow's sign + notarize step is wired but
+stays off until these repo secrets exist; add them to flip it on with no code
+change:
+
+| Secret | Purpose |
+|--------|---------|
+| `MACOS_CERTIFICATE` | base64 of the Developer ID Application `.p12` |
+| `MACOS_CERTIFICATE_PWD` | password for that `.p12` |
+| `MACOS_SIGN_IDENTITY` | e.g. `Developer ID Application: Name (TEAMID)` |
+| `KEYCHAIN_PASSWORD` | throwaway password for the CI keychain |
+| `NOTARY_APPLE_ID` | Apple ID email for `notarytool` |
+| `NOTARY_PASSWORD` | app-specific password for that Apple ID |
+| `NOTARY_TEAM_ID` | Developer Team ID |
+
+The cask-bump step pushes to `main`; if `main` is branch-protected, bump
+[`Casks/protokoll.rb`](Casks/protokoll.rb) via a PR instead.
 
 ## Testing
 

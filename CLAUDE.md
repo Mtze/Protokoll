@@ -84,6 +84,11 @@ Dev env overrides: see the table in `README.md`.
 - **M5 (done):** new-recording notifications with a Process action (F13).
 - **M6 (foundation):** watchOS target + ADR-6 (WatchConnectivity -> iPhone ->
   container); iOS `WatchReceiver` files watch recordings into the container.
+- **Distribution (ADR-8):** the Mac app ships as a Homebrew cask
+  (`Casks/protokoll.rb`) served from this repo via a custom tap URL. A
+  tag-triggered workflow (`.github/workflows/release.yml`) builds, optionally
+  Developer ID-signs + notarizes (secrets-gated, off by default), zips, publishes
+  a GitHub Release, and auto-bumps the cask.
 
 Session deletion: `Container.deleteSession(_:)` removes the whole session folder
 (Trash on macOS, outright elsewhere); `AppModel`/`IOSAppModel` `deleteSession(_:)`
