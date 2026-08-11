@@ -150,6 +150,7 @@ struct LibraryView: View {
                             Text(project.name)
                         } icon: {
                             Image(nsImage: projectDotImage(hex: project.color, checked: projectFilter == project.id))
+                                .renderingMode(.original)
                         }
                     }
                 }
@@ -239,7 +240,7 @@ private struct SessionRow: View {
 /// menu icons as monochrome templates, so `.foregroundStyle` is dropped; an
 /// `NSImage` with `isTemplate = false` actually shows the project color. A white
 /// checkmark is drawn on the selected one.
-private func projectDotImage(hex: String, checked: Bool, diameter: CGFloat = 12) -> NSImage {
+func projectDotImage(hex: String, checked: Bool, diameter: CGFloat = 12) -> NSImage {
     let size = NSSize(width: diameter, height: diameter)
     let image = NSImage(size: size)
     image.lockFocus()
