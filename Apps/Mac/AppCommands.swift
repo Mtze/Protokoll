@@ -29,6 +29,7 @@ struct DetailActions {
         let run: () -> Void
     }
     let primary: Primary?
+    let rename: () -> Void
     let delete: () -> Void
     let reveal: () -> Void
     let copyDocument: () -> Void
@@ -36,6 +37,9 @@ struct DetailActions {
     let showTranscript: () -> Void
     /// Toggle playback, or `nil` when the session has no mic audio.
     let playPause: (() -> Void)?
+    /// Projects this session belongs to (for the Assign-to-Project checkmarks).
+    let assignedProjectIDs: Set<String>
+    let toggleProject: (Project) -> Void
 }
 
 struct DetailActionsKey: FocusedValueKey {
@@ -82,9 +86,27 @@ struct ProtokollCommands: Commands {
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(detailActions?.primary == nil)
 
+            Button("action.rename") { detailActions?.rename() }
+                .disabled(detailActions == nil)
+
             Button("action.reveal") { detailActions?.reveal() }
                 .keyboardShortcut("r", modifiers: [.command, .shift])
                 .disabled(detailActions == nil)
+
+            Menu("project.assign") {
+                ForEach(model.projects) { project in
+                    Button {
+                        detailActions?.toggleProject(project)
+                    } label: {
+                        if detailActions?.assignedProjectIDs.contains(project.id) == true {
+                            Label(project.name, systemImage: "checkmark")
+                        } else {
+                            Text(project.name)
+                        }
+                    }
+                }
+            }
+            .disabled(detailActions == nil || model.projects.isEmpty)
 
             Button("action.delete") { detailActions?.delete() }
                 .keyboardShortcut(.delete, modifiers: .command)

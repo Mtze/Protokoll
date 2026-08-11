@@ -16,6 +16,8 @@ struct LibraryView: View {
     @State private var searchText = ""
     @State private var showingConsent = false
     @State private var sessionToDelete: Session?
+    @State private var sessionToRename: Session?
+    @State private var renameText = ""
     @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
     @State private var showOnboarding = false
     @State private var projectFilter: String?
@@ -36,34 +38,12 @@ struct LibraryView: View {
 
     var body: some View {
         NavigationSplitView {
-            List(visibleSessions, selection: $selection) { session in
-                SessionRow(session: session, snippet: snippet(for: session.id),
-                           projects: model.projects(for: session)).tag(session.id)
-                    .contextMenu {
-                        Button(role: .destructive) { sessionToDelete = session } label: {
-                            Label("action.delete", systemImage: "trash")
-                        }
-                    }
-                    .swipeActions(edge: .trailing) {
-                        Button(role: .destructive) { sessionToDelete = session } label: {
-                            Label("action.delete", systemImage: "trash")
-                        }
-                    }
-            }
-            // Wide enough that title, state, date and duration all show without resizing.
-            .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 440)
-            .navigationTitle("library.title")
-            .safeAreaInset(edge: .top, spacing: 0) { sidebarHeader }
-            .overlay {
-                if model.sessions.isEmpty {
-                    ContentUnavailableView("library.empty.title", systemImage: "waveform", description: Text("library.empty.subtitle"))
-                } else if !searchText.isEmpty && visibleSessions.isEmpty {
-                    ContentUnavailableView.search(text: searchText)
-                }
-            }
+            sidebar
         } detail: {
             if let selection, let session = model.sessions.first(where: { $0.id == selection }) {
-                SessionDetailView(session: session, onDelete: { sessionToDelete = $0 })
+                SessionDetailView(session: session,
+                                  onDelete: { sessionToDelete = $0 },
+                                  onRename: { beginRename($0) })
             } else {
                 ContentUnavailableView("library.selectPrompt", systemImage: "sidebar.left")
             }
@@ -94,26 +74,99 @@ struct LibraryView: View {
                 }
             }
         }
-        .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
-            Button("consent.confirm") { Task { await model.startRecording() } }
-            Button("common.cancel", role: .cancel) {}
-        } message: {
-            Text("consent.message")
+        .modifier(SessionDialogs(model: model, selection: $selection,
+                                 showingConsent: $showingConsent,
+                                 sessionToDelete: $sessionToDelete,
+                                 sessionToRename: $sessionToRename,
+                                 renameText: $renameText))
+    }
+
+    /// The session list (sidebar column), extracted to keep `body` type-checkable.
+    private var sidebar: some View {
+        List(visibleSessions, selection: $selection) { session in
+            SessionRow(session: session, snippet: snippet(for: session.id),
+                       projects: model.projects(for: session)).tag(session.id)
+                .contextMenu { sessionMenuItems(for: session) }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) { sessionToDelete = session } label: {
+                        Label("action.delete", systemImage: "trash")
+                    }
+                }
         }
-        .confirmationDialog(
-            "delete.confirm.title",
-            isPresented: Binding(get: { sessionToDelete != nil }, set: { if !$0 { sessionToDelete = nil } }),
-            titleVisibility: .visible,
-            presenting: sessionToDelete
-        ) { session in
-            Button("action.delete", role: .destructive) {
-                if selection == session.id { selection = nil }
-                model.deleteSession(session)
+        // Wide enough that title, state, date and duration all show without resizing.
+        .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 440)
+        .navigationTitle("library.title")
+        .safeAreaInset(edge: .top, spacing: 0) { sidebarHeader }
+        .overlay {
+            if model.sessions.isEmpty {
+                ContentUnavailableView("library.empty.title", systemImage: "waveform", description: Text("library.empty.subtitle"))
+            } else if !searchText.isEmpty && visibleSessions.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             }
-            Button("common.cancel", role: .cancel) {}
-        } message: { _ in
-            Text("delete.confirm.message")
         }
+    }
+
+    /// Opens the rename dialog for `session`, prefilled with its current title.
+    private func beginRename(_ session: Session) {
+        renameText = session.displayTitle
+        sessionToRename = session
+    }
+
+    /// The per-session actions shown in the sidebar row context menu, mirrored by
+    /// the "Session" system menu (`ProtokollCommands`).
+    @ViewBuilder private func sessionMenuItems(for session: Session) -> some View {
+        switch SessionAction.forDetail(status: session.metadata.pipeline.status,
+                                       hasActiveJob: model.activeJob(for: session.id) != nil) {
+        case .process:
+            Button { model.process(session) } label: { Label("action.process", systemImage: "gearshape.2") }
+        case .retry:
+            Button { model.retry(session) } label: { Label("action.retry", systemImage: "arrow.clockwise") }
+        case .regenerate:
+            Button { model.regenerateProtocol(session) } label: {
+                Label("action.regenerate", systemImage: "arrow.triangle.2.circlepath")
+            }
+        case .none:
+            EmptyView()
+        }
+
+        Button { beginRename(session) } label: { Label("action.rename", systemImage: "pencil") }
+        Button { reveal(session) } label: { Label("action.reveal", systemImage: "folder") }
+
+        if !model.projects.isEmpty {
+            Menu {
+                ForEach(model.projects) { project in
+                    Button { toggleProject(project, for: session) } label: {
+                        if session.metadata.projects.contains(project.id) {
+                            Label { Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)") }
+                                icon: { Image(systemName: "checkmark") }
+                        } else {
+                            Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)")
+                        }
+                    }
+                }
+            } label: {
+                Label("project.assign", systemImage: "tag")
+            }
+        }
+
+        Divider()
+
+        Button(role: .destructive) { sessionToDelete = session } label: {
+            Label("action.delete", systemImage: "trash")
+        }
+    }
+
+    /// Toggles `session`'s membership in `project` and persists (F7).
+    private func toggleProject(_ project: Project, for session: Session) {
+        var ids = session.metadata.projects
+        if let i = ids.firstIndex(of: project.id) { ids.remove(at: i) } else { ids.append(project.id) }
+        model.setProjects(ids, for: session)
+    }
+
+    private func reveal(_ session: Session) {
+        #if canImport(AppKit)
+        NSWorkspace.shared.activateFileViewerSelecting([session.folder])
+        #endif
     }
 
     /// The sidebar header bar: the active project filter (when any projects
@@ -202,6 +255,50 @@ struct LibraryView: View {
     private func snippet(for id: String) -> String? {
         guard !searchText.isEmpty else { return nil }
         return model.searchResults.first { $0.sessionID == id }?.snippet
+    }
+}
+
+/// The library's consent / delete / rename dialogs, factored out of `body` to
+/// keep the main view's modifier chain within the type-checker's budget.
+private struct SessionDialogs: ViewModifier {
+    let model: AppModel
+    @Binding var selection: Session.ID?
+    @Binding var showingConsent: Bool
+    @Binding var sessionToDelete: Session?
+    @Binding var sessionToRename: Session?
+    @Binding var renameText: String
+
+    func body(content: Content) -> some View {
+        content
+            .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
+                Button("consent.confirm") { Task { await model.startRecording() } }
+                Button("common.cancel", role: .cancel) {}
+            } message: {
+                Text("consent.message")
+            }
+            .confirmationDialog(
+                "delete.confirm.title",
+                isPresented: Binding(get: { sessionToDelete != nil }, set: { if !$0 { sessionToDelete = nil } }),
+                titleVisibility: .visible,
+                presenting: sessionToDelete
+            ) { session in
+                Button("action.delete", role: .destructive) {
+                    if selection == session.id { selection = nil }
+                    model.deleteSession(session)
+                }
+                Button("common.cancel", role: .cancel) {}
+            } message: { _ in
+                Text("delete.confirm.message")
+            }
+            .alert(
+                "rename.title",
+                isPresented: Binding(get: { sessionToRename != nil }, set: { if !$0 { sessionToRename = nil } }),
+                presenting: sessionToRename
+            ) { session in
+                TextField("rename.placeholder", text: $renameText)
+                Button("common.save") { model.rename(session, to: renameText) }
+                Button("common.cancel", role: .cancel) {}
+            }
     }
 }
 

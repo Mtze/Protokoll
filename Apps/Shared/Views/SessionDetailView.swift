@@ -11,6 +11,9 @@ struct SessionDetailView: View {
     /// Invoked when the user asks to delete this session; the library owns the
     /// confirmation dialog and selection reset.
     var onDelete: (Session) -> Void = { _ in }
+    /// Invoked when the user asks to rename this session; the library owns the
+    /// rename dialog.
+    var onRename: (Session) -> Void = { _ in }
 
     enum Pane: String, CaseIterable, Identifiable { case protocolDoc, transcript; var id: String { rawValue } }
     @State private var pane: Pane = .protocolDoc
@@ -56,12 +59,15 @@ struct SessionDetailView: View {
         let playPause: (() -> Void)? = hasMicAudio ? { audioModel.playPause() } : nil
         return DetailActions(
             primary: primary,
+            rename: { onRename(session) },
             delete: { onDelete(session) },
             reveal: { revealInFinder() },
             copyDocument: { if let body = documentBody { DocumentPasteboard.copy(body) } },
             showProtocol: { pane = .protocolDoc },
             showTranscript: { pane = .transcript },
-            playPause: playPause
+            playPause: playPause,
+            assignedProjectIDs: Set(session.metadata.projects),
+            toggleProject: { toggleProject($0) }
         )
     }
 
@@ -191,16 +197,6 @@ struct SessionDetailView: View {
                 .help("project.assign")
                 .accessibilityLabel(Text("project.assign"))
             }
-            Button { revealInFinder() } label: {
-                Image(systemName: "folder")
-            }
-            .help("action.reveal")
-            .accessibilityLabel(Text("action.reveal"))
-            Button(role: .destructive) { onDelete(session) } label: {
-                Image(systemName: "trash")
-            }
-            .help("action.delete")
-            .accessibilityLabel(Text("action.delete"))
         }
     }
 

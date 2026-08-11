@@ -78,7 +78,9 @@ brew install --cask --no-quarantine protokoll
 - Native **playback**: scrubber, play/pause, and speed; the **transcript is
   tap-to-seek** (click a line to jump the audio there). Rendered Markdown
   summary with **Copy** and **Export**.
-- **Delete** sessions (moved to the Trash on macOS).
+- **Session actions** on macOS live in the sidebar row's right-click menu (and
+  the "Session" system menu): Process / Retry / Regenerate, **Rename**, Reveal in
+  Finder, Assign to Project, and **Delete** (moved to the Trash).
 
 **Keyboard control** (macOS): the app is fully operable from the keyboard via a
 "Session" menu and the standard Window menu. Shortcuts:
