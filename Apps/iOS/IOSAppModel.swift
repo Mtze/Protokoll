@@ -60,6 +60,15 @@ final class IOSAppModel {
         searchResults = (try? await index.search(text)) ?? []
     }
 
+    /// Deletes a session: removes its folder from disk, drops it from the list,
+    /// and prunes it from the FTS index (ADR-2).
+    func deleteSession(_ session: Session) {
+        try? container.deleteSession(session)
+        sessions.removeAll { $0.id == session.id }
+        let id = session.id
+        Task { [index] in try? await index?.remove(id: id) }
+    }
+
     // MARK: Recording
 
     func startRecording(title: String?, includeGeotag: Bool) async {

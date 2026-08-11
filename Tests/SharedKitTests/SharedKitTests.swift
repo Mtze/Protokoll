@@ -45,6 +45,38 @@ private func makeTempContainer() throws -> Container {
         #expect(sessions.count == 1)
     }
 
+    @Test func deleteRemovesTheSessionFolder() throws {
+        let container = try makeTempContainer()
+        let session = try container.createSession(device: .mac)
+        #expect(FileManager.default.fileExists(atPath: session.folder.path))
+
+        try container.deleteSession(session)
+
+        #expect(!FileManager.default.fileExists(atPath: session.folder.path))
+        #expect(try container.allSessions().isEmpty)
+    }
+
+    @Test func deleteMissingSessionDoesNotThrow() throws {
+        let container = try makeTempContainer()
+        let session = try container.createSession(device: .mac)
+        try container.deleteSession(session)
+        // Deleting the already-gone session again is a no-op, not an error.
+        try container.deleteSession(session)
+        #expect(try container.allSessions().isEmpty)
+    }
+
+    @Test func deleteLeavesOtherSessionsUntouched() throws {
+        let container = try makeTempContainer()
+        let keep = try container.createSession(device: .mac, startedAt: Date(timeIntervalSince1970: 1000))
+        let remove = try container.createSession(device: .ios, startedAt: Date(timeIntervalSince1970: 2000))
+
+        try container.deleteSession(remove)
+
+        let remaining = try container.allSessions()
+        #expect(remaining.map(\.id) == [keep.id])
+        #expect(FileManager.default.fileExists(atPath: keep.folder.path))
+    }
+
     @Test func projectsRoundTrip() throws {
         let container = try makeTempContainer()
         #expect(try container.loadProjects().isEmpty)

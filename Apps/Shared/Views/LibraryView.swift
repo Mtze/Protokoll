@@ -14,6 +14,7 @@ struct LibraryView: View {
     @State private var selection: Session.ID?
     @State private var searchText = ""
     @State private var showingConsent = false
+    @State private var sessionToDelete: Session?
 
     /// Sessions to show: full list, or the FTS-matched subset when searching.
     private var visibleSessions: [Session] {
@@ -26,6 +27,11 @@ struct LibraryView: View {
         NavigationSplitView {
             List(visibleSessions, selection: $selection) { session in
                 SessionRow(session: session, snippet: snippet(for: session.id)).tag(session.id)
+                    .contextMenu {
+                        Button(role: .destructive) { sessionToDelete = session } label: {
+                            Label("action.delete", systemImage: "trash")
+                        }
+                    }
             }
             // Wide enough that title, state, date and duration all show without resizing.
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 440)
@@ -39,7 +45,7 @@ struct LibraryView: View {
             }
         } detail: {
             if let selection, let session = model.sessions.first(where: { $0.id == selection }) {
-                SessionDetailView(session: session)
+                SessionDetailView(session: session, onDelete: { sessionToDelete = $0 })
             } else {
                 ContentUnavailableView("library.selectPrompt", systemImage: "sidebar.left")
             }
@@ -75,6 +81,20 @@ struct LibraryView: View {
             Button("common.cancel", role: .cancel) {}
         } message: {
             Text("consent.message")
+        }
+        .confirmationDialog(
+            "delete.confirm.title",
+            isPresented: Binding(get: { sessionToDelete != nil }, set: { if !$0 { sessionToDelete = nil } }),
+            titleVisibility: .visible,
+            presenting: sessionToDelete
+        ) { session in
+            Button("action.delete", role: .destructive) {
+                if selection == session.id { selection = nil }
+                model.deleteSession(session)
+            }
+            Button("common.cancel", role: .cancel) {}
+        } message: { _ in
+            Text("delete.confirm.message")
         }
     }
 

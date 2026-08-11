@@ -6,6 +6,7 @@ import SharedKit
 struct LibraryListView: View {
     @Environment(IOSAppModel.self) private var model
     @State private var searchText = ""
+    @State private var sessionToDelete: Session?
 
     private var visible: [Session] {
         guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return model.sessions }
@@ -27,6 +28,11 @@ struct LibraryListView: View {
                         }
                     }
                 }
+                .swipeActions(edge: .trailing) {
+                    Button(role: .destructive) { sessionToDelete = session } label: {
+                        Label("action.delete", systemImage: "trash")
+                    }
+                }
             }
             .overlay {
                 if model.sessions.isEmpty {
@@ -37,6 +43,17 @@ struct LibraryListView: View {
             .searchable(text: $searchText, prompt: Text("library.search.prompt"))
             .task(id: searchText) { await model.search(searchText) }
             .refreshable { model.reload(); await model.rebuildIndex() }
+            .confirmationDialog(
+                "delete.confirm.title",
+                isPresented: Binding(get: { sessionToDelete != nil }, set: { if !$0 { sessionToDelete = nil } }),
+                titleVisibility: .visible,
+                presenting: sessionToDelete
+            ) { session in
+                Button("action.delete", role: .destructive) { model.deleteSession(session) }
+                Button("common.cancel", role: .cancel) {}
+            } message: { _ in
+                Text("delete.confirm.message")
+            }
         }
     }
 }

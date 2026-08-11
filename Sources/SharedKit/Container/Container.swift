@@ -82,6 +82,20 @@ public struct Container: Sendable {
         try allSessions().first { $0.metadata.id == id }
     }
 
+    /// Deletes a session's entire folder (audio, transcript, protocol, metadata)
+    /// from disk. On macOS the folder is moved to the Trash so a deletion is
+    /// recoverable; on other platforms it is removed outright. A missing folder
+    /// is a no-op, so deleting an already-gone session never throws.
+    public func deleteSession(_ session: Session) throws {
+        let fileManager = FileManager.default
+        guard fileManager.fileExists(atPath: session.folder.path) else { return }
+        #if os(macOS)
+        try fileManager.trashItem(at: session.folder, resultingItemURL: nil)
+        #else
+        try fileManager.removeItem(at: session.folder)
+        #endif
+    }
+
     // MARK: Projects (F7)
 
     /// Reads the project/tag definitions, returning an empty list if none exist.

@@ -76,6 +76,11 @@ Dev env overrides: see the table in `README.md`.
 - **M6 (foundation):** watchOS target + ADR-6 (WatchConnectivity -> iPhone ->
   container); iOS `WatchReceiver` files watch recordings into the container.
 
+Session deletion: `Container.deleteSession(_:)` removes the whole session folder
+(Trash on macOS, outright elsewhere); `AppModel`/`IOSAppModel` `deleteSession(_:)`
+also prune the FTS index. Mac exposes it via a sidebar context menu + a detail
+trash button (destructive confirmation); iOS via swipe-to-delete + confirmation.
+
 Targets build via XcodeGen: `MeetingNotes-Mac`, `MeetingNotes-iOS`,
 `MeetingNotes-Watch`. See "Manual verification required" in the PR/report for
 what can't be checked headlessly (live mic, permissions, real iCloud, signing).

@@ -154,6 +154,23 @@
         }
       }
     },
+    "action.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
     "app.name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -167,6 +184,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "MeetingNotes"
+          }
+        }
+      }
+    },
+    "delete.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahme, Transkript und Protokoll dieser Sitzung werden gelöscht. Auf dem Mac wandert der Ordner in den Papierkorb."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording, transcript, and protocol for this session will be deleted. On the Mac the folder moves to the Trash."
+          }
+        }
+      }
+    },
+    "delete.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sitzung löschen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this session?"
           }
         }
       }

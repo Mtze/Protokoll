@@ -227,6 +227,15 @@ final class AppModel {
         scheduler.enqueueSummarize(session, force: true)
     }
 
+    /// Deletes a session: removes its folder from disk (Trash on macOS), drops it
+    /// from the in-memory list, and prunes it from the FTS index (ADR-2).
+    func deleteSession(_ session: Session) {
+        try? container.deleteSession(session)
+        sessions.removeAll { $0.id == session.id }
+        let id = session.id
+        Task { [index] in try? await index?.remove(id: id) }
+    }
+
     /// Sessions that still need processing (F13 surfacing).
     var unprocessedSessions: [Session] {
         sessions.filter { $0.metadata.pipeline.status == .recorded }

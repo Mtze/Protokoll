@@ -85,6 +85,25 @@ private func makeIndex() throws -> SearchIndex {
         #expect(try await freshOnNewPath.search("zeta").count == 1)
     }
 
+    @Test func removeDropsSessionFromResults() async throws {
+        let container = makeContainer()
+        let session = try container.createSession(device: .mac, title: "Deletable")
+        try Data("this mentions the mango keyword".utf8).write(to: session.transcriptURL)
+        let other = try container.createSession(device: .mac, title: "Keeper")
+        try Data("this also mentions the mango keyword".utf8).write(to: other.transcriptURL)
+
+        let index = try makeIndex()
+        try await index.rebuild(from: container)
+        #expect(try await index.search("mango").count == 2)
+
+        try await index.remove(id: session.id)
+
+        let hits = try await index.search("mango")
+        #expect(hits.count == 1)
+        #expect(hits.allSatisfy { $0.sessionID != session.id })
+        #expect(hits.first?.sessionID == other.id)
+    }
+
     @Test func punctuationInQueryDoesNotThrow() async throws {
         let container = makeContainer()
         let session = try container.createSession(device: .mac, title: "Q")

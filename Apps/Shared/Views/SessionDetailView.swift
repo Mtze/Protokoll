@@ -8,6 +8,9 @@ import SharedKit
 struct SessionDetailView: View {
     @Environment(AppModel.self) private var model
     let session: Session
+    /// Invoked when the user asks to delete this session; the library owns the
+    /// confirmation dialog and selection reset.
+    var onDelete: (Session) -> Void = { _ in }
 
     enum Pane: String, CaseIterable, Identifiable { case protocolDoc, transcript; var id: String { rawValue } }
     @State private var pane: Pane = .protocolDoc
@@ -125,6 +128,11 @@ struct SessionDetailView: View {
             }
             .help("action.reveal")
             .accessibilityLabel(Text("action.reveal"))
+            Button(role: .destructive) { onDelete(session) } label: {
+                Image(systemName: "trash")
+            }
+            .help("action.delete")
+            .accessibilityLabel(Text("action.delete"))
         }
     }
 
