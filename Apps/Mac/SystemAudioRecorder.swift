@@ -1,4 +1,5 @@
 import AVFoundation
+import CoreGraphics
 import Foundation
 import ScreenCaptureKit
 import SharedKit
@@ -6,29 +7,36 @@ import SharedKit
 /// Optional system-audio capture for calls (F2) via ScreenCaptureKit's
 /// audio-only `SCStream` - no BlackHole or kernel extension needed. Writes a
 /// separate `system.m4a` track alongside the mic, which also gives rough
-/// speaker separation later (NH1) for free. Requires Screen Recording
-/// permission.
+/// speaker separation later (NH1) for free.
 ///
-/// An `actor` coordinating the stream; the stream output writes AAC via an
-/// `AVAssetWriter`.
-actor SystemAudioRecorder {
+/// Requires Screen Recording permission; without it `SCShareableContent` yields
+/// nothing, which is the usual reason "only my mic is recorded". We preflight
+/// the permission and throw a clear error instead of failing silently.
+actor SystemAudioRecorder: SystemAudioCapturing {
     private var stream: SCStream?
     private var output: AudioStreamOutput?
 
     enum SystemAudioError: Error, LocalizedError {
+        case permissionDenied
         case noDisplay
-        case notSupported
 
         var errorDescription: String? {
             switch self {
-            case .noDisplay: return "No display available for system-audio capture."
-            case .notSupported: return "System-audio capture requires macOS 13 or later."
+            case .permissionDenied: return String(localized: "systemaudio.error.permission")
+            case .noDisplay: return String(localized: "systemaudio.error.noDisplay")
             }
         }
     }
 
     /// Starts capturing system audio to `url` (`system.m4a`).
     func start(to url: URL) async throws {
+        // Screen Recording permission is required for system audio. Preflight it
+        // and trigger the prompt / add the app to the list if it is missing.
+        guard CGPreflightScreenCaptureAccess() else {
+            _ = CGRequestScreenCaptureAccess()
+            throw SystemAudioError.permissionDenied
+        }
+
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
         guard let display = content.displays.first else { throw SystemAudioError.noDisplay }
         let filter = SCContentFilter(display: display, excludingApplications: [], exceptingWindows: [])
@@ -36,9 +44,13 @@ actor SystemAudioRecorder {
         let configuration = SCStreamConfiguration()
         configuration.capturesAudio = true
         configuration.excludesCurrentProcessAudio = true
-        // A tiny video size keeps the (unused) video path cheap; we only consume audio.
-        configuration.width = 2
-        configuration.height = 2
+        configuration.sampleRate = 48_000
+        configuration.channelCount = 2
+        // We only consume audio, but a valid (non-degenerate) video size is
+        // required for the stream to start; keep it small and cheap.
+        configuration.width = 128
+        configuration.height = 128
+        configuration.minimumFrameInterval = CMTime(value: 1, timescale: 1)
 
         let output = try AudioStreamOutput(url: url)
         let stream = SCStream(filter: filter, configuration: configuration, delegate: nil)
@@ -49,21 +61,26 @@ actor SystemAudioRecorder {
         self.output = output
     }
 
-    /// Stops capture and finalizes `system.m4a`.
-    func stop() async {
+    /// Stops capture, finalizes `system.m4a`, and reports whether any audio was
+    /// actually written (so the app can warn when nothing was captured).
+    func stop() async -> Bool {
         try? await stream?.stopCapture()
-        await output?.finish()
+        let captured = await output?.finish() ?? false
         stream = nil
         output = nil
+        return captured
     }
 }
 
 /// Writes captured audio sample buffers to an `.m4a` (AAC) via `AVAssetWriter`.
+/// All mutable state is touched only on `queue` (the stream's sample-handler
+/// queue and the finish continuation), so `@unchecked Sendable` is safe.
 private final class AudioStreamOutput: NSObject, SCStreamOutput, @unchecked Sendable {
     let queue = DispatchQueue(label: "systemaudio.write")
     private let writer: AVAssetWriter
     private let input: AVAssetWriterInput
     private var started = false
+    private var sampleCount = 0
 
     init(url: URL) throws {
         try? FileManager.default.removeItem(at: url)
@@ -81,18 +98,26 @@ private final class AudioStreamOutput: NSObject, SCStreamOutput, @unchecked Send
     func stream(_ stream: SCStream, didOutputSampleBuffer sampleBuffer: CMSampleBuffer, of type: SCStreamOutputType) {
         guard type == .audio, sampleBuffer.isValid, CMSampleBufferDataIsReady(sampleBuffer) else { return }
         if !started {
-            writer.startWriting()
+            guard writer.startWriting() else { return }
             writer.startSession(atSourceTime: CMSampleBufferGetPresentationTimeStamp(sampleBuffer))
             started = true
         }
-        if input.isReadyForMoreMediaData {
-            input.append(sampleBuffer)
+        if input.isReadyForMoreMediaData, input.append(sampleBuffer) {
+            sampleCount += 1
         }
     }
 
-    func finish() async {
-        guard started else { return }
-        input.markAsFinished()
-        await writer.finishWriting()
+    /// Finalizes on `queue` (where `started`/`sampleCount` are mutated) and
+    /// reports whether the file has real audio.
+    func finish() async -> Bool {
+        await withCheckedContinuation { (continuation: CheckedContinuation<Bool, Never>) in
+            queue.async {
+                guard self.started else { continuation.resume(returning: false); return }
+                self.input.markAsFinished()
+                self.writer.finishWriting {
+                    continuation.resume(returning: self.writer.status == .completed && self.sampleCount > 0)
+                }
+            }
+        }
     }
 }

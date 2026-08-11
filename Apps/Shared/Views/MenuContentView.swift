@@ -21,6 +21,10 @@ struct MenuContentView: View {
                     .frame(height: 28)
             }
 
+            if let error = model.systemAudioError {
+                SystemAudioBanner(message: error)
+            }
+
             if !model.scheduler.jobs.isEmpty {
                 Divider()
                 jobsSection

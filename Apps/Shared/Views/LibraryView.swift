@@ -1,5 +1,8 @@
 import SwiftUI
 import SharedKit
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// The library window: a `NavigationSplitView` listing sessions with a detail
 /// pane showing transcript and protocol (F6). HIG-correct, Dark Mode and
@@ -43,6 +46,14 @@ struct LibraryView: View {
         }
         .searchable(text: $searchText, prompt: Text("library.search.prompt"))
         .task(id: searchText) { await model.search(searchText) }
+        .safeAreaInset(edge: .top) {
+            if let error = model.systemAudioError {
+                SystemAudioBanner(message: error)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.regularMaterial)
+            }
+        }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
             if model.isRecording {
@@ -123,6 +134,31 @@ private struct SessionRow: View {
         }
         .padding(.vertical, 2)
         .help(status.nameKey)
+    }
+}
+
+/// A tappable warning shown when system-audio capture (F2) failed; opens the
+/// Screen Recording settings pane.
+struct SystemAudioBanner: View {
+    let message: String
+
+    var body: some View {
+        Button { Self.openScreenRecordingSettings() } label: {
+            Label(message, systemImage: "speaker.slash.fill")
+                .font(.caption)
+                .foregroundStyle(.orange)
+                .multilineTextAlignment(.leading)
+        }
+        .buttonStyle(.plain)
+        .help("systemaudio.openSettings")
+    }
+
+    static func openScreenRecordingSettings() {
+        #if canImport(AppKit)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+            NSWorkspace.shared.open(url)
+        }
+        #endif
     }
 }
 

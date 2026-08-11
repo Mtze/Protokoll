@@ -4,6 +4,74 @@
     "·" : {
 
     },
+    "systemaudio.error.permission" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube die Bildschirmaufnahme, um den Systemton (z. B. Discord, Anrufe) aufzunehmen: Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme, danach App neu starten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Screen Recording to capture system audio (e.g. Discord, calls): System Settings › Privacy & Security › Screen Recording, then restart the app."
+          }
+        }
+      }
+    },
+    "systemaudio.error.noDisplay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Bildschirm für die Systemton-Aufnahme verfügbar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No display available for system-audio capture."
+          }
+        }
+      }
+    },
+    "systemaudio.error.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es wurde kein Systemton aufgenommen. Läuft gerade Audio, und ist die Bildschirmaufnahme erlaubt?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No system audio was captured. Is anything playing, and is Screen Recording allowed?"
+          }
+        }
+      }
+    },
+    "systemaudio.openSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmaufnahme-Einstellungen öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Screen Recording settings"
+          }
+        }
+      }
+    },
     "action.newRecording" : {
       "extractionState" : "manual",
       "localizations" : {

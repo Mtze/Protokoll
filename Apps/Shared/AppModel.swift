@@ -35,9 +35,12 @@ final class AppModel {
 
     private let recorder = Recorder()
     #if os(macOS)
-    private let systemRecorder = SystemAudioRecorder()
+    private let systemAudio = SystemAudioController(capture: SystemAudioRecorder())
     private var capturingSystemAudio = false
     #endif
+    /// Surfaced when system-audio capture (F2) was requested but failed or
+    /// produced nothing - so it never fails silently to mic-only again.
+    private(set) var systemAudioError: String?
 
     /// Shared reference so the `NSApplicationDelegate` can gate quit on active
     /// work (confirm-on-quit, ADR-4).
@@ -121,15 +124,14 @@ final class AppModel {
             isRecording = true
             activeRecordingID = session.id
             startLevelMonitoring()
+            systemAudioError = nil
             #if os(macOS)
-            // Optionally capture system audio in parallel (F2).
+            // Optionally capture system audio in parallel (F2). Surface failures
+            // instead of silently recording mic-only.
             if UserDefaults.standard.bool(forKey: SettingsKeys.captureSystemAudio) {
-                do {
-                    try await systemRecorder.start(to: session.systemAudioURL)
-                    capturingSystemAudio = true
-                } catch {
-                    capturingSystemAudio = false  // Mic-only if permission/display unavailable.
-                }
+                let outcome = await systemAudio.begin(to: session.systemAudioURL)
+                capturingSystemAudio = outcome.capturing
+                systemAudioError = outcome.error
             }
             #endif
             reloadSessions()
@@ -141,20 +143,23 @@ final class AppModel {
     func stopRecording() async {
         guard isRecording else { return }
         #if os(macOS)
-        var hadSystemAudio = false
+        let requestedSystem = capturingSystemAudio
+        var systemProduced = false
         if capturingSystemAudio {
-            await systemRecorder.stop()
+            systemProduced = await systemAudio.end()
             capturingSystemAudio = false
-            hadSystemAudio = true
+            if !systemProduced {
+                systemAudioError = String(localized: "systemaudio.error.empty")
+            }
         }
         #endif
         do {
             var session = try await recorder.stop()
             session.metadata.pipeline.status = .recorded
             #if os(macOS)
-            if hadSystemAudio, FileManager.default.fileExists(atPath: session.systemAudioURL.path) {
-                session.metadata.audioTracks = [.mic, .system]
-            }
+            let producedFile = systemProduced && FileManager.default.fileExists(atPath: session.systemAudioURL.path)
+            session.metadata.audioTracks = AudioTrackResolver.tracks(
+                systemRequested: requestedSystem, systemProducedAudio: producedFile)
             #endif
             try container.store.save(session)
         } catch {
