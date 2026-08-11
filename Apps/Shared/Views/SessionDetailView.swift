@@ -94,21 +94,31 @@ struct SessionDetailView: View {
         }
     }
 
-    /// Right-aligned actions. Show in Finder is icon-only with a hover label.
+    /// Right-aligned actions, derived from the persisted status so they survive
+    /// a restart (a failed session keeps its Retry button). Show in Finder is
+    /// icon-only with a hover label.
     private var metaActions: some View {
         HStack(spacing: 8) {
-            if status == .recorded, model.activeJob(for: session.id) == nil {
+            switch SessionAction.forDetail(status: status, hasActiveJob: model.activeJob(for: session.id) != nil) {
+            case .process:
                 Button { model.process(session) } label: {
                     Label("action.process", systemImage: "gearshape.2")
                 }
                 .buttonStyle(.borderedProminent)
                 .help("action.process")
-            }
-            if status == .done {
+            case .retry:
+                Button { model.retry(session) } label: {
+                    Label("action.retry", systemImage: "arrow.clockwise")
+                }
+                .buttonStyle(.borderedProminent)
+                .help("action.retry")
+            case .regenerate:
                 Button { model.regenerateProtocol(session) } label: {
                     Label("action.regenerate", systemImage: "arrow.triangle.2.circlepath")
                 }
                 .help("action.regenerate")
+            case .none:
+                EmptyView()
             }
             Button { revealInFinder() } label: {
                 Image(systemName: "folder")
