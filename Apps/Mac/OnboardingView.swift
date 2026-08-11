@@ -1,10 +1,4 @@
-import AVFoundation
-import CoreGraphics
 import SwiftUI
-import UserNotifications
-#if canImport(AppKit)
-import AppKit
-#endif
 
 /// First-launch onboarding. Asks for exactly the permissions Protokoll needs,
 /// one at a time, with plain explanations - so nothing is a surprise. Only the
@@ -12,15 +6,11 @@ import AppKit
 /// a call) and Notifications are optional. Protokoll never needs Photos or
 /// broad file access.
 struct OnboardingView: View {
-    enum Access { case unknown, granted, denied }
-
     var dismiss: () -> Void
     @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
 
     @State private var step = 0
-    @State private var mic: Access = .unknown
-    @State private var screen: Access = .unknown
-    @State private var notify: Access = .unknown
+    @State private var permissions = PermissionsModel()
 
     private let lastStep = 4
 
@@ -33,7 +23,7 @@ struct OnboardingView: View {
             footer.padding(16)
         }
         .frame(width: 480, height: 440)
-        .task { await refreshStatuses() }
+        .task { await permissions.refresh() }
     }
 
     // MARK: Steps
@@ -42,24 +32,22 @@ struct OnboardingView: View {
         switch step {
         case 0:
             info(icon: "checkmark.shield.fill",
-                 title: "onboarding.welcome.title",
-                 body: "onboarding.welcome.body")
+                 title: "onboarding.welcome.title", body: "onboarding.welcome.body")
         case 1:
             permission(icon: "mic.fill",
                        title: "onboarding.mic.title", body: "onboarding.mic.body",
-                       state: mic, required: true, action: requestMic)
+                       state: permissions.mic, required: true) { permissions.requestMic() }
         case 2:
             permission(icon: "rectangle.inset.filled.badge.record",
                        title: "onboarding.screen.title", body: "onboarding.screen.body",
-                       state: screen, required: false, action: requestScreen)
+                       state: permissions.screen, required: false) { permissions.requestScreen() }
         case 3:
             permission(icon: "bell.badge.fill",
                        title: "onboarding.notify.title", body: "onboarding.notify.body",
-                       state: notify, required: false, action: requestNotify)
+                       state: permissions.notify, required: false) { permissions.requestNotify() }
         default:
             info(icon: "checkmark.seal.fill",
-                 title: "onboarding.done.title",
-                 body: "onboarding.done.body")
+                 title: "onboarding.done.title", body: "onboarding.done.body")
         }
     }
 
@@ -73,7 +61,8 @@ struct OnboardingView: View {
     }
 
     private func permission(icon: String, title: LocalizedStringKey, body: LocalizedStringKey,
-                            state: Access, required: Bool, action: @escaping () -> Void) -> some View {
+                            state: PermissionsModel.Access, required: Bool,
+                            action: @escaping () -> Void) -> some View {
         VStack(spacing: 16) {
             Image(systemName: icon).font(.system(size: 44)).foregroundStyle(.tint)
             HStack(spacing: 6) {
@@ -134,65 +123,6 @@ struct OnboardingView: View {
     private func finish() {
         onboardingDone = true
         dismiss()
-    }
-
-    // MARK: Permission requests (one at a time, only on tap)
-
-    private func requestMic() {
-        Task {
-            let granted = await AVCaptureDevice.requestAccess(for: .audio)
-            if AVCaptureDevice.authorizationStatus(for: .audio) == .notDetermined {
-                mic = .unknown
-            } else {
-                mic = granted ? .granted : .denied
-            }
-            if mic == .denied { openSettings("Privacy_Microphone") }
-        }
-    }
-
-    private func requestScreen() {
-        // Triggers the system prompt and adds Protokoll to the Screen Recording
-        // list. macOS often reports the grant only after a relaunch, so on a
-        // false result we also open the settings pane.
-        let granted = CGRequestScreenCaptureAccess()
-        screen = granted ? .granted : .denied
-        if !granted { openSettings("Privacy_ScreenCapture") }
-    }
-
-    private func requestNotify() {
-        Task {
-            let granted = (try? await UNUserNotificationCenter.current()
-                .requestAuthorization(options: [.alert, .sound])) ?? false
-            notify = granted ? .granted : .denied
-            if !granted { openSettings("Privacy_Notifications") }
-        }
-    }
-
-    private func refreshStatuses() async {
-        mic = map(AVCaptureDevice.authorizationStatus(for: .audio))
-        screen = CGPreflightScreenCaptureAccess() ? .granted : .unknown
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        switch settings.authorizationStatus {
-        case .authorized, .provisional, .ephemeral: notify = .granted
-        case .denied: notify = .denied
-        default: notify = .unknown
-        }
-    }
-
-    private func map(_ status: AVAuthorizationStatus) -> Access {
-        switch status {
-        case .authorized: return .granted
-        case .denied, .restricted: return .denied
-        default: return .unknown
-        }
-    }
-
-    private func openSettings(_ pane: String) {
-        #if canImport(AppKit)
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)") {
-            NSWorkspace.shared.open(url)
-        }
-        #endif
     }
 }
 

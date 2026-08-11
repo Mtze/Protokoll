@@ -66,6 +66,8 @@ struct SettingsView: View {
                 .tabItem { Label("settings.tab.projects", systemImage: "tag") }
             ProcessingTab()
                 .tabItem { Label("settings.tab.processing", systemImage: "gearshape.2") }
+            DiagnosticsSettingsTab()
+                .tabItem { Label("settings.tab.diagnostics", systemImage: "stethoscope") }
             AdvancedTab(container: container)
                 .tabItem { Label("settings.tab.advanced", systemImage: "wrench.and.screwdriver") }
         }
@@ -299,6 +301,19 @@ private struct SettingsPane: ViewModifier {
 
 private extension View {
     func settingsPane() -> some View { modifier(SettingsPane()) }
+}
+
+// MARK: - Diagnostics
+
+/// Embeds the shared Diagnostics panel (permissions + tool checks + System-Test)
+/// in Settings, refreshing the checks when the tab appears.
+private struct DiagnosticsSettingsTab: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        DiagnosticsView()
+            .task { await model.runDiagnostics() }
+    }
 }
 
 // MARK: - Formatting helpers

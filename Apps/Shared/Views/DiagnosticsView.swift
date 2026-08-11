@@ -10,16 +10,24 @@ import AppKit
 /// end-to-end System-Test. All strings localized; icons are SF Symbols.
 struct DiagnosticsView: View {
     @Environment(AppModel.self) private var model
+    @State private var permissions = PermissionsModel()
     @State private var fixLog: FixLog?
     @State private var runningSystemTest = false
     @State private var systemTestResult: SystemTest.Outcome?
+
+    /// Tool/dependency checks only - permissions are shown in their own section.
+    private var toolChecks: [CheckResult] {
+        model.checkResults.filter { $0.id != .microphone && $0.id != .screenRecording }
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             header
             Divider()
+            permissionsSection
+            Divider()
             List {
-                ForEach(model.checkResults) { result in
+                ForEach(toolChecks) { result in
                     CheckRow(result: result, remediation: model.remediation(for: result.id)) { fix in
                         runAutoFix(fix)
                     } onGuided: { guidance in
@@ -36,7 +44,47 @@ struct DiagnosticsView: View {
         }
         .frame(minWidth: 480, minHeight: 420)
         .navigationTitle("diag.title")
+        .task { await permissions.refresh() }
         .sheet(item: $fixLog) { log in FixLogSheet(log: log) }
+    }
+
+    // MARK: Permissions (mirrors onboarding; adjustable after first run)
+
+    private var permissionsSection: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text("permissions.section").font(.subheadline).bold()
+                .padding(.horizontal).padding(.top, 8)
+            permissionRow(icon: "mic.fill", title: "onboarding.mic.title", state: permissions.mic,
+                          request: { permissions.requestMic() },
+                          openSettings: { permissions.openSettings("Privacy_Microphone") })
+            permissionRow(icon: "rectangle.inset.filled.badge.record", title: "onboarding.screen.title",
+                          state: permissions.screen,
+                          request: { permissions.requestScreen() },
+                          openSettings: { permissions.openSettings("Privacy_ScreenCapture") })
+            permissionRow(icon: "bell.badge.fill", title: "onboarding.notify.title", state: permissions.notify,
+                          request: { permissions.requestNotify() },
+                          openSettings: { permissions.openSettings("Privacy_Notifications") })
+        }
+        .padding(.bottom, 6)
+    }
+
+    private func permissionRow(icon: String, title: LocalizedStringKey, state: PermissionsModel.Access,
+                               request: @escaping () -> Void, openSettings: @escaping () -> Void) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon).foregroundStyle(.tint).frame(width: 22)
+            Text(title)
+            Spacer()
+            switch state {
+            case .granted:
+                Label("onboarding.granted", systemImage: "checkmark.circle.fill")
+                    .foregroundStyle(.green).font(.caption)
+            case .denied:
+                Button("onboarding.openSettings") { openSettings() }.controlSize(.small)
+            case .unknown:
+                Button("onboarding.allow") { request() }.buttonStyle(.borderedProminent).controlSize(.small)
+            }
+        }
+        .padding(.horizontal).padding(.vertical, 4)
     }
 
     private var header: some View {

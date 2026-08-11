@@ -321,6 +321,7 @@ private struct SessionRow: View {
                 Text(session.displayTitle).font(.body).lineLimit(1)
                 HStack(spacing: 6) {
                     Text(session.metadata.startedAt, style: .date)
+                    Text(session.metadata.startedAt, style: .time)
                     if let duration = session.metadata.duration {
                         Text("·")
                         Text(SessionFormat.duration(duration))

@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>Protokoll - private meeting notes for your Mac</title>
+  <meta name="description" content="Protokoll is a free, private meeting recorder for macOS. Record, and get a transcript and clear minutes - all on your own machine.">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Protokoll - private meeting notes for your Mac">
+  <meta property="og:description" content="Record your meetings and get a transcript plus clear minutes, all on your own Mac. Free, local, private.">
+  <meta property="og:url" content="https://mtze.github.io/Protokoll/">
+  <meta property="og:image" content="https://mtze.github.io/Protokoll/og.png">
+  <meta name="twitter:card" content="summary">
+
+  <link rel="icon" type="image/svg+xml" href="./logo.svg">
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #f6f6fb;
+      --border: #e6e6f0;
+      --text: #1a1830;
+      --muted: #5c5a70;
+      --accent: #6366f1;
+      --accent-2: #a855f7;
+      --code-bg: #f1f0fb;
+      --code-text: #2a1466;
+      --shadow: 0 1px 2px rgba(20, 16, 60, .06), 0 8px 24px rgba(20, 16, 60, .06);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0e1a;
+        --surface: #17162a;
+        --border: #272544;
+        --text: #ecebf7;
+        --muted: #a6a3c4;
+        --accent: #8b8cf8;
+        --accent-2: #c07dfb;
+        --code-bg: #1c1a33;
+        --code-text: #d7d3ff;
+        --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px rgba(0, 0, 0, .35);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      font-size: 17px;
+    }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 0 24px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    h1, h2, h3 { line-height: 1.25; }
+
+    /* Hero */
+    header.hero { text-align: center; padding: 72px 0 40px; }
+    .logo { width: 108px; height: 108px; border-radius: 24px; box-shadow: var(--shadow); }
+    .wordmark {
+      font-size: 44px; font-weight: 800; letter-spacing: -.02em; margin: 20px 0 6px;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .tagline { font-size: 20px; color: var(--muted); margin: 0 auto 28px; max-width: 30em; }
+
+    .cta-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; align-items: center; }
+    .btn {
+      display: inline-block; padding: 12px 22px; border-radius: 12px; font-weight: 600;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2)); color: #fff;
+      box-shadow: var(--shadow);
+    }
+    .btn:hover { text-decoration: none; filter: brightness(1.05); }
+    .btn.secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+
+    /* Sections */
+    section { padding: 34px 0; border-top: 1px solid var(--border); }
+    section h2 { font-size: 26px; margin: 0 0 14px; }
+    .lead { color: var(--muted); }
+
+    /* Code blocks */
+    .code {
+      position: relative; background: var(--code-bg); color: var(--code-text);
+      border: 1px solid var(--border); border-radius: 12px; padding: 14px 52px 14px 16px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 14.5px;
+      white-space: pre; overflow-x: auto; margin: 12px 0;
+    }
+    .code .copy {
+      position: absolute; top: 8px; right: 8px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--muted); border-radius: 8px; padding: 4px 10px;
+      font: inherit; font-size: 12px; cursor: pointer;
+    }
+    .code .copy:hover { color: var(--text); }
+    code.inline {
+      background: var(--code-bg); color: var(--code-text); padding: 1px 6px;
+      border-radius: 6px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .9em;
+    }
+
+    /* Steps + cards */
+    .steps { display: grid; gap: 16px; grid-template-columns: 1fr; margin-top: 8px; }
+    @media (min-width: 620px) { .steps { grid-template-columns: repeat(3, 1fr); } }
+    .step { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+    .step .n {
+      display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+      border-radius: 9px; font-weight: 700; color: #fff; margin-bottom: 8px;
+      background: linear-gradient(120deg, var(--accent), var(--accent-2));
+    }
+    .step h3 { margin: 0 0 4px; font-size: 17px; }
+    .step p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    ul.clean { padding-left: 20px; }
+    ul.clean li { margin: 6px 0; }
+    .note { color: var(--muted); font-size: 15px; }
+
+    details { border: 1px solid var(--border); border-radius: 12px; padding: 4px 16px; margin: 10px 0; background: var(--surface); }
+    details summary { cursor: pointer; font-weight: 600; padding: 10px 0; }
+    details[open] summary { border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+    details p, details ul { margin: 8px 0; }
+
+    footer { text-align: center; color: var(--muted); font-size: 14px; padding: 40px 0 56px; border-top: 1px solid var(--border); }
+    footer a { margin: 0 8px; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <img class="logo" src="./logo.svg" width="108" height="108" alt="Protokoll app icon">
+      <div class="wordmark">Protokoll</div>
+      <p class="tagline">Private meeting notes for your Mac. Hit record, and get a full transcript and clear minutes - all on your own machine.</p>
+      <div class="cta-row">
+        <a class="btn" href="#install">Install</a>
+        <a class="btn secondary" href="https://github.com/Mtze/Protokoll">View on GitHub</a>
+      </div>
+    </header>
+
+    <section id="install">
+      <h2>Install</h2>
+      <p class="lead">Protokoll installs with <a href="https://brew.sh">Homebrew</a> on macOS 14+ (Apple Silicon).</p>
+      <div class="code" data-copy="brew tap mtze/protokoll https://github.com/Mtze/Protokoll
+brew install --cask protokoll"><button class="copy" type="button">Copy</button>brew tap mtze/protokoll https://github.com/Mtze/Protokoll
+brew install --cask protokoll</div>
+      <p class="note">Update later with <code class="inline">brew upgrade --cask protokoll</code>. Protokoll isn't notarized yet, so if macOS blocks the first launch you can instead run <code class="inline">brew install --cask --no-quarantine protokoll</code>.</p>
+    </section>
+
+    <section id="first-launch">
+      <h2>First launch</h2>
+      <p class="lead">A few one-time steps so Protokoll can record and process your meetings:</p>
+      <ul class="clean">
+        <li><strong>Open the app.</strong> If macOS says it can't be opened, go to <strong>System Settings &rarr; Privacy &amp; Security</strong> and choose <em>Open Anyway</em> (or use the <code class="inline">--no-quarantine</code> install above).</li>
+        <li><strong>Allow the microphone</strong> when asked - this captures your voice.</li>
+        <li><strong>Allow screen recording</strong> to also capture the other side of a call (video-call and system audio).</li>
+        <li><strong>Sign in to Claude.</strong> Protokoll writes your summaries using your existing <code class="inline">claude</code> login - no API key needed.</li>
+        <li><strong>Run Diagnostics.</strong> The built-in panel installs the rest for you (<code class="inline">ffmpeg</code> and a local Whisper engine) with one click.</li>
+      </ul>
+    </section>
+
+    <section id="how-it-works">
+      <h2>How it works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="n">1</div>
+          <h3>Record</h3>
+          <p>Capture your mic and the call audio together, so the whole conversation is covered.</p>
+        </div>
+        <div class="step">
+          <div class="n">2</div>
+          <h3>Transcribe</h3>
+          <p>Whisper turns the audio into a timestamped transcript, right on your Mac.</p>
+        </div>
+        <div class="step">
+          <div class="n">3</div>
+          <h3>Summarize</h3>
+          <p>Get tidy minutes - decisions, action items with owners, and open questions.</p>
+        </div>
+      </div>
+      <p class="note" style="margin-top:16px">Your recordings and notes are just files in a folder you own - Protokoll never hides them in a database.</p>
+    </section>
+
+    <section id="privacy">
+      <h2>Private by design</h2>
+      <ul class="clean">
+        <li>Transcription runs <strong>locally</strong> with Whisper - your audio never leaves the Mac.</li>
+        <li>Summaries use <strong>your own Claude login</strong>, not a shared server or API key.</li>
+        <li>Nothing is uploaded to third parties. Your meetings stay yours.</li>
+      </ul>
+    </section>
+
+    <section id="requirements">
+      <h2>Requirements</h2>
+      <ul class="clean">
+        <li>macOS 14 or later on Apple Silicon.</li>
+        <li>The <code class="inline">claude</code> CLI, signed in (<code class="inline">claude login</code>).</li>
+        <li><code class="inline">ffmpeg</code> and a Whisper engine - the app's Diagnostics panel installs these for you.</li>
+      </ul>
+    </section>
+
+    <section id="faq">
+      <h2>Troubleshooting</h2>
+
+      <details>
+        <summary>The app won't open ("unidentified developer" / "damaged")</summary>
+        <p>Protokoll isn't notarized yet. Open <strong>System Settings &rarr; Privacy &amp; Security</strong> and click <em>Open Anyway</em>, or reinstall with <code class="inline">brew install --cask --no-quarantine protokoll</code>.</p>
+      </details>
+
+      <details>
+        <summary>No transcript, or "ffmpeg not found"</summary>
+        <p>Open the app's <strong>Diagnostics</strong> panel and run the checks - it installs <code class="inline">ffmpeg</code> and a Whisper engine and fixes the tool path for you. The end-to-end <em>System-Test</em> confirms everything works.</p>
+      </details>
+
+      <details>
+        <summary>What languages are supported?</summary>
+        <p>The app is localized in English and German, and Whisper transcribes many spoken languages. Pick your transcription language in Settings.</p>
+      </details>
+
+      <details>
+        <summary>Where are my recordings and notes?</summary>
+        <p>Everything lives as plain files in your Protokoll container folder - audio, the transcript, and the summary. They're the source of truth, so you can read, back up, or move them like any other files.</p>
+      </details>
+    </section>
+
+    <footer>
+      <div>
+        <a href="https://github.com/Mtze/Protokoll">GitHub</a>
+        <a href="https://github.com/Mtze/Protokoll/issues">Report an issue</a>
+      </div>
+      <p>Free and open source. Local, private meeting notes for macOS.</p>
+    </footer>
+  </div>
+
+  <script>
+    // Copy-to-clipboard for command blocks. Feature-detected: outside a secure
+    // context (e.g. opening the file directly) navigator.clipboard is undefined,
+    // so we hide the button rather than throw.
+    (function () {
+      var canCopy = !!(navigator.clipboard && navigator.clipboard.writeText);
+      document.querySelectorAll('.code .copy').forEach(function (btn) {
+        if (!canCopy) { btn.hidden = true; return; }
+        btn.addEventListener('click', function () {
+          var text = btn.parentElement.getAttribute('data-copy') || '';
+          navigator.clipboard.writeText(text).then(function () {
+            var old = btn.textContent;
+            btn.textContent = 'Copied';
+            setTimeout(function () { btn.textContent = old; }, 1500);
+          }).catch(function () { /* leave the text selectable */ });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

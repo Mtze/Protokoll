@@ -8,6 +8,10 @@
   <a href="https://github.com/Mtze/Protokoll/actions/workflows/ci.yml"><img src="https://github.com/Mtze/Protokoll/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
 </p>
 
+<p align="center">
+  <a href="https://mtze.github.io/Protokoll/"><strong>Documentation &amp; install guide &rarr;</strong></a>
+</p>
+
 **Protokoll turns your meetings into clear, decision-focused minutes - without your
 audio ever leaving your Mac.** Hit record (your microphone and the call audio
 together), and Protokoll transcribes locally with Whisper and drafts a structured
@@ -182,6 +186,7 @@ docs/branding/          app icon source art (SVG, icns, 1024 master)
 fastlane/               build/test lanes
 Casks/                  Homebrew cask (protokoll.rb) for `brew install --cask` (ADR-8)
 .github/workflows/      root ci.yml orchestrates reusable test/build/release workflows (ADR-8)
+site/                   static GitHub Pages user-docs one-pager (deployed by pages.yml)
 ```
 
 The app icon is one shared `AppIcon` set in

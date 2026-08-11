@@ -100,6 +100,9 @@ Dev env overrides: see the table in `README.md`.
   release, use the `release-app` skill (`.claude/skills/release-app/`): it picks
   the version, writes user-first release notes, pushes the `vX.Y.Z` tag, and
   attaches the notes once the workflow publishes.
+- **User docs:** a self-contained static one-pager lives in `site/index.html`
+  (assets in `site/`), deployed to GitHub Pages by `.github/workflows/pages.yml`
+  on pushes touching `site/`. Published at `https://mtze.github.io/Protokoll/`.
 
 Session actions (macOS): the sidebar row **context menu** is the home for
 per-session actions (`LibraryView.sessionMenuItems(for:)`) - Process/Retry/
