@@ -149,8 +149,7 @@ struct LibraryView: View {
                         Label {
                             Text(project.name)
                         } icon: {
-                            Image(systemName: projectFilter == project.id ? "checkmark.circle.fill" : "circle.fill")
-                                .foregroundStyle(Color(hex: project.color))
+                            Image(nsImage: projectDotImage(hex: project.color, checked: projectFilter == project.id))
                         }
                     }
                 }
@@ -234,6 +233,35 @@ private struct SessionRow: View {
         .help(status.nameKey)
     }
 }
+
+#if canImport(AppKit)
+/// A non-template colored dot image for menu items. SwiftUI renders SF Symbol
+/// menu icons as monochrome templates, so `.foregroundStyle` is dropped; an
+/// `NSImage` with `isTemplate = false` actually shows the project color. A white
+/// checkmark is drawn on the selected one.
+private func projectDotImage(hex: String, checked: Bool, diameter: CGFloat = 12) -> NSImage {
+    let size = NSSize(width: diameter, height: diameter)
+    let image = NSImage(size: size)
+    image.lockFocus()
+    let rgb = ProjectColor.rgb(fromHex: hex) ?? (red: 0.5, green: 0.5, blue: 0.5)
+    NSColor(red: rgb.red, green: rgb.green, blue: rgb.blue, alpha: 1).setFill()
+    NSBezierPath(ovalIn: NSRect(origin: .zero, size: size)).fill()
+    if checked {
+        let path = NSBezierPath()
+        path.lineWidth = 1.6
+        path.lineCapStyle = .round
+        path.lineJoinStyle = .round
+        path.move(to: NSPoint(x: diameter * 0.27, y: diameter * 0.50))
+        path.line(to: NSPoint(x: diameter * 0.43, y: diameter * 0.33))
+        path.line(to: NSPoint(x: diameter * 0.73, y: diameter * 0.67))
+        NSColor.white.setStroke()
+        path.stroke()
+    }
+    image.unlockFocus()
+    image.isTemplate = false
+    return image
+}
+#endif
 
 /// A tappable warning shown when system-audio capture (F2) failed; opens the
 /// Screen Recording settings pane.
