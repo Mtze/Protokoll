@@ -1,5 +1,6 @@
 import SwiftUI
 import SharedKit
+import SearchIndex
 #if canImport(AppKit)
 import AppKit
 #endif
@@ -17,18 +18,27 @@ struct LibraryView: View {
     @State private var sessionToDelete: Session?
     @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
     @State private var showOnboarding = false
+    @State private var projectFilter: String?
 
-    /// Sessions to show: full list, or the FTS-matched subset when searching.
+    /// Sessions to show: filtered by the selected project (browse, in-memory),
+    /// then narrowed to the FTS-matched subset when searching (F7/F10).
     private var visibleSessions: [Session] {
-        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return model.sessions }
-        let matchedIDs = Set(model.searchResults.map(\.sessionID))
-        return model.sessions.filter { matchedIDs.contains($0.id) }
+        var list = model.sessions
+        if let projectFilter {
+            list = list.filter { $0.metadata.projects.contains(projectFilter) }
+        }
+        if !searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+            let matchedIDs = Set(model.searchResults.map(\.sessionID))
+            list = list.filter { matchedIDs.contains($0.id) }
+        }
+        return list
     }
 
     var body: some View {
         NavigationSplitView {
             List(visibleSessions, selection: $selection) { session in
-                SessionRow(session: session, snippet: snippet(for: session.id)).tag(session.id)
+                SessionRow(session: session, snippet: snippet(for: session.id),
+                           projects: model.projects(for: session)).tag(session.id)
                     .contextMenu {
                         Button(role: .destructive) { sessionToDelete = session } label: {
                             Label("action.delete", systemImage: "trash")
@@ -58,7 +68,9 @@ struct LibraryView: View {
             }
         }
         .searchable(text: $searchText, prompt: Text("library.search.prompt"))
-        .task(id: searchText) { await model.search(searchText) }
+        .task(id: searchText + "\u{1}" + (projectFilter ?? "")) {
+            await model.search(searchText, filter: SearchFilter(projectID: projectFilter))
+        }
         .onAppear { if !onboardingDone { showOnboarding = true } }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView(dismiss: { showOnboarding = false })
@@ -73,6 +85,9 @@ struct LibraryView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
+            if !model.projects.isEmpty {
+                ToolbarItem { projectFilterMenu }
+            }
             if model.isRecording {
                 ToolbarItem(placement: .principal) {
                     RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt, compact: true)
@@ -109,6 +124,25 @@ struct LibraryView: View {
         }
     }
 
+    /// Filter the library by a project (F7). "All" clears the filter.
+    private var projectFilterMenu: some View {
+        Menu {
+            Button { projectFilter = nil } label: {
+                Label("library.filter.all", systemImage: projectFilter == nil ? "checkmark" : "")
+            }
+            Divider()
+            ForEach(model.projects) { project in
+                Button { projectFilter = project.id } label: {
+                    Label(project.name, systemImage: projectFilter == project.id ? "checkmark" : "circle")
+                }
+            }
+        } label: {
+            Label("library.filter", systemImage: projectFilter == nil
+                  ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+        }
+        .help("library.filter")
+    }
+
     /// Record / stop, creating a new session right from the main window.
     private var recordButton: some View {
         Button {
@@ -136,6 +170,7 @@ struct LibraryView: View {
 private struct SessionRow: View {
     let session: Session
     var snippet: String?
+    var projects: [Project] = []
 
     private var status: PipelineStatus { session.metadata.pipeline.status }
 
@@ -157,6 +192,11 @@ private struct SessionRow: View {
                     }
                 }
                 .font(.caption).foregroundStyle(.secondary)
+                if !projects.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(projects) { ProjectChip(name: $0.name, colorHex: $0.color) }
+                    }
+                }
                 if let snippet, !snippet.isEmpty {
                     Text(snippet).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
                 }

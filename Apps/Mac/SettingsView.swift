@@ -21,16 +21,37 @@ final class PipelineSettingsStore {
     func save() { try? container.savePipelineConfig(config) }
 }
 
+/// Container-backed store for project/tag definitions (F7), mirroring
+/// ``PipelineSettingsStore``.
+@MainActor
+@Observable
+final class ProjectsStore {
+    var projects: [Project]
+    private let container: Container
+
+    init(container: Container) {
+        self.container = container
+        self.projects = (try? container.loadProjects()) ?? []
+    }
+
+    func save() { try? container.saveProjects(projects) }
+    func add() { projects.append(Project(name: "", color: ProjectColor.palette.first ?? "#3B82F6")) }
+    func delete(_ project: Project) { projects.removeAll { $0.id == project.id } }
+}
+
 /// App settings, organized into native preference tabs. App-behavior toggles are
 /// `@AppStorage`; pipeline tuning (transcription/summary) lives in the container
 /// so `process-session` reads it too.
 struct SettingsView: View {
+    @Environment(AppModel.self) private var model
     private let container: Container
     @State private var store: PipelineSettingsStore
+    @State private var projectsStore: ProjectsStore
 
     init(container: Container) {
         self.container = container
         _store = State(wrappedValue: PipelineSettingsStore(container: container))
+        _projectsStore = State(wrappedValue: ProjectsStore(container: container))
     }
 
     var body: some View {
@@ -41,6 +62,8 @@ struct SettingsView: View {
                 .tabItem { Label("settings.tab.transcription", systemImage: "waveform") }
             SummaryTab(store: store)
                 .tabItem { Label("settings.tab.summary", systemImage: "doc.text") }
+            ProjectsTab(store: projectsStore)
+                .tabItem { Label("settings.tab.projects", systemImage: "tag") }
             ProcessingTab()
                 .tabItem { Label("settings.tab.processing", systemImage: "gearshape.2") }
             AdvancedTab(container: container)
@@ -48,6 +71,56 @@ struct SettingsView: View {
         }
         .frame(width: 560, height: 480)
         .onChange(of: store.config) { store.save() }
+        .onChange(of: projectsStore.projects) {
+            projectsStore.save()
+            model.reloadProjects()
+        }
+    }
+}
+
+// MARK: - Projects
+
+private struct ProjectsTab: View {
+    @Bindable var store: ProjectsStore
+
+    var body: some View {
+        Form {
+            Section("settings.tab.projects") {
+                ForEach($store.projects) { $project in
+                    HStack(spacing: 10) {
+                        colorMenu($project.color)
+                        TextField("project.name", text: $project.name)
+                        Button(role: .destructive) { store.delete(project) } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.borderless)
+                        .help("project.delete")
+                    }
+                }
+                Button { store.add() } label: { Label("project.new", systemImage: "plus") }
+            }
+        }
+        .formStyle(.grouped)
+        .settingsPane()
+    }
+
+    private func colorMenu(_ hex: Binding<String>) -> some View {
+        Menu {
+            ForEach(ProjectColor.palette, id: \.self) { option in
+                Button { hex.wrappedValue = option } label: {
+                    Label {
+                        Text(verbatim: option)
+                    } icon: {
+                        Image(systemName: "circle.fill").foregroundStyle(Color(hex: option))
+                    }
+                }
+            }
+        } label: {
+            Circle().fill(Color(hex: hex.wrappedValue)).frame(width: 16, height: 16)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .help("project.color")
     }
 }
 

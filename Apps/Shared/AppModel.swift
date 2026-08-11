@@ -95,6 +95,27 @@ final class AppModel {
         projects = (try? container.loadProjects()) ?? []
     }
 
+    /// Reloads just the project/tag definitions (after Settings edits, F7).
+    func reloadProjects() {
+        projects = (try? container.loadProjects()) ?? []
+    }
+
+    /// Resolves a session's project IDs to `Project`s (unknown IDs skipped).
+    func projects(for session: Session) -> [Project] {
+        let ids = Set(session.metadata.projects)
+        return projects.filter { ids.contains($0.id) }
+    }
+
+    /// Assigns a session to `ids` projects: persists metadata, reloads, and
+    /// rebuilds the index so project-filtered search stays correct (F7).
+    func setProjects(_ ids: [String], for session: Session) {
+        var updated = session
+        updated.metadata.projects = ids
+        try? container.store.save(updated)
+        reloadSessions()
+        Task { await rebuildIndex() }
+    }
+
     /// Rebuilds the local FTS index from the files (ADR-2).
     func rebuildIndex() async {
         guard let index else { return }

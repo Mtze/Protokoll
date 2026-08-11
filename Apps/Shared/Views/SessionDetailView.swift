@@ -93,10 +93,23 @@ struct SessionDetailView: View {
                     Label(message, systemImage: "exclamationmark.triangle.fill")
                         .font(.caption).foregroundStyle(.red)
                 }
+                let projects = model.projects(for: session)
+                if !projects.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(projects) { ProjectChip(name: $0.name, colorHex: $0.color) }
+                    }
+                }
             }
             Spacer(minLength: 8)
             metaActions
         }
+    }
+
+    /// Toggle the session's membership in a project and persist (F7).
+    private func toggleProject(_ project: Project) {
+        var ids = session.metadata.projects
+        if let i = ids.firstIndex(of: project.id) { ids.remove(at: i) } else { ids.append(project.id) }
+        model.setProjects(ids, for: session)
     }
 
     /// Right-aligned actions, derived from the persisted status so they survive
@@ -124,6 +137,22 @@ struct SessionDetailView: View {
                 .help("action.regenerate")
             case .none:
                 EmptyView()
+            }
+            if !model.projects.isEmpty {
+                Menu {
+                    ForEach(model.projects) { project in
+                        Button { toggleProject(project) } label: {
+                            Label(project.name,
+                                  systemImage: session.metadata.projects.contains(project.id) ? "checkmark" : "circle")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "tag")
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+                .help("project.assign")
+                .accessibilityLabel(Text("project.assign"))
             }
             Button { revealInFinder() } label: {
                 Image(systemName: "folder")

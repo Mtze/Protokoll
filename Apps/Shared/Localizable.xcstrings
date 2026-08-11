@@ -1,6 +1,62 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "settings.tab.projects" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekte" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Projects" } }
+      }
+    },
+    "project.new" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt hinzufügen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add project" } }
+      }
+    },
+    "project.name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Name" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name" } }
+      }
+    },
+    "project.color" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Farbe" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Color" } }
+      }
+    },
+    "project.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt löschen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete project" } }
+      }
+    },
+    "project.assign" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekte zuordnen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Assign projects" } }
+      }
+    },
+    "library.filter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Filtern" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter" } }
+      }
+    },
+    "library.filter.all" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Projekte" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "All projects" } }
+      }
+    },
     "settings.tab.general" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -1,5 +1,6 @@
 import SwiftUI
 import SharedKit
+import SearchIndex
 
 /// iOS library (F12): searchable list of sessions with a detail viewer for
 /// transcript + protocol.
@@ -7,11 +8,18 @@ struct LibraryListView: View {
     @Environment(IOSAppModel.self) private var model
     @State private var searchText = ""
     @State private var sessionToDelete: Session?
+    @State private var projectFilter: String?
 
     private var visible: [Session] {
-        guard !searchText.trimmingCharacters(in: .whitespaces).isEmpty else { return model.sessions }
-        let ids = Set(model.searchResults.map(\.sessionID))
-        return model.sessions.filter { ids.contains($0.id) }
+        var list = model.sessions
+        if let projectFilter {
+            list = list.filter { $0.metadata.projects.contains(projectFilter) }
+        }
+        if !searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+            let ids = Set(model.searchResults.map(\.sessionID))
+            list = list.filter { ids.contains($0.id) }
+        }
+        return list
     }
 
     var body: some View {
@@ -25,6 +33,12 @@ struct LibraryListView: View {
                         HStack(spacing: 6) {
                             IOSStatusBadge(status: session.metadata.pipeline.status)
                             Text(session.metadata.startedAt, style: .date).font(.caption).foregroundStyle(.secondary)
+                        }
+                        let projects = model.projects(for: session)
+                        if !projects.isEmpty {
+                            HStack(spacing: 4) {
+                                ForEach(projects) { ProjectChip(name: $0.name, colorHex: $0.color) }
+                            }
                         }
                     }
                 }
@@ -40,8 +54,30 @@ struct LibraryListView: View {
                 }
             }
             .navigationTitle("library.title")
+            .toolbar {
+                if !model.projects.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Menu {
+                            Button { projectFilter = nil } label: {
+                                Label("library.filter.all", systemImage: projectFilter == nil ? "checkmark" : "")
+                            }
+                            Divider()
+                            ForEach(model.projects) { project in
+                                Button { projectFilter = project.id } label: {
+                                    Label(project.name, systemImage: projectFilter == project.id ? "checkmark" : "circle")
+                                }
+                            }
+                        } label: {
+                            Label("library.filter", systemImage: projectFilter == nil
+                                  ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+                        }
+                    }
+                }
+            }
             .searchable(text: $searchText, prompt: Text("library.search.prompt"))
-            .task(id: searchText) { await model.search(searchText) }
+            .task(id: searchText + "\u{1}" + (projectFilter ?? "")) {
+                await model.search(searchText, filter: SearchFilter(projectID: projectFilter))
+            }
             .refreshable { model.reload(); await model.rebuildIndex() }
             .confirmationDialog(
                 "delete.confirm.title",
@@ -89,6 +125,7 @@ struct IOSStatusBadge: View {
 }
 
 struct IOSDetailView: View {
+    @Environment(IOSAppModel.self) private var model
     let session: Session
     enum Pane: String, CaseIterable, Identifiable { case protocolDoc, transcript; var id: String { rawValue } }
     @State private var pane: Pane = .protocolDoc
@@ -123,6 +160,28 @@ struct IOSDetailView: View {
         }
         .navigationTitle(session.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if !model.projects.isEmpty {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        ForEach(model.projects) { project in
+                            Button { toggleProject(project) } label: {
+                                Label(project.name,
+                                      systemImage: session.metadata.projects.contains(project.id) ? "checkmark" : "circle")
+                            }
+                        }
+                    } label: {
+                        Label("project.assign", systemImage: "tag")
+                    }
+                }
+            }
+        }
+    }
+
+    private func toggleProject(_ project: Project) {
+        var ids = session.metadata.projects
+        if let i = ids.firstIndex(of: project.id) { ids.remove(at: i) } else { ids.append(project.id) }
+        model.setProjects(ids, for: session)
     }
 
     private var currentDocumentURL: URL {

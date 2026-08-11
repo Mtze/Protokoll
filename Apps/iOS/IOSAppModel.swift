@@ -11,6 +11,7 @@ import SearchIndex
 final class IOSAppModel {
     let container: Container
     private(set) var sessions: [Session] = []
+    private(set) var projects: [Project] = []
     private(set) var isRecording = false
     private(set) var searchResults: [SearchHit] = []
 
@@ -47,7 +48,25 @@ final class IOSAppModel {
         await rebuildIndex()
     }
 
-    func reload() { sessions = (try? container.allSessions()) ?? [] }
+    func reload() {
+        sessions = (try? container.allSessions()) ?? []
+        projects = (try? container.loadProjects()) ?? []
+    }
+
+    /// Resolves a session's project IDs to `Project`s (F7).
+    func projects(for session: Session) -> [Project] {
+        let ids = Set(session.metadata.projects)
+        return projects.filter { ids.contains($0.id) }
+    }
+
+    /// Assigns a session to `ids` projects and persists (F7).
+    func setProjects(_ ids: [String], for session: Session) {
+        var updated = session
+        updated.metadata.projects = ids
+        try? container.store.save(updated)
+        reload()
+        Task { await rebuildIndex() }
+    }
 
     func rebuildIndex() async {
         guard let index else { return }
@@ -55,9 +74,9 @@ final class IOSAppModel {
         try? await index.rebuild(from: container)
     }
 
-    func search(_ text: String) async {
+    func search(_ text: String, filter: SearchFilter = .none) async {
         guard let index, !text.trimmingCharacters(in: .whitespaces).isEmpty else { searchResults = []; return }
-        searchResults = (try? await index.search(text)) ?? []
+        searchResults = (try? await index.search(text, filter: filter)) ?? []
     }
 
     /// Deletes a session: removes its folder from disk, drops it from the list,
