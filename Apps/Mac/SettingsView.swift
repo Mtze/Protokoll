@@ -87,15 +87,18 @@ private struct ProjectsTab: View {
         Form {
             Section("settings.tab.projects") {
                 ForEach($store.projects) { $project in
-                    HStack(spacing: 10) {
-                        colorMenu($project.color)
-                        TextField("project.name", text: $project.name)
-                        Button(role: .destructive) { store.delete(project) } label: {
-                            Image(systemName: "trash")
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            TextField("project.name", text: $project.name)
+                            Button(role: .destructive) { store.delete(project) } label: {
+                                Image(systemName: "trash")
+                            }
+                            .buttonStyle(.borderless)
+                            .help("project.delete")
                         }
-                        .buttonStyle(.borderless)
-                        .help("project.delete")
+                        SwatchPicker(selection: $project.color)
                     }
+                    .padding(.vertical, 2)
                 }
                 Button { store.add() } label: { Label("project.new", systemImage: "plus") }
             }
@@ -103,24 +106,33 @@ private struct ProjectsTab: View {
         .formStyle(.grouped)
         .settingsPane()
     }
+}
 
-    private func colorMenu(_ hex: Binding<String>) -> some View {
-        Menu {
+/// A row of tappable color swatches; the selected one gets a ring. Replaces the
+/// hex-code menu with a friendly visual picker.
+private struct SwatchPicker: View {
+    @Binding var selection: String
+
+    var body: some View {
+        HStack(spacing: 10) {
             ForEach(ProjectColor.palette, id: \.self) { option in
-                Button { hex.wrappedValue = option } label: {
-                    Label {
-                        Text(verbatim: option)
-                    } icon: {
-                        Image(systemName: "circle.fill").foregroundStyle(Color(hex: option))
-                    }
+                Button { selection = option } label: {
+                    Circle()
+                        .fill(Color(hex: option))
+                        .frame(width: 20, height: 20)
+                        .overlay {
+                            Circle()
+                                .stroke(Color.primary, lineWidth: 2)
+                                .padding(-3)
+                                .opacity(option == selection ? 1 : 0)
+                        }
                 }
+                .buttonStyle(.plain)
+                .help(SettingsFormat.colorName(option))
+                .accessibilityLabel(Text(SettingsFormat.colorName(option)))
+                .accessibilityAddTraits(option == selection ? .isSelected : [])
             }
-        } label: {
-            Circle().fill(Color(hex: hex.wrappedValue)).frame(width: 16, height: 16)
         }
-        .menuStyle(.borderlessButton)
-        .fixedSize()
-        .help("project.color")
     }
 }
 
@@ -303,6 +315,20 @@ enum SettingsFormat {
 
     static func speed(_ speed: Float) -> String {
         String(format: "%g\u{00D7}", Double(speed))
+    }
+
+    /// Friendly, localized name for a palette color (used as swatch tooltip/label).
+    static func colorName(_ hex: String) -> LocalizedStringKey {
+        switch hex {
+        case "#EF4444": return "color.red"
+        case "#F97316": return "color.orange"
+        case "#EAB308": return "color.yellow"
+        case "#22C55E": return "color.green"
+        case "#3B82F6": return "color.blue"
+        case "#A855F7": return "color.purple"
+        case "#A16207": return "color.brown"
+        default: return "color.custom"
+        }
     }
 }
 

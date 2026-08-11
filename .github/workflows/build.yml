@@ -1,0 +1,38 @@
+name: Build
+
+# Reusable: unsigned Mac/iOS/watchOS app builds. Triggers are owned by ci.yml.
+on:
+  workflow_call:
+
+jobs:
+  app-builds:
+    name: App builds (unsigned)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build macOS app
+        run: >
+          xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Mac
+          -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+
+      - name: Build iOS app
+        run: >
+          xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-iOS
+          -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+
+      - name: Build watchOS app
+        run: >
+          xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Watch
+          -destination 'generic/platform=watchOS Simulator' CODE_SIGNING_ALLOWED=NO build

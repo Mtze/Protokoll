@@ -473,7 +473,8 @@ Transkript der ganzen Besprechung") überwiegt der einzelne gemischte Track.
 
 **Entscheidung:** Die Mac-App wird als **Homebrew-Cask** (`Casks/protokoll.rb`)
 verteilt, das auf ein gezipptes `Protokoll.app` in den **GitHub-Releases** zeigt.
-Ein tag-getriggerter Workflow (`.github/workflows/release.yml`) baut die App,
+Der wiederverwendbare `.github/workflows/release.yml`, aufgerufen vom Root-Workflow
+`ci.yml` bei einem `v*`-Tag (nachdem Test + Build grün sind), baut die App,
 signiert und notarisiert sie **optional** (nur wenn die Signing-Secrets gesetzt
 sind), zippt sie, veröffentlicht das Release und aktualisiert `version` + `sha256`
 im Cask automatisch. Das Cask liegt in diesem App-Repo; die Installation nutzt

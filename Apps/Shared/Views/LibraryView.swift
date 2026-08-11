@@ -53,6 +53,11 @@ struct LibraryView: View {
             // Wide enough that title, state, date and duration all show without resizing.
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 440)
             .navigationTitle("library.title")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if !model.projects.isEmpty {
+                    projectFilterHeader
+                }
+            }
             .overlay {
                 if model.sessions.isEmpty {
                     ContentUnavailableView("library.empty.title", systemImage: "waveform", description: Text("library.empty.subtitle"))
@@ -86,9 +91,6 @@ struct LibraryView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
-            if !model.projects.isEmpty {
-                ToolbarItem { projectFilterMenu }
-            }
             if model.isRecording {
                 ToolbarItem(placement: .principal) {
                     RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt, compact: true)
@@ -125,23 +127,48 @@ struct LibraryView: View {
         }
     }
 
-    /// Filter the library by a project (F7). "All" clears the filter.
-    private var projectFilterMenu: some View {
-        Menu {
-            Button { projectFilter = nil } label: {
-                Label("library.filter.all", systemImage: projectFilter == nil ? "checkmark" : "")
+    /// A compact filter control at the top-right of the sidebar (F7). The icon
+    /// fills when a filter is active, and the active project is named alongside
+    /// it, so what's filtered is always clear.
+    private var projectFilterHeader: some View {
+        HStack(spacing: 6) {
+            if let id = projectFilter, let project = model.projects.first(where: { $0.id == id }) {
+                Circle().fill(Color(hex: project.color)).frame(width: 8, height: 8)
+                Text(project.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            } else {
+                Text("library.filter.all").font(.caption).foregroundStyle(.secondary)
             }
-            Divider()
-            ForEach(model.projects) { project in
-                Button { projectFilter = project.id } label: {
-                    Label(project.name, systemImage: projectFilter == project.id ? "checkmark" : "circle")
+            Spacer()
+            Menu {
+                Button { projectFilter = nil } label: {
+                    Label("library.filter.all",
+                          systemImage: projectFilter == nil ? "checkmark.circle.fill" : "circle.dashed")
                 }
+                Divider()
+                ForEach(model.projects) { project in
+                    Button { projectFilter = project.id } label: {
+                        if projectFilter == project.id {
+                            Label { Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)") }
+                                icon: { Image(systemName: "checkmark") }
+                        } else {
+                            Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)")
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: projectFilter == nil
+                      ? "line.3.horizontal.decrease.circle"
+                      : "line.3.horizontal.decrease.circle.fill")
+                    .foregroundStyle(projectFilter == nil ? Color.secondary : Color.accentColor)
             }
-        } label: {
-            Label("library.filter", systemImage: projectFilter == nil
-                  ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+            .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
+            .fixedSize()
+            .help("library.filter")
         }
-        .help("library.filter")
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background(.bar)
     }
 
     /// Record / stop, creating a new session right from the main window. Shared
