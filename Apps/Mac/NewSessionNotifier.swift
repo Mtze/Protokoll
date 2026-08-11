@@ -52,10 +52,17 @@ final class NewSessionNotifier: NSObject, UNUserNotificationCenterDelegate {
 
     private func scan() {
         let sessions = (try? container.allSessions()) ?? []
+        let defaults = UserDefaults.standard
+        let autoProcess = defaults.bool(forKey: SettingsKeys.autoProcess)
+        // Notifications default on when the user hasn't set the toggle.
+        let notificationsOn = defaults.object(forKey: SettingsKeys.notificationsEnabled) as? Bool ?? true
         for session in sessions where !knownIDs.contains(session.id) {
             knownIDs.insert(session.id)
-            if session.metadata.pipeline.status == .recorded {
-                notify(session)
+            guard session.metadata.pipeline.status == .recorded else { continue }
+            if autoProcess {
+                onProcess(session)               // process automatically (Settings)
+            } else if notificationsOn {
+                notify(session)                  // otherwise nudge with a notification
             }
         }
     }

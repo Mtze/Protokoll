@@ -29,20 +29,41 @@ public struct Summarizer: Sendable {
     let chunker: TranscriptChunker
     /// User's extra summary instructions, appended to the built-in prompt.
     let customInstructions: String
+    /// `"auto"` (match the meeting, N8) or an ISO code to force the summary into.
+    let summaryLanguage: String
+    /// Overrides ``ToolLocator/claudeModel`` when non-empty.
+    let summaryModel: String
 
     public init(
         runner: CommandRunning,
         tools: ToolLocator = ToolLocator(),
         store: SessionStore = SessionStore(),
         chunker: TranscriptChunker = TranscriptChunker(),
-        customInstructions: String = ""
+        customInstructions: String = "",
+        summaryLanguage: String = "auto",
+        summaryModel: String = ""
     ) {
         self.runner = runner
         self.tools = tools
         self.store = store
         self.chunker = chunker
         self.customInstructions = customInstructions
+        self.summaryLanguage = summaryLanguage
+        self.summaryModel = summaryModel
     }
+
+    /// The custom instructions, prefixed with a language directive when the user
+    /// forced a summary language (overrides N8). Fed to the prompt's `extra`.
+    var effectiveInstructions: String {
+        guard summaryLanguage != "auto", !summaryLanguage.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return customInstructions
+        }
+        let name = Locale(identifier: "en").localizedString(forLanguageCode: summaryLanguage) ?? summaryLanguage
+        let directive = "Write the ENTIRE protocol in \(name), regardless of the meeting's language."
+        return customInstructions.isEmpty ? directive : "\(directive)\n\n\(customInstructions)"
+    }
+
+    private var effectiveModel: String { summaryModel.isEmpty ? tools.claudeModel : summaryModel }
 
     public func summarize(
         session: Session,
@@ -63,7 +84,7 @@ public struct Summarizer: Sendable {
         let output: String
         if chunks.count <= 1 {
             output = try runClaude(
-                prompt: SummarizePrompt.build(currentTitle: currentTitle, extra: customInstructions),
+                prompt: SummarizePrompt.build(currentTitle: currentTitle, extra: effectiveInstructions),
                 stdin: body, onProgress: onProgress
             )
         } else {
@@ -94,10 +115,10 @@ public struct Summarizer: Sendable {
         stdin: String,
         onProgress: (@Sendable (String) -> Void)?
     ) throws -> String {
-        AppLog.pipeline.debug("running claude model=\(tools.claudeModel, privacy: .public)")
+        AppLog.pipeline.debug("running claude model=\(effectiveModel, privacy: .public)")
         let result = try runner.run(
             executable: tools.claudeBinary,
-            arguments: ["-p", prompt, "--model", tools.claudeModel],
+            arguments: ["-p", prompt, "--model", effectiveModel],
             stdin: stdin,
             environment: nil,
             onStderrLine: onProgress
@@ -131,7 +152,7 @@ public struct Summarizer: Sendable {
         }
         onProgress?("synthesizing final protocol")
         return try runClaude(
-            prompt: SummarizePrompt.reduce(currentTitle: currentTitle, extra: customInstructions),
+            prompt: SummarizePrompt.reduce(currentTitle: currentTitle, extra: effectiveInstructions),
             stdin: partials.joined(separator: "\n\n"),
             onProgress: onProgress
         )

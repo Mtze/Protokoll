@@ -51,8 +51,19 @@ enum HelperLocator {
     /// Environment passed to the pipeline subprocess so it can find its helpers.
     static func pipelineEnvironment() -> [String: String] {
         var env: [String: String] = [:]
-        if let script = transcribeScript() { env["TRANSCRIBE_SH"] = script }
-        if let model = ProcessInfo.processInfo.environment["TRANSCRIBE_MODEL"] { env["TRANSCRIBE_MODEL"] = model }
+        let defaults = UserDefaults.standard
+        // transcribe.sh: user override wins over the bundled/dev copy.
+        if let override = defaults.string(forKey: SettingsKeys.transcribeShOverride),
+           !override.trimmingCharacters(in: .whitespaces).isEmpty {
+            env["TRANSCRIBE_SH"] = override
+        } else if let script = transcribeScript() {
+            env["TRANSCRIBE_SH"] = script
+        }
+        // Optional `claude` binary override (Advanced settings).
+        if let claude = defaults.string(forKey: SettingsKeys.claudeBinOverride),
+           !claude.trimmingCharacters(in: .whitespaces).isEmpty {
+            env["CLAUDE_BIN"] = claude
+        }
         return env
     }
 }
