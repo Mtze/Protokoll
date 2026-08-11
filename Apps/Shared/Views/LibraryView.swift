@@ -53,6 +53,11 @@ struct LibraryView: View {
             // Wide enough that title, state, date and duration all show without resizing.
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 440)
             .navigationTitle("library.title")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if !model.projects.isEmpty {
+                    projectFilterBar
+                }
+            }
             .overlay {
                 if model.sessions.isEmpty {
                     ContentUnavailableView("library.empty.title", systemImage: "waveform", description: Text("library.empty.subtitle"))
@@ -85,9 +90,6 @@ struct LibraryView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
-            if !model.projects.isEmpty {
-                ToolbarItem { projectFilterMenu }
-            }
             if model.isRecording {
                 ToolbarItem(placement: .principal) {
                     RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt, compact: true)
@@ -124,23 +126,22 @@ struct LibraryView: View {
         }
     }
 
-    /// Filter the library by a project (F7). "All" clears the filter.
-    private var projectFilterMenu: some View {
-        Menu {
-            Button { projectFilter = nil } label: {
-                Label("library.filter.all", systemImage: projectFilter == nil ? "checkmark" : "")
-            }
-            Divider()
-            ForEach(model.projects) { project in
-                Button { projectFilter = project.id } label: {
-                    Label(project.name, systemImage: projectFilter == project.id ? "checkmark" : "circle")
+    /// A filter bar pinned to the top of the sidebar so the active project
+    /// filter is always visible (F7). "All" clears it.
+    private var projectFilterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                FilterPill(label: Text("library.filter.all"), color: nil,
+                           selected: projectFilter == nil) { projectFilter = nil }
+                ForEach(model.projects) { project in
+                    FilterPill(label: Text(project.name), color: Color(hex: project.color),
+                               selected: projectFilter == project.id) { projectFilter = project.id }
                 }
             }
-        } label: {
-            Label("library.filter", systemImage: projectFilter == nil
-                  ? "line.3.horizontal.decrease.circle" : "line.3.horizontal.decrease.circle.fill")
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
         }
-        .help("library.filter")
+        .background(.bar)
     }
 
     /// Record / stop, creating a new session right from the main window.
@@ -164,6 +165,28 @@ struct LibraryView: View {
     private func snippet(for id: String) -> String? {
         guard !searchText.isEmpty else { return nil }
         return model.searchResults.first { $0.sessionID == id }?.snippet
+    }
+}
+
+/// A selectable filter pill (All / a project); the active one is highlighted.
+private struct FilterPill: View {
+    let label: Text
+    var color: Color?
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 4) {
+                if let color { Circle().fill(color).frame(width: 7, height: 7) }
+                label.font(.caption)
+            }
+            .padding(.horizontal, 9).padding(.vertical, 4)
+            .background(selected ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.12), in: Capsule())
+            .overlay { Capsule().strokeBorder(Color.accentColor, lineWidth: selected ? 1 : 0) }
+            .foregroundStyle(selected ? Color.accentColor : Color.primary)
+        }
+        .buttonStyle(.plain)
     }
 }
 
