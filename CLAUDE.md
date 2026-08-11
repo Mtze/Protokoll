@@ -87,10 +87,15 @@ Dev env overrides: see the table in `README.md`.
 - **M6 (foundation):** watchOS target + ADR-6 (WatchConnectivity -> iPhone ->
   container); iOS `WatchReceiver` files watch recordings into the container.
 - **Distribution (ADR-8):** the Mac app ships as a Homebrew cask
-  (`Casks/protokoll.rb`) served from this repo via a custom tap URL. A
-  tag-triggered workflow (`.github/workflows/release.yml`) builds, optionally
-  Developer ID-signs + notarizes (secrets-gated, off by default), zips, publishes
-  a GitHub Release, and auto-bumps the cask.
+  (`Casks/protokoll.rb`) served from this repo via a custom tap URL. The reusable
+  `.github/workflows/release.yml`, invoked by the root `ci.yml` on a `v*` tag
+  (after test + build pass), builds, optionally Developer ID-signs + notarizes
+  (secrets-gated, off by default), zips, publishes a GitHub Release, and
+  auto-bumps the cask. CI triggers live only in `ci.yml` (reusable
+  test/build/release workflows); it runs on PRs + pushes to `main`. To cut a
+  release, use the `release-app` skill (`.claude/skills/release-app/`): it picks
+  the version, writes user-first release notes, pushes the `vX.Y.Z` tag, and
+  attaches the notes once the workflow publishes.
 
 Session deletion: `Container.deleteSession(_:)` removes the whole session folder
 (Trash on macOS, outright elsewhere); `AppModel`/`IOSAppModel` `deleteSession(_:)`

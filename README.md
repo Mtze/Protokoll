@@ -161,7 +161,7 @@ scripts/                vendored transcribe.sh (+ setup.sh)
 docs/branding/          app icon source art (SVG, icns, 1024 master)
 fastlane/               build/test lanes
 Casks/                  Homebrew cask (protokoll.rb) for `brew install --cask` (ADR-8)
-.github/workflows/      CI (test + unsigned builds) and Release (tag → cask, ADR-8)
+.github/workflows/      root ci.yml orchestrates reusable test/build/release workflows (ADR-8)
 ```
 
 The app icon is one shared `AppIcon` set in
@@ -174,14 +174,18 @@ source art under `docs/branding/`, not the catalog PNGs.
 `swift test` runs the Swift Testing suites for SharedKit, the pipeline,
 Diagnostics, SearchIndex, and MediaKit. The subprocess boundary
 (`CommandRunning`) is faked so tests never shell out to Whisper or `claude`.
-GitHub Actions runs the same suite plus unsigned Mac/iOS/watchOS builds on every
-push and pull request; `fastlane test` wraps the tests locally.
+A single root workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml))
+owns all triggers and concurrency and calls reusable workflows: it runs the test
+suite plus unsigned Mac/iOS/watchOS builds on pull requests and pushes to `main`
+(so each commit gets exactly one run, never a duplicate from the push *and* PR
+events). `fastlane test` wraps the tests locally.
 
 ## Releases, signing & notarization
 
-Distribution is automated by [`.github/workflows/release.yml`](.github/workflows/release.yml).
-Pushing a version tag builds the Mac app, zips it, publishes a GitHub Release,
-and bumps the Homebrew cask:
+Distribution runs through the reusable
+[`.github/workflows/release.yml`](.github/workflows/release.yml), invoked by the
+root `ci.yml` on a `v*` tag once test + build pass. Pushing a version tag builds
+the Mac app, zips it, publishes a GitHub Release, and bumps the Homebrew cask:
 
 ```bash
 git tag v0.1.0 && git push origin v0.1.0
