@@ -39,7 +39,7 @@ struct ProtokollApp: App {
         .windowResizability(.contentMinSize)
 
         Settings {
-            SettingsView()
+            SettingsView().environment(model)
         }
     }
 }

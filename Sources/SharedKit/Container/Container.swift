@@ -121,4 +121,31 @@ public struct Container: Sendable {
         let data = try SessionStore.encoder.encode(projects)
         try store.atomicWrite(data, to: url)
     }
+
+    // MARK: Config
+
+    public func configDirectory() throws -> URL {
+        let url = try root().appendingPathComponent("config", isDirectory: true)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }
+
+    /// The user's extra summary instructions, appended to the built-in prompt.
+    /// Empty when unset (tolerant, like ``loadProjects``).
+    public func loadSummaryInstructions() throws -> String {
+        let url = try configDirectory().appendingPathComponent("summary-instructions.md")
+        guard let data = try? Data(contentsOf: url) else { return "" }
+        return String(data: data, encoding: .utf8) ?? ""
+    }
+
+    /// Persists the summary instructions; a blank value removes the file so
+    /// "empty" is unambiguous.
+    public func saveSummaryInstructions(_ text: String) throws {
+        let url = try configDirectory().appendingPathComponent("summary-instructions.md")
+        if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            try? FileManager.default.removeItem(at: url)
+        } else {
+            try store.atomicWrite(Data(text.utf8), to: url)
+        }
+    }
 }

@@ -1,6 +1,27 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "settings.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammenfassung" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Summary" } }
+      }
+    },
+    "settings.summary.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusätzliche Anweisungen, die an den Standard-Prompt für die Zusammenfassung angehängt werden (z. B. Sprache, Tonfall, Länge, eigene Abschnitte). Struktur und Titel/Sprache-Kopf bleiben immer erhalten. Leer = Standard." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Extra instructions appended to the default summary prompt (e.g. language, tone, length, extra sections). The report structure and the title/language header are always kept. Empty = default." } }
+      }
+    },
+    "settings.summary.reset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf Standard zurücksetzen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset to default" } }
+      }
+    },
     "onboarding.welcome.title" : {
       "extractionState" : "manual",
       "localizations" : {

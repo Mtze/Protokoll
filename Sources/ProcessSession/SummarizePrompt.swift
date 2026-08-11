@@ -9,7 +9,20 @@ import Foundation
 /// for text on stdout: YAML frontmatter (with an auto-title, F9) followed by the
 /// protocol Markdown.
 public enum SummarizePrompt {
-    public static func build(currentTitle: String?) -> String {
+    /// The user's optional extra instructions, appended after the fixed rules so
+    /// the required output format always dominates. Empty when unset.
+    static func extraBlock(_ extra: String?) -> String {
+        guard let extra, !extra.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return "" }
+        return """
+
+
+        Additional instructions from the user (honor these, but ALWAYS keep the required YAML \
+        frontmatter with `title:` and `language:` and the Markdown structure above):
+        \(extra)
+        """
+    }
+
+    public static func build(currentTitle: String?, extra: String? = nil) -> String {
         let titleInstruction: String
         if let currentTitle, !currentTitle.isEmpty {
             titleInstruction = """
@@ -63,7 +76,7 @@ public enum SummarizePrompt {
         - Put Beschlüsse and Action Items first; they are what people look up later.
         - Never invent facts to smooth over a gap. For an unreconstructable passage write \
           `[unklar: ~HH:MM:SS]` with the timestamp. For unclear attribution write `[Sprecher unklar]`.
-        - Be concise. Omit a section only if it would be genuinely empty.
+        - Be concise. Omit a section only if it would be genuinely empty.\(extraBlock(extra))
         """
     }
 
@@ -85,7 +98,7 @@ public enum SummarizePrompt {
     }
 
     /// Reduce step (N9): synthesize the per-chunk notes into the final protocol.
-    public static func reduce(currentTitle: String?) -> String {
+    public static func reduce(currentTitle: String?, extra: String? = nil) -> String {
         let titleRule: String
         if let currentTitle, !currentTitle.isEmpty {
             titleRule = "Keep the existing title \"\(currentTitle)\" unless it is a placeholder date."
@@ -107,7 +120,7 @@ public enum SummarizePrompt {
         ## Offene Punkte / Open items   (discussed-but-not-decided, F4)
 
         \(titleRule)
-        Put Beschlüsse and Action Items first. Never invent facts to fill a gap.
+        Put Beschlüsse and Action Items first. Never invent facts to fill a gap.\(extraBlock(extra))
         """
     }
 }

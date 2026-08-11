@@ -51,7 +51,9 @@ public struct Pipeline: Sendable {
     ) {
         self.container = container
         self.transcriber = Transcriber(runner: runner, tools: tools)
-        self.summarizer = Summarizer(runner: runner, tools: tools, store: container.store)
+        let customInstructions = (try? container.loadSummaryInstructions()) ?? ""
+        self.summarizer = Summarizer(runner: runner, tools: tools, store: container.store,
+                                     customInstructions: customInstructions)
         self.waiter = ICloudDownloadWaiter()
         self.deviceId = deviceId
     }

@@ -27,17 +27,21 @@ public struct Summarizer: Sendable {
     let tools: ToolLocator
     let store: SessionStore
     let chunker: TranscriptChunker
+    /// User's extra summary instructions, appended to the built-in prompt.
+    let customInstructions: String
 
     public init(
         runner: CommandRunning,
         tools: ToolLocator = ToolLocator(),
         store: SessionStore = SessionStore(),
-        chunker: TranscriptChunker = TranscriptChunker()
+        chunker: TranscriptChunker = TranscriptChunker(),
+        customInstructions: String = ""
     ) {
         self.runner = runner
         self.tools = tools
         self.store = store
         self.chunker = chunker
+        self.customInstructions = customInstructions
     }
 
     public func summarize(
@@ -59,7 +63,7 @@ public struct Summarizer: Sendable {
         let output: String
         if chunks.count <= 1 {
             output = try runClaude(
-                prompt: SummarizePrompt.build(currentTitle: currentTitle),
+                prompt: SummarizePrompt.build(currentTitle: currentTitle, extra: customInstructions),
                 stdin: body, onProgress: onProgress
             )
         } else {
@@ -127,7 +131,7 @@ public struct Summarizer: Sendable {
         }
         onProgress?("synthesizing final protocol")
         return try runClaude(
-            prompt: SummarizePrompt.reduce(currentTitle: currentTitle),
+            prompt: SummarizePrompt.reduce(currentTitle: currentTitle, extra: customInstructions),
             stdin: partials.joined(separator: "\n\n"),
             onProgress: onProgress
         )
