@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0"   stop-color="#6D6BF6"/>
+      <stop offset="0.45" stop-color="#5B4CE0"/>
+      <stop offset="1"   stop-color="#5A22C9"/>
+    </linearGradient>
+<linearGradient id="bar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0"   stop-color="#6366F1"/>
+      <stop offset="1"   stop-color="#A855F7"/>
+    </linearGradient>
+<linearGradient id="pageFill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F1F0FB"/>
+    </linearGradient>
+<linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0"    stop-color="#FFFFFF" stop-opacity="0.42"/>
+      <stop offset="0.35" stop-color="#FFFFFF" stop-opacity="0.06"/>
+      <stop offset="0.6"  stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+<radialGradient id="glow" cx="0.32" cy="0.24" r="0.75">
+      <stop offset="0" stop-color="#B9A7FF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#B9A7FF" stop-opacity="0"/>
+    </radialGradient>
+<filter id="pageShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="14" stdDeviation="20" flood-color="#1E1247" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+
+  <!-- iOS/watchOS: full-bleed, opaque. System applies the corner/circle mask. -->
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1024" height="1024" fill="url(#glow)"/>
+  <rect x="0" y="0" width="1024" height="596" fill="url(#sheen)"/>
+
+  <!-- reuse the macOS content, scaled from the 824px squircle to the full frame -->
+  <g transform="translate(512 512) scale(1.2427) translate(-512 -512)">
+<!-- document -->
+  <g filter="url(#pageShadow)">
+    <rect x="277" y="236" width="470" height="560" rx="46" fill="url(#pageFill)"/>
+  </g>
+
+  <rect x="329" y="316" width="150" height="26" rx="13" fill="url(#bar)" opacity="0.95"/>
+  <rect x="329.00" y="411.47" width="15.00" height="117.06" rx="7.50" fill="url(#bar)"/>
+<rect x="358.25" y="390.23" width="15.00" height="159.54" rx="7.50" fill="url(#bar)"/>
+<rect x="387.50" y="401.28" width="15.00" height="137.45" rx="7.50" fill="url(#bar)"/>
+<rect x="416.75" y="370.69" width="15.00" height="198.62" rx="7.50" fill="url(#bar)"/>
+<rect x="446.00" y="352.00" width="15.00" height="236.00" rx="7.50" fill="url(#bar)"/>
+<rect x="475.25" y="382.59" width="15.00" height="174.83" rx="7.50" fill="url(#bar)"/>
+<rect x="504.50" y="364.74" width="15.00" height="210.51" rx="7.50" fill="url(#bar)"/>
+<rect x="533.75" y="396.18" width="15.00" height="147.64" rx="7.50" fill="url(#bar)"/>
+<rect x="563.00" y="358.80" width="15.00" height="222.41" rx="7.50" fill="url(#bar)"/>
+<rect x="592.25" y="385.98" width="15.00" height="168.03" rx="7.50" fill="url(#bar)"/>
+<rect x="621.50" y="375.79" width="15.00" height="188.42" rx="7.50" fill="url(#bar)"/>
+<rect x="650.75" y="404.68" width="15.00" height="130.65" rx="7.50" fill="url(#bar)"/>
+<rect x="680.00" y="392.78" width="15.00" height="154.44" rx="7.50" fill="url(#bar)"/>
+
+  <rect x="329" y="620" width="366.0" height="17" rx="8.5" fill="#CBCEE6"/>
+<rect x="329" y="662" width="366.0" height="17" rx="8.5" fill="#CBCEE6"/>
+<rect x="329" y="704" width="201.3" height="17" rx="8.5" fill="#CBCEE6"/>
+  </g>
+</svg>
