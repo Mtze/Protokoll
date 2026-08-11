@@ -85,6 +85,7 @@ struct SessionDetailView: View {
                         Label(language.uppercased(), systemImage: "globe").font(.caption).foregroundStyle(.secondary)
                     }
                     Text(session.metadata.startedAt, style: .date).font(.caption).foregroundStyle(.secondary)
+                    Text(session.metadata.startedAt, style: .time).font(.caption).foregroundStyle(.secondary)
                     if let duration = session.metadata.duration {
                         Text(SessionFormat.duration(duration)).font(.caption).foregroundStyle(.secondary)
                     }

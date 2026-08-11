@@ -33,6 +33,7 @@ struct LibraryListView: View {
                         HStack(spacing: 6) {
                             IOSStatusBadge(status: session.metadata.pipeline.status)
                             Text(session.metadata.startedAt, style: .date).font(.caption).foregroundStyle(.secondary)
+                            Text(session.metadata.startedAt, style: .time).font(.caption).foregroundStyle(.secondary)
                         }
                         let projects = model.projects(for: session)
                         if !projects.isEmpty {
