@@ -140,12 +140,18 @@ struct LibraryView: View {
             Spacer()
             Menu {
                 Button { projectFilter = nil } label: {
-                    Label("library.filter.all", systemImage: projectFilter == nil ? "checkmark" : "")
+                    Label("library.filter.all",
+                          systemImage: projectFilter == nil ? "checkmark.circle.fill" : "circle.dashed")
                 }
                 Divider()
                 ForEach(model.projects) { project in
                     Button { projectFilter = project.id } label: {
-                        Label(project.name, systemImage: projectFilter == project.id ? "checkmark" : "circle")
+                        Label {
+                            Text(project.name)
+                        } icon: {
+                            Image(systemName: projectFilter == project.id ? "checkmark.circle.fill" : "circle.fill")
+                                .foregroundStyle(Color(hex: project.color))
+                        }
                     }
                 }
             } label: {
