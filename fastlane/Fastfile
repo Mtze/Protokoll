@@ -24,6 +24,7 @@ platform :mac do
   end
 
   # TODO (M4): snapshot lane for localized screenshots (fastlane snapshot).
-  # TODO (M5): distribution lane (gym + notarize + Developer ID) - requires a
-  #            Developer ID certificate and an Apple Developer account.
+  # Distribution (ADR-8) lives in .github/workflows/release.yml, not here: a
+  # tag-triggered build that optionally Developer ID-signs + notarizes (secrets-
+  # gated), zips the app, publishes a GitHub Release, and bumps the Homebrew cask.
 end

@@ -1,0 +1,146 @@
+name: Release
+
+# Tag-triggered distribution: build the Mac app, optionally Developer ID sign +
+# notarize (only when signing secrets are present), zip it, publish a GitHub
+# Release, and auto-bump the Homebrew cask (Casks/protokoll.rb).
+#
+#   git tag v0.1.0 && git push origin v0.1.0
+#
+# Signing/notarization is OFF until these repo secrets exist (see README):
+#   MACOS_CERTIFICATE      base64 of the Developer ID Application .p12
+#   MACOS_CERTIFICATE_PWD  password for that .p12
+#   MACOS_SIGN_IDENTITY    e.g. "Developer ID Application: Name (TEAMID)"
+#   KEYCHAIN_PASSWORD      throwaway password for the temp keychain
+#   NOTARY_APPLE_ID        Apple ID email for notarytool
+#   NOTARY_PASSWORD        app-specific password for that Apple ID
+#   NOTARY_TEAM_ID         Developer Team ID
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build, release, bump cask
+    runs-on: macos-latest
+    env:
+      # Secrets can't be used in `if:` directly, so gate on a mapped boolean.
+      HAS_SIGNING: ${{ secrets.MACOS_CERTIFICATE != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Derive version from tag
+        id: version
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      - name: Generate Xcode project
+        run: xcodegen generate
+
+      - name: Build macOS app (Release)
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Mac \
+            -configuration Release -destination 'platform=macOS' \
+            -derivedDataPath build \
+            MARKETING_VERSION="$VERSION" CODE_SIGNING_ALLOWED=NO build
+          APP="build/Build/Products/Release/Protokoll.app"
+          test -d "$APP"
+          echo "APP=$APP" >> "$GITHUB_ENV"
+
+      - name: Developer ID sign + notarize
+        if: env.HAS_SIGNING == 'true'
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+          MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          NOTARY_APPLE_ID: ${{ secrets.NOTARY_APPLE_ID }}
+          NOTARY_PASSWORD: ${{ secrets.NOTARY_PASSWORD }}
+          NOTARY_TEAM_ID: ${{ secrets.NOTARY_TEAM_ID }}
+        run: |
+          set -euo pipefail
+
+          # 1. Import the Developer ID cert into a throwaway keychain and allow
+          #    non-interactive codesign (partition list avoids errSecInternalComponent).
+          KEYCHAIN="$RUNNER_TEMP/signing.keychain-db"
+          echo "$MACOS_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" \
+            -P "$MACOS_CERTIFICATE_PWD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security list-keychains -d user -s "$KEYCHAIN" login.keychain-db
+
+          # 2. Sign inside-out: bundled helpers/scripts first, then the app itself
+          #    (Apple discourages --deep; sign nested executables explicitly).
+          find "$APP/Contents/Helpers" -type f -perm +111 2>/dev/null | while read -r bin; do
+            codesign --force --options runtime --timestamp \
+              --sign "$MACOS_SIGN_IDENTITY" "$bin"
+          done
+          codesign --force --options runtime --timestamp \
+            --sign "$MACOS_SIGN_IDENTITY" "$APP"
+          codesign --verify --strict --verbose=2 "$APP"
+
+          # 3. Notarize (notarytool requires a zipped submission, not a raw .app).
+          ditto -c -k --keepParent "$APP" "$RUNNER_TEMP/notarize.zip"
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+            --apple-id "$NOTARY_APPLE_ID" --password "$NOTARY_PASSWORD" \
+            --team-id "$NOTARY_TEAM_ID" --wait
+
+          # 4. Staple the ticket onto the .app (it gets re-zipped in the next step).
+          xcrun stapler staple "$APP"
+
+      - name: Zip the app
+        run: |
+          set -euo pipefail
+          ditto -c -k --keepParent "$APP" Protokoll.zip
+          echo "SHA256=$(shasum -a 256 Protokoll.zip | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" Protokoll.zip \
+            --title "Protokoll $GITHUB_REF_NAME" --generate-notes
+
+      - name: Bump Homebrew cask
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          CASK="Casks/protokoll.rb"
+          sed -i '' -E "s/  version \"[^\"]*\"/  version \"$VERSION\"/" "$CASK"
+          sed -i '' -E "s/  sha256 \"[^\"]*\"/  sha256 \"$SHA256\"/" "$CASK"
+          if git diff --quiet -- "$CASK"; then
+            echo "Cask already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$CASK"
+          git commit -m "Bump protokoll cask to $VERSION [skip ci]"
+          # Rebase onto main in case it moved while this tag build ran. If main is
+          # branch-protected, this push is rejected - bump the cask via a PR instead.
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
+
+      - name: Clean up signing keychain
+        if: always() && env.HAS_SIGNING == 'true'
+        run: security delete-keychain "$RUNNER_TEMP/signing.keychain-db" || true

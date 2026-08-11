@@ -466,3 +466,35 @@ getrennten Spuren entfällt vorerst. Wird Diarisierung später verfolgt, können
 die Rohspuren zusätzlich unter `audio/` erhalten und ein Werkzeug wie WhisperX
 eingesetzt werden. Für die aktuelle Anforderung („ein funktionierendes
 Transkript der ganzen Besprechung") überwiegt der einzelne gemischte Track.
+
+### ADR-8 — Verteilung über ein Homebrew-Cask + GitHub-Releases
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Die Mac-App wird als **Homebrew-Cask** (`Casks/protokoll.rb`)
+verteilt, das auf ein gezipptes `Protokoll.app` in den **GitHub-Releases** zeigt.
+Ein tag-getriggerter Workflow (`.github/workflows/release.yml`) baut die App,
+signiert und notarisiert sie **optional** (nur wenn die Signing-Secrets gesetzt
+sind), zippt sie, veröffentlicht das Release und aktualisiert `version` + `sha256`
+im Cask automatisch. Das Cask liegt in diesem App-Repo; die Installation nutzt
+daher die Zwei-Argument-Form
+`brew tap mtze/protokoll https://github.com/Mtze/Protokoll`.
+
+**Kontext & Begründung:**
+- Für eine GUI-`.app` ist ein **Cask** (nicht eine Formula) der richtige
+  Homebrew-Mechanismus.
+- Ein eigenes `homebrew-protokoll`-Repo wäre die Standardkonvention, ist aber für
+  ein persönliches Tool Overhead. Das Cask im App-Repo zu halten spart ein zweites
+  Repo; bewusster Nachteil: jedes `brew update` holt das ganze App-Repo statt eines
+  schlanken Tap-Repos.
+- Signieren/Notarisieren erfordert ein Developer-ID-Zertifikat und einen Apple-
+  Developer-Account (ADR-3: die App ist nicht sandboxed, weil sie fremde CLIs
+  ausführt). Solange diese fehlen, läuft die Auslieferung **unsigniert**; der
+  Workflow-Schritt ist per Secret-Gate vorbereitet und wird ohne Code-Änderung
+  aktiv, sobald die Secrets vorliegen.
+
+**Konsequenz (bewusst):** Bis zur Notarisierung blockiert Gatekeeper den ersten
+Start (unter macOS 15 ohne den alten Rechtsklick-Öffnen-Umweg); Nutzer bestätigen
+über *Systemeinstellungen > Datenschutz & Sicherheit* oder installieren mit
+`--no-quarantine`. Der Cask-Bump-Schritt pusht auf `main` - bei Branch-Schutz muss
+der Bump stattdessen per PR erfolgen.
