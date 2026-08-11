@@ -320,14 +320,13 @@ enum SettingsFormat {
     /// Friendly, localized name for a palette color (used as swatch tooltip/label).
     static func colorName(_ hex: String) -> LocalizedStringKey {
         switch hex {
-        case "#3B82F6": return "color.blue"
-        case "#22C55E": return "color.green"
-        case "#A855F7": return "color.purple"
-        case "#F97316": return "color.orange"
         case "#EF4444": return "color.red"
-        case "#14B8A6": return "color.teal"
+        case "#F97316": return "color.orange"
         case "#EAB308": return "color.yellow"
-        case "#EC4899": return "color.pink"
+        case "#22C55E": return "color.green"
+        case "#3B82F6": return "color.blue"
+        case "#A855F7": return "color.purple"
+        case "#A16207": return "color.brown"
         default: return "color.custom"
         }
     }

@@ -57,6 +57,13 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } }
       }
     },
+    "color.brown" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Braun" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Brown" } }
+      }
+    },
     "color.custom" : {
       "extractionState" : "manual",
       "localizations" : {

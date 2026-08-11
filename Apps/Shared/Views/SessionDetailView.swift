@@ -142,12 +142,11 @@ struct SessionDetailView: View {
                 Menu {
                     ForEach(model.projects) { project in
                         Button { toggleProject(project) } label: {
-                            Label {
-                                Text(project.name)
-                            } icon: {
-                                Image(nsImage: projectDotImage(hex: project.color,
-                                                               checked: session.metadata.projects.contains(project.id)))
-                                    .renderingMode(.original)
+                            if session.metadata.projects.contains(project.id) {
+                                Label { Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)") }
+                                    icon: { Image(systemName: "checkmark") }
+                            } else {
+                                Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)")
                             }
                         }
                     }

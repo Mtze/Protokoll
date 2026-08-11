@@ -15,15 +15,30 @@ public enum ProjectColor {
         )
     }
 
-    /// A small, accessible preset palette for the project color picker.
+    /// A small preset palette. Each color maps to a colored circle emoji so it
+    /// can be shown as a menu indicator (see ``emoji(for:)``).
     public static let palette: [String] = [
-        "#3B82F6", // blue
-        "#22C55E", // green
-        "#A855F7", // purple
-        "#F97316", // orange
         "#EF4444", // red
-        "#14B8A6", // teal
-        "#EAB308", // amber
-        "#EC4899", // pink
+        "#F97316", // orange
+        "#EAB308", // yellow
+        "#22C55E", // green
+        "#3B82F6", // blue
+        "#A855F7", // purple
+        "#A16207", // brown
     ]
+
+    /// A colored circle emoji for a palette color (a menu-friendly indicator,
+    /// since SwiftUI templates SF Symbol menu icons to a single tint).
+    public static func emoji(for hex: String) -> String {
+        switch hex {
+        case "#EF4444": return "🔴"
+        case "#F97316": return "🟠"
+        case "#EAB308": return "🟡"
+        case "#22C55E": return "🟢"
+        case "#3B82F6": return "🔵"
+        case "#A855F7": return "🟣"
+        case "#A16207": return "🟤"
+        default: return "⚪"
+        }
+    }
 }
