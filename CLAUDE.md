@@ -20,7 +20,9 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
 - `Sources/Diagnostics/` - preflight checks, tiered remediation, System-Test.
   UI-free and testable.
 - `Apps/Mac/` - `MenuBarExtra` app + `Recorder` actor (CAF→m4a, ADR-3).
-- `Apps/Shared/` - SwiftUI views, `Scheduler` (ADR-4), `Localizable.xcstrings`.
+- `Apps/Shared/` - SwiftUI views, `Scheduler` (ADR-4), `Localizable.xcstrings`,
+  and `Resources/Assets.xcassets` with the shared `AppIcon` (Mac/iOS/watch, wired
+  via `ASSETCATALOG_COMPILER_APPICON_NAME`). Icon source art: `docs/branding/`.
 - `Sources/SharedKit/AppLog.swift` - the one logging facility (`os.Logger`,
   subsystem `com.protokoll`, a category per flow). Every module + app uses it.
 

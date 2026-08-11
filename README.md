@@ -74,10 +74,17 @@ Sources/SharedKit/     Foundation-only model + container access (ADR-2)
 Sources/ProcessSession/ the process-session pipeline CLI (ADR-1)
 Sources/Diagnostics/   preflight checks, remediation, System-Test
 Apps/Mac/              menubar app + Recorder actor (ADR-3)
-Apps/Shared/           SwiftUI views, scheduler (ADR-4), String Catalog
+Apps/Shared/           SwiftUI views, scheduler (ADR-4), String Catalog,
+                       Resources/Assets.xcassets (shared AppIcon)
 scripts/               vendored transcribe.sh (+ setup.sh)
+docs/branding/         app icon source art (SVG, icns, 1024 master)
 fastlane/              build/test lanes
 ```
+
+The app icon is one shared `AppIcon` set in
+`Apps/Shared/Resources/Assets.xcassets`, wired into the Mac, iOS, and watchOS
+targets via `ASSETCATALOG_COMPILER_APPICON_NAME` in `project.yml`. Edit the
+source art under `docs/branding/`, not the catalog PNGs.
 
 ## Signing & notarization (manual)
 
