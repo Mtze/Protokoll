@@ -1,5 +1,7 @@
 # Protokoll
 
+[![CI](https://github.com/Mtze/Protokoll/actions/workflows/ci.yml/badge.svg)](https://github.com/Mtze/Protokoll/actions/workflows/ci.yml)
+
 A local, free, privacy-preserving meeting recorder and protocol pipeline for
 macOS (and iOS/watchOS in later milestones). Record audio into an iCloud
 container of open files; a Mac-side pipeline turns audio into a transcript and a
