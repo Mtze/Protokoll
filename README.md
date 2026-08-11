@@ -90,3 +90,27 @@ outside this automated build.
 `swift test` runs the Swift Testing suites for SharedKit, the pipeline, and
 Diagnostics. The subprocess boundary (`CommandRunning`) is faked so tests never
 shell out to Whisper or `claude`. `fastlane test` wraps the same.
+
+## Logging & debugging
+
+All apps and the `process-session` CLI log through one facility, `AppLog`
+(`Sources/SharedKit/AppLog.swift`), built on Apple's unified logging
+(`os.Logger`). Everything shares the subsystem `com.meetingnotes` with a category
+per flow: `recording`, `systemaudio`, `pipeline`, `scheduler`, `diagnostics`,
+`container`, `search`.
+
+View logs live from the terminal or in Console.app:
+
+```bash
+# Everything from the app + pipeline
+log stream --predicate 'subsystem == "com.meetingnotes"'
+
+# Just one flow
+log stream --predicate 'subsystem == "com.meetingnotes" && category == "pipeline"'
+
+# Past hour, including debug/info
+log show --last 1h --debug --info --predicate 'subsystem == "com.meetingnotes"'
+```
+
+Privacy: logs never contain transcript or audio content - only session IDs,
+folder names, states, step names, durations, exit codes, and error messages.

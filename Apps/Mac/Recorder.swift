@@ -77,6 +77,7 @@ actor Recorder {
         self.session = session
         self.startedAt = Date()
         self.isRecording = true
+        AppLog.recording.info("recording started session=\(session.id, privacy: .public) folder=\(AppLog.folderName(session.folder), privacy: .public)")
     }
 
     /// Stops capture, finalizes the CAF, and produces `mic.m4a` - mixing in the
@@ -95,9 +96,11 @@ actor Recorder {
 
         let systemURL = session.systemAudioURL
         if mixSystemAudio, FileManager.default.fileExists(atPath: systemURL.path) {
+            AppLog.recording.info("mixing mic + system audio session=\(session.id, privacy: .public)")
             try await AudioMixer.mix([session.micCaptureURL, systemURL], into: session.micAudioURL)
             try? FileManager.default.removeItem(at: systemURL)
         } else {
+            AppLog.recording.info("converting CAF to m4a session=\(session.id, privacy: .public)")
             try await Self.convertCAFToM4A(caf: session.micCaptureURL, m4a: session.micAudioURL)
         }
         try? FileManager.default.removeItem(at: session.micCaptureURL)
@@ -108,6 +111,7 @@ actor Recorder {
         session.metadata.audioTracks = [.mic]
         self.session = nil
         self.startedAt = nil
+        AppLog.recording.info("recording stopped session=\(session.id, privacy: .public) duration=\(session.metadata.duration ?? 0, format: .fixed(precision: 1), privacy: .public)s")
         return session
     }
 
@@ -120,11 +124,13 @@ actor Recorder {
             let m4a = session.micAudioURL
             let fileManager = FileManager.default
             guard fileManager.fileExists(atPath: caf.path), !fileManager.fileExists(atPath: m4a.path) else { continue }
+            AppLog.recording.info("recovering orphaned CAF session=\(session.id, privacy: .public)")
             do {
                 try await convertCAFToM4A(caf: caf, m4a: m4a)
                 try? fileManager.removeItem(at: caf)
             } catch {
                 // Leave the CAF in place; better a raw file than nothing (N5).
+                AppLog.recording.error("orphan recovery failed session=\(session.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")
                 continue
             }
         }

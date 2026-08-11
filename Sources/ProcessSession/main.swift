@@ -82,10 +82,14 @@ let progress: @Sendable (String) -> Void = { line in
     FileHandle.standardError.write(Data("  \(line)\n".utf8))
 }
 
+AppLog.pipeline.info("process-session invoked step=\(stepSelection.rawValue, privacy: .public) force=\(force, privacy: .public) folder=\(AppLog.folderName(folder), privacy: .public)")
+
 do {
     let session = try pipeline.run(folder: folder, step: stepSelection, force: force, onProgress: progress)
+    AppLog.pipeline.info("process-session finished status=\(session.metadata.pipeline.status.name, privacy: .public)")
     print("done: \(session.metadata.pipeline.status.name) - \(session.displayTitle)")
 } catch {
     let message = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+    AppLog.pipeline.error("process-session failed: \(message, privacy: .public)")
     fail(message)
 }

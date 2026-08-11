@@ -55,7 +55,9 @@ final class WatchRecorder {
             self.recordingStartedAt = Date()
             self.lastRecordingURL = nil
             startLevelMonitoring()
+            AppLog.recording.info("watch recording started")
         } catch {
+            AppLog.recording.error("watch recording start failed: \(AppLog.describe(error), privacy: .public)")
             lastStatus = error.localizedDescription
         }
     }
@@ -68,6 +70,7 @@ final class WatchRecorder {
         guard let fileURL, let startedAt else { return }
         let duration = Date().timeIntervalSince(startedAt)
         WatchTransfer.shared.send(audio: fileURL, startedAt: startedAt, duration: duration)
+        AppLog.recording.info("watch recording sent duration=\(duration, format: .fixed(precision: 1), privacy: .public)s")
         lastStatus = String(localized: "watch.sent")
         lastRecordingURL = fileURL  // keep for local playback
         self.fileURL = nil

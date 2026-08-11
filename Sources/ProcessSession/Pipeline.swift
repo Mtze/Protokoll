@@ -87,6 +87,9 @@ public struct Pipeline: Sendable {
 
     private func runTranscribe(session: Session, onProgress: (@Sendable (String) -> Void)?) throws -> Session {
         let store = container.store
+        let name = AppLog.folderName(session.folder)
+        AppLog.pipeline.info("transcribe start session=\(session.id, privacy: .public) folder=\(name, privacy: .public)")
+        let started = Date()
         try waiter.awaitLocal(session.micAudioURL)
         _ = try store.acquireClaim(step: .transcribe, deviceId: deviceId, in: session.folder)
         _ = try store.setStatus(.transcribing, in: session.folder)
@@ -97,8 +100,10 @@ public struct Pipeline: Sendable {
             updated.metadata.pipeline.status = .transcribed
             updated.metadata.pipeline.claim = nil
             try store.save(updated)
+            AppLog.pipeline.info("transcribe done session=\(session.id, privacy: .public) duration=\(Date().timeIntervalSince(started), format: .fixed(precision: 1), privacy: .public)s")
             return updated
         } catch {
+            AppLog.pipeline.error("transcribe failed session=\(session.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")
             try? recordFailure(folder: session.folder, error: error)
             throw error
         }
@@ -106,6 +111,9 @@ public struct Pipeline: Sendable {
 
     private func runSummarize(session: Session, onProgress: (@Sendable (String) -> Void)?) throws -> Session {
         let store = container.store
+        let name = AppLog.folderName(session.folder)
+        AppLog.pipeline.info("summarize start session=\(session.id, privacy: .public) folder=\(name, privacy: .public)")
+        let started = Date()
         _ = try store.acquireClaim(step: .summarize, deviceId: deviceId, in: session.folder)
         _ = try store.setStatus(.summarizing, in: session.folder)
         do {
@@ -115,8 +123,10 @@ public struct Pipeline: Sendable {
             updated.metadata.pipeline.status = .done
             updated.metadata.pipeline.claim = nil
             try store.save(updated)
+            AppLog.pipeline.info("summarize done session=\(session.id, privacy: .public) duration=\(Date().timeIntervalSince(started), format: .fixed(precision: 1), privacy: .public)s")
             return updated
         } catch {
+            AppLog.pipeline.error("summarize failed session=\(session.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")
             try? recordFailure(folder: session.folder, error: error)
             throw error
         }

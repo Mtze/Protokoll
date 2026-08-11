@@ -43,6 +43,7 @@ public struct SessionStore: Sendable {
         try FileManager.default.createDirectory(at: session.folder, withIntermediateDirectories: true)
         let data = try Self.encoder.encode(session.metadata)
         try atomicWrite(data, to: session.metadataURL)
+        AppLog.container.debug("session saved id=\(session.id, privacy: .public) status=\(session.metadata.pipeline.status.name, privacy: .public)")
     }
 
     // MARK: Protocol rotation (N10)
@@ -85,6 +86,7 @@ public struct SessionStore: Sendable {
         if let existing = session.metadata.pipeline.claim,
            existing.deviceId != deviceId,
            existing.isLive(now: now) {
+            AppLog.container.info("claim conflict session=\(session.id, privacy: .public) step=\(step.rawValue, privacy: .public) heldBy=\(existing.deviceId, privacy: .public)")
             throw ClaimConflict(heldBy: existing.deviceId, step: existing.step)
         }
         session.metadata.pipeline.claim = Claim(

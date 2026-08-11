@@ -34,11 +34,15 @@ actor SystemAudioRecorder: SystemAudioCapturing {
         // and trigger the prompt / add the app to the list if it is missing.
         guard CGPreflightScreenCaptureAccess() else {
             _ = CGRequestScreenCaptureAccess()
+            AppLog.systemAudio.error("system-audio capture blocked: Screen Recording permission missing")
             throw SystemAudioError.permissionDenied
         }
 
         let content = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: false)
-        guard let display = content.displays.first else { throw SystemAudioError.noDisplay }
+        guard let display = content.displays.first else {
+            AppLog.systemAudio.error("system-audio capture failed: no display available")
+            throw SystemAudioError.noDisplay
+        }
         let filter = SCContentFilter(display: display, excludingApplications: [], exceptingWindows: [])
 
         let configuration = SCStreamConfiguration()
@@ -59,6 +63,7 @@ actor SystemAudioRecorder: SystemAudioCapturing {
 
         self.stream = stream
         self.output = output
+        AppLog.systemAudio.info("system-audio capture started file=\(url.lastPathComponent, privacy: .public)")
     }
 
     /// Stops capture, finalizes `system.m4a`, and reports whether any audio was
@@ -68,6 +73,7 @@ actor SystemAudioRecorder: SystemAudioCapturing {
         let captured = await output?.finish() ?? false
         stream = nil
         output = nil
+        AppLog.systemAudio.info("system-audio capture stopped captured=\(captured, privacy: .public)")
         return captured
     }
 }

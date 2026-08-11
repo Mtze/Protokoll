@@ -19,6 +19,10 @@ model and container access, reused unchanged by Mac/iOS/watch.
 - `Frontmatter` - a tiny dependency-free YAML frontmatter reader/writer.
 - `CommandRunner` - the `CommandRunning` subprocess boundary (fakeable) reused
   by the pipeline and Diagnostics.
+- `AppLog` - the one logging facility (`os.Logger`, subsystem `com.meetingnotes`,
+  a category per flow). Used by every module and app; `MediaKit` depends on
+  SharedKit solely for this. Pure helpers `folderName`/`describe` are unit-tested.
+  View with `log stream --predicate 'subsystem == "com.meetingnotes"'`.
 
 ## ProcessSession (`Sources/ProcessSession`)
 
@@ -54,6 +58,7 @@ bootstrap gate. `SystemTest` runs a bundled clip through the real
 ## Tests (`Tests/`)
 
 Swift Testing. `SharedKitTests` (create/reload/status, rotation, malformed-JSON
-tolerance, claim lifecycle, frontmatter). `ProcessSessionTests` (transcript
-assembly, summarize title-lift, full pipeline via fakes, failure capture).
-`DiagnosticsTests` (checks, aggregate health, bootstrap gate, System-Test).
+tolerance, claim lifecycle, frontmatter, `AppLog` subsystem + redaction helpers).
+`ProcessSessionTests` (transcript assembly, summarize title-lift, full pipeline
+via fakes, failure capture). `DiagnosticsTests` (checks, aggregate health,
+bootstrap gate, System-Test).

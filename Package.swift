@@ -33,6 +33,7 @@ let package = Package(
         ),
         .target(
             name: "MediaKit",
+            dependencies: ["SharedKit"],
             swiftSettings: [.swiftLanguageMode(.v6)]
         ),
         .executableTarget(
