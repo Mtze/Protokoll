@@ -27,7 +27,7 @@ public struct RemediationExecutor: Sendable {
         if let bootstrap = fix.bootstrap {
             let resolved = (try? runner.run(
                 executable: "/bin/sh",
-                arguments: ["-lc", "command -v \(bootstrap.toolName)"]
+                arguments: ["-c", "command -v \(bootstrap.toolName)"]
             )) ?? CommandResult(exitCode: 127, stdout: "", stderr: "")
             if !resolved.succeeded {
                 return .bootstrapRequired(bootstrap)

@@ -18,7 +18,9 @@ public protocol DiagnosticCheck: Sendable {
 extension DiagnosticCheck {
     /// Whether an executable is resolvable on PATH (via `command -v`).
     func resolves(_ tool: String, runner: CommandRunning) -> CommandResult {
-        (try? runner.run(executable: "/bin/sh", arguments: ["-lc", "command -v \(tool)"]))
+        // `-c` (not `-lc`): use the inherited, PATH-augmented environment rather
+        // than a login shell, whose profile never sees a fish user's PATH.
+        (try? runner.run(executable: "/bin/sh", arguments: ["-c", "command -v \(tool)"]))
             ?? CommandResult(exitCode: 127, stdout: "", stderr: "could not launch shell")
     }
 }
@@ -140,9 +142,12 @@ public struct PathCheck: DiagnosticCheck {
     public let explanationKey = "diag.path.explanation"
     public let remediation = Remediation.none
     public func run(runner: CommandRunning) -> CheckResult {
-        let path = ProcessInfo.processInfo.environment["PATH"] ?? ""
-        let hasHomebrew = path.contains("/opt/homebrew/bin") || path.contains("/usr/local/bin")
-        return CheckResult(id: id, outcome: hasHomebrew ? .passed : .warning, detail: path)
+        // Report the *effective* PATH used for subprocesses (CommandRunner adds
+        // the Homebrew/pip dirs), not the app's minimal launch PATH.
+        let env = ProcessInfo.processInfo.environment
+        let effective = ShellPath.augmented(base: env["PATH"], home: env["HOME"])
+        let hasHomebrew = effective.contains("/opt/homebrew/bin") || effective.contains("/usr/local/bin")
+        return CheckResult(id: id, outcome: hasHomebrew ? .passed : .warning, detail: effective)
     }
 }
 

@@ -66,6 +66,9 @@ public struct ProcessCommandRunner: CommandRunning {
         if let environment {
             for (key, value) in environment { env[key] = value }
         }
+        // A GUI-launched app has a minimal PATH; make sure Homebrew/pip CLIs
+        // (ffmpeg, claude, whisper) are findable by every subprocess.
+        env["PATH"] = ShellPath.augmented(base: env["PATH"], home: env["HOME"])
         process.environment = env
 
         let outputPipe = Pipe()
