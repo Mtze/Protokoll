@@ -53,11 +53,7 @@ struct LibraryView: View {
             // Wide enough that title, state, date and duration all show without resizing.
             .navigationSplitViewColumnWidth(min: 260, ideal: 300, max: 440)
             .navigationTitle("library.title")
-            .safeAreaInset(edge: .top, spacing: 0) {
-                if !model.projects.isEmpty {
-                    projectFilterHeader
-                }
-            }
+            .safeAreaInset(edge: .top, spacing: 0) { sidebarHeader }
             .overlay {
                 if model.sessions.isEmpty {
                     ContentUnavailableView("library.empty.title", systemImage: "waveform", description: Text("library.empty.subtitle"))
@@ -97,13 +93,6 @@ struct LibraryView: View {
                         .frame(width: 180, height: 22)
                 }
             }
-            ToolbarItem {
-                Button {
-                    model.reloadSessions()
-                    Task { await model.rebuildIndex() }
-                } label: { Label("library.refresh", systemImage: "arrow.clockwise") }
-                .help("library.refresh")
-            }
         }
         .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
             Button("consent.confirm") { Task { await model.startRecording() } }
@@ -127,44 +116,28 @@ struct LibraryView: View {
         }
     }
 
-    /// A compact filter control at the top-right of the sidebar (F7). The icon
-    /// fills when a filter is active, and the active project is named alongside
-    /// it, so what's filtered is always clear.
-    private var projectFilterHeader: some View {
-        HStack(spacing: 6) {
-            if let id = projectFilter, let project = model.projects.first(where: { $0.id == id }) {
-                Circle().fill(Color(hex: project.color)).frame(width: 8, height: 8)
-                Text(project.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
-            } else {
-                Text("library.filter.all").font(.caption).foregroundStyle(.secondary)
+    /// The sidebar header bar: the active project filter (when any projects
+    /// exist) on the left, and the filter + refresh controls on the right.
+    private var sidebarHeader: some View {
+        HStack(spacing: 8) {
+            if !model.projects.isEmpty {
+                if let id = projectFilter, let project = model.projects.first(where: { $0.id == id }) {
+                    Circle().fill(Color(hex: project.color)).frame(width: 8, height: 8)
+                    Text(project.name).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                } else {
+                    Text("library.filter.all").font(.caption).foregroundStyle(.secondary)
+                }
             }
             Spacer()
-            Menu {
-                Button { projectFilter = nil } label: {
-                    Label("library.filter.all",
-                          systemImage: projectFilter == nil ? "checkmark.circle.fill" : "circle.dashed")
-                }
-                Divider()
-                ForEach(model.projects) { project in
-                    Button { projectFilter = project.id } label: {
-                        if projectFilter == project.id {
-                            Label { Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)") }
-                                icon: { Image(systemName: "checkmark") }
-                        } else {
-                            Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)")
-                        }
-                    }
-                }
+            if !model.projects.isEmpty { filterMenu }
+            Button {
+                model.reloadSessions()
+                Task { await model.rebuildIndex() }
             } label: {
-                Image(systemName: projectFilter == nil
-                      ? "line.3.horizontal.decrease.circle"
-                      : "line.3.horizontal.decrease.circle.fill")
-                    .foregroundStyle(projectFilter == nil ? Color.secondary : Color.accentColor)
+                Image(systemName: "arrow.clockwise")
             }
-            .menuStyle(.borderlessButton)
-            .menuIndicator(.hidden)
-            .fixedSize()
-            .help("library.filter")
+            .buttonStyle(.borderless)
+            .help("library.refresh")
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
@@ -182,6 +155,36 @@ struct LibraryView: View {
         } else {
             Task { await model.startRecording() }
         }
+    }
+
+    /// The project filter menu (F7). The icon fills when a filter is active.
+    private var filterMenu: some View {
+        Menu {
+            Button { projectFilter = nil } label: {
+                Label("library.filter.all",
+                      systemImage: projectFilter == nil ? "checkmark.circle.fill" : "circle.dashed")
+            }
+            Divider()
+            ForEach(model.projects) { project in
+                Button { projectFilter = project.id } label: {
+                    if projectFilter == project.id {
+                        Label { Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)") }
+                            icon: { Image(systemName: "checkmark") }
+                    } else {
+                        Text(verbatim: "\(ProjectColor.emoji(for: project.color))  \(project.name)")
+                    }
+                }
+            }
+        } label: {
+            Image(systemName: projectFilter == nil
+                  ? "line.3.horizontal.decrease.circle"
+                  : "line.3.horizontal.decrease.circle.fill")
+                .foregroundStyle(projectFilter == nil ? Color.secondary : Color.accentColor)
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .help("library.filter")
     }
 
     /// Record / stop, creating a new session right from the main window.
