@@ -141,6 +141,20 @@
         "en" : { "stringUnit" : { "state" : "translated", "value" : "All projects" } }
       }
     },
+    "settings.tab.diagnostics" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diagnose" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Diagnostics" } }
+      }
+    },
+    "permissions.section" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Berechtigungen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Permissions" } }
+      }
+    },
     "settings.tab.general" : {
       "extractionState" : "manual",
       "localizations" : {
