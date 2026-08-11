@@ -16,7 +16,7 @@ final class ProbeRunner: CommandRunning, @unchecked Sendable {
         self.pythonImports = pythonImports
     }
 
-    func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
+    func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, workingDirectory: URL?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
         lock.lock(); lastCalls.append(arguments); lock.unlock()
         let script = arguments.last ?? ""
         if script.hasPrefix("command -v ") {
@@ -159,7 +159,7 @@ final class ProbeRunner: CommandRunning, @unchecked Sendable {
     @Test func passesWhenPipelineProducesOutputs() throws {
         // Fake process-session: writes transcript + protocol and sets done.
         final class FakePipelineRunner: CommandRunning, @unchecked Sendable {
-            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
+            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, workingDirectory: URL?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
                 let folder = URL(fileURLWithPath: arguments[0])
                 let store = SessionStore()
                 var session = try store.load(folder: folder)
@@ -183,7 +183,7 @@ final class ProbeRunner: CommandRunning, @unchecked Sendable {
 
     @Test func failsWhenPipelineErrors() throws {
         final class FailingRunner: CommandRunning, @unchecked Sendable {
-            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
+            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, workingDirectory: URL?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
                 CommandResult(exitCode: 1, stdout: "", stderr: "engine missing")
             }
         }

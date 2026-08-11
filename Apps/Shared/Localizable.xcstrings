@@ -1,6 +1,146 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "onboarding.welcome.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Willkommen bei Protokoll" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to Protokoll" } }
+      }
+    },
+    "onboarding.welcome.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles bleibt lokal auf diesem Mac. Wir richten kurz die nötigen Berechtigungen ein - nur Mikrofon ist erforderlich. Protokoll braucht keinen Zugriff auf Fotos oder deine Ordner." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Everything stays local on this Mac. Let's set up the few permissions Protokoll needs - only the microphone is required. Protokoll never needs access to Photos or your folders." } }
+      }
+    },
+    "onboarding.mic.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mikrofon" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Microphone" } }
+      }
+    },
+    "onboarding.mic.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erforderlich, um Meetings aufzunehmen. Die Aufnahme bleibt auf diesem Gerät." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Required to record meetings. Recordings stay on this device." } }
+      }
+    },
+    "onboarding.screen.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bildschirmaufnahme" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Screen Recording" } }
+      }
+    },
+    "onboarding.screen.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur nötig, um den Systemton mitzuschneiden (z. B. die Gegenseite eines Anrufs). Kannst du überspringen und später aktivieren. Nach dem Erlauben ggf. App neu starten." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Only needed to capture system audio (e.g. the other side of a call). You can skip this and enable it later. You may need to restart the app after granting." } }
+      }
+    },
+    "onboarding.notify.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mitteilungen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } }
+      }
+    },
+    "onboarding.notify.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optional: Protokoll meldet neue Aufnahmen (z. B. vom iPhone), die verarbeitet werden können." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional: Protokoll can tell you about new recordings (e.g. from your iPhone) that are ready to process." } }
+      }
+    },
+    "onboarding.done.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles bereit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You're all set" } }
+      }
+    },
+    "onboarding.done.body" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Du kannst Berechtigungen jederzeit unter Diagnose anpassen." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can review permissions any time under Diagnostics." } }
+      }
+    },
+    "onboarding.optional" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optional" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional" } }
+      }
+    },
+    "onboarding.granted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erteilt" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Granted" } }
+      }
+    },
+    "onboarding.denied" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht erteilt - in den Einstellungen aktivieren" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not granted - enable it in Settings" } }
+      }
+    },
+    "onboarding.allow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erlauben" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow" } }
+      }
+    },
+    "onboarding.openSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einstellungen öffnen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } }
+      }
+    },
+    "onboarding.skip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Überspringen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Skip" } }
+      }
+    },
+    "onboarding.back" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zurück" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } }
+      }
+    },
+    "onboarding.getStarted" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Los geht's" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get started" } }
+      }
+    },
+    "onboarding.continue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weiter" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue" } }
+      }
+    },
+    "onboarding.finish" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fertig" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } }
+      }
+    },
     "·" : {
 
     },

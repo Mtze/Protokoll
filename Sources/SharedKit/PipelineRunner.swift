@@ -46,6 +46,7 @@ public struct PipelineRunner: Sendable {
             arguments: arguments,
             stdin: nil,
             environment: env,
+            workingDirectory: folder,
             onStderrLine: onProgress
         )
         guard result.succeeded else {

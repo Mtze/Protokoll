@@ -15,6 +15,8 @@ struct LibraryView: View {
     @State private var searchText = ""
     @State private var showingConsent = false
     @State private var sessionToDelete: Session?
+    @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
+    @State private var showOnboarding = false
 
     /// Sessions to show: full list, or the FTS-matched subset when searching.
     private var visibleSessions: [Session] {
@@ -57,6 +59,10 @@ struct LibraryView: View {
         }
         .searchable(text: $searchText, prompt: Text("library.search.prompt"))
         .task(id: searchText) { await model.search(searchText) }
+        .onAppear { if !onboardingDone { showOnboarding = true } }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView(dismiss: { showOnboarding = false })
+        }
         .safeAreaInset(edge: .top) {
             if let error = model.systemAudioError {
                 SystemAudioBanner(message: error)

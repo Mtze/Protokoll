@@ -26,4 +26,5 @@ struct SettingsView: View {
 enum SettingsKeys {
     static let consentReminder = "consentReminderEnabled"
     static let captureSystemAudio = "captureSystemAudioEnabled"
+    static let onboardingDone = "onboardingComplete"
 }

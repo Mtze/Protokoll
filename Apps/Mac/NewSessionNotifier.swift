@@ -38,7 +38,9 @@ final class NewSessionNotifier: NSObject, UNUserNotificationCenterDelegate {
             identifier: Self.categoryNew, actions: [action], intentIdentifiers: []
         )
         center.setNotificationCategories([category])
-        center.requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        // Authorization is requested during onboarding, not at launch, so the
+        // app doesn't fire a surprise notification prompt. If not granted, macOS
+        // silently drops the notifications below.
 
         knownIDs = Set((try? container.allSessions())?.map(\.id) ?? [])
         timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in

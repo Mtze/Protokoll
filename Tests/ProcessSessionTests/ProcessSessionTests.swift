@@ -31,6 +31,7 @@ final class FakeCommandRunner: CommandRunning, @unchecked Sendable {
         arguments: [String],
         stdin: String?,
         environment: [String: String]?,
+        workingDirectory: URL?,
         onStderrLine: (@Sendable (String) -> Void)?
     ) throws -> CommandResult {
         lock.lock()
@@ -228,7 +229,7 @@ private func vendoredScriptEnv() -> ToolLocator {
         final class Tracking: CommandRunning, @unchecked Sendable {
             var mapCalls = 0; var reduceCalls = 0
             let lock = NSLock()
-            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
+            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, workingDirectory: URL?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
                 lock.lock(); defer { lock.unlock() }
                 let prompt = arguments.count > 1 ? arguments[1] : ""
                 if prompt.contains("PART") { mapCalls += 1; return CommandResult(exitCode: 0, stdout: "notes", stderr: "") }

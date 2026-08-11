@@ -18,24 +18,38 @@ public struct CommandResult: Sendable, Equatable {
 /// The subprocess boundary, behind a protocol so the pipeline can be unit-tested
 /// with fakes instead of really shelling out to whisper or `claude`.
 public protocol CommandRunning: Sendable {
-    /// Runs `executable` with `arguments`, optionally feeding `stdin`, and
-    /// optionally streaming stderr lines to `onStderrLine` as they arrive.
+    /// Runs `executable` with `arguments`, optionally feeding `stdin`, running in
+    /// `workingDirectory` (so subprocesses don't roam from `/` and trigger broad
+    /// macOS file-access prompts), and optionally streaming stderr lines.
     func run(
         executable: String,
         arguments: [String],
         stdin: String?,
         environment: [String: String]?,
+        workingDirectory: URL?,
         onStderrLine: (@Sendable (String) -> Void)?
     ) throws -> CommandResult
 }
 
 extension CommandRunning {
     public func run(executable: String, arguments: [String]) throws -> CommandResult {
-        try run(executable: executable, arguments: arguments, stdin: nil, environment: nil, onStderrLine: nil)
+        try run(executable: executable, arguments: arguments, stdin: nil, environment: nil, workingDirectory: nil, onStderrLine: nil)
     }
 
     public func run(executable: String, arguments: [String], stdin: String?) throws -> CommandResult {
-        try run(executable: executable, arguments: arguments, stdin: stdin, environment: nil, onStderrLine: nil)
+        try run(executable: executable, arguments: arguments, stdin: stdin, environment: nil, workingDirectory: nil, onStderrLine: nil)
+    }
+
+    /// Back-compat overload for callers that don't set a working directory.
+    public func run(
+        executable: String,
+        arguments: [String],
+        stdin: String?,
+        environment: [String: String]?,
+        onStderrLine: (@Sendable (String) -> Void)?
+    ) throws -> CommandResult {
+        try run(executable: executable, arguments: arguments, stdin: stdin,
+                environment: environment, workingDirectory: nil, onStderrLine: onStderrLine)
     }
 }
 
@@ -50,6 +64,7 @@ public struct ProcessCommandRunner: CommandRunning {
         arguments: [String],
         stdin: String?,
         environment: [String: String]?,
+        workingDirectory: URL?,
         onStderrLine: (@Sendable (String) -> Void)?
     ) throws -> CommandResult {
         let process = Process()
@@ -61,6 +76,9 @@ public struct ProcessCommandRunner: CommandRunning {
             process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
             process.arguments = [executable] + arguments
         }
+        // Contain the subprocess (and its children) to a known directory instead
+        // of inheriting the app's `/` cwd.
+        if let workingDirectory { process.currentDirectoryURL = workingDirectory }
 
         var env = ProcessInfo.processInfo.environment
         if let environment {

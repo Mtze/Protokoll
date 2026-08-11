@@ -24,6 +24,7 @@ struct PipelineRunnerTests {
             arguments: [String],
             stdin: String?,
             environment: [String: String]?,
+            workingDirectory: URL?,
             onStderrLine: (@Sendable (String) -> Void)?
         ) throws -> CommandResult {
             self.executable = executable
