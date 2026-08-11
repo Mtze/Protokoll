@@ -27,6 +27,25 @@ targets:
   MeetingNotes-Mac:
     type: application
     platform: macOS
+    postCompileScripts:
+      - name: Bundle process-session helper + transcribe.sh
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          # Build the pipeline CLI and bundle it into Contents/Helpers so the app
+          # can drive it as a subprocess (ADR-1). Also bundle transcribe.sh.
+          xcrun swift build -c release --product process-session --package-path "$SRCROOT"
+          HELPERS="$TARGET_BUILD_DIR/$CONTENTS_FOLDER_PATH/Helpers"
+          mkdir -p "$HELPERS"
+          cp -f "$SRCROOT/.build/release/process-session" "$HELPERS/process-session"
+          chmod +x "$HELPERS/process-session"
+          RES="$TARGET_BUILD_DIR/$UNLOCALIZED_RESOURCES_FOLDER_PATH"
+          mkdir -p "$RES"
+          cp -f "$SRCROOT/scripts/transcribe.sh" "$RES/transcribe.sh"
+          chmod +x "$RES/transcribe.sh"
+          if [ -f "$SRCROOT/scripts/faster_whisper_run.py" ]; then
+            cp -f "$SRCROOT/scripts/faster_whisper_run.py" "$RES/faster_whisper_run.py"
+          fi
     sources:
       - path: Apps/Mac
       - path: Apps/Shared

@@ -17,6 +17,7 @@ struct SessionDetailView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             metadataSection
+            processingSection
             if hasMicAudio {
                 GroupBox { audioPlayers.padding(4) }
             }
@@ -24,6 +25,47 @@ struct SessionDetailView: View {
         }
         .padding()
         .navigationTitle(session.displayTitle)
+    }
+
+    /// Live feedback for the processing chain (F13/N6): queued, running with the
+    /// engine's latest progress line, or a clear failure with a Retry action.
+    @ViewBuilder private var processingSection: some View {
+        if let job = model.activeJob(for: session.id) {
+            GroupBox {
+                HStack(alignment: .center, spacing: 10) {
+                    switch job.state {
+                    case .queued:
+                        ProgressView().controlSize(.small)
+                        Text("detail.processing.queued")
+                        Spacer()
+                    case .running:
+                        ProgressView().controlSize(.small)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(job.step == .transcribe ? "status.transcribing" : "status.summarizing")
+                                .font(.callout)
+                            if !job.progress.isEmpty {
+                                Text(job.progress).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                            }
+                        }
+                        Spacer()
+                    case let .failed(message):
+                        Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("status.failed").font(.callout).foregroundStyle(.red)
+                            Text(message).font(.caption).foregroundStyle(.secondary)
+                                .textSelection(.enabled).lineLimit(3)
+                        }
+                        Spacer()
+                        Button { model.retry(session) } label: {
+                            Label("action.retry", systemImage: "arrow.clockwise")
+                        }
+                        .help("action.retry")
+                    case .finished:
+                        EmptyView()
+                    }
+                }
+            }
+        }
     }
 
     // MARK: 1. Metadata + meta actions
@@ -55,7 +97,7 @@ struct SessionDetailView: View {
     /// Right-aligned actions. Show in Finder is icon-only with a hover label.
     private var metaActions: some View {
         HStack(spacing: 8) {
-            if status == .recorded {
+            if status == .recorded, model.activeJob(for: session.id) == nil {
                 Button { model.process(session) } label: {
                     Label("action.process", systemImage: "gearshape.2")
                 }

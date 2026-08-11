@@ -12,9 +12,9 @@ enum HelperLocator {
         }
         let fileManager = FileManager.default
         var candidates: [String] = []
-        if let helpers = Bundle.main.url(forResource: "process-session", withExtension: nil, subdirectory: "Helpers") {
-            candidates.append(helpers.path)
-        }
+        // Packaged location: MeetingNotes.app/Contents/Helpers/process-session.
+        candidates.append(Bundle.main.bundleURL
+            .appendingPathComponent("Contents/Helpers/process-session").path)
         if let auxiliary = Bundle.main.url(forAuxiliaryExecutable: "process-session") {
             candidates.append(auxiliary.path)
         }

@@ -52,9 +52,17 @@ final class AppModel {
         let device = self.deviceId
         self.scheduler = Scheduler(container: container) {
             guard let binary = HelperLocator.processSessionBinary() else { return nil }
-            return PipelineRunner(binary: binary, deviceId: device)
+            return PipelineRunner(binary: binary, deviceId: device,
+                                  runner: ProcessCommandRunner(),
+                                  environment: HelperLocator.pipelineEnvironment())
         }
         AppModel.shared = self
+        // Refresh the list, index, and detail once a step finishes so the new
+        // transcript/protocol appear without a manual reload.
+        scheduler.onFinished = { [weak self] in
+            self?.reloadSessions()
+            Task { await self?.rebuildIndex() }
+        }
     }
 
     #if os(macOS)
@@ -202,6 +210,17 @@ final class AppModel {
 
     func process(_ session: Session) {
         scheduler.enqueueProcess(session)
+    }
+
+    /// Clears a session's finished/failed jobs and processes it again.
+    func retry(_ session: Session) {
+        scheduler.clearCompleted()
+        scheduler.enqueueProcess(session)
+    }
+
+    /// The in-flight (queued/running/failed) job for a session, if any.
+    func activeJob(for sessionID: String) -> ProcessingJob? {
+        scheduler.jobs.last { $0.sessionID == sessionID && $0.state != .finished }
     }
 
     func regenerateProtocol(_ session: Session) {

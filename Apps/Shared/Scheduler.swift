@@ -48,6 +48,10 @@ final class Scheduler {
     private let container: Container
     private let makeRunner: @Sendable () -> PipelineRunner?
 
+    /// Called on the main actor after any step finishes (success or failure) so
+    /// the UI can reload sessions/index and reflect the new state.
+    var onFinished: (@MainActor () -> Void)?
+
     init(container: Container, makeRunner: @escaping @Sendable () -> PipelineRunner?) {
         self.container = container
         self.makeRunner = makeRunner
@@ -94,6 +98,7 @@ final class Scheduler {
             case let .failure(message):
                 job.state = .failed(message)
             }
+            self.onFinished?()
             self.pumpTranscribe()
         }
     }
@@ -110,6 +115,7 @@ final class Scheduler {
             case .success: job.state = .finished
             case let .failure(message): job.state = .failed(message)
             }
+            self.onFinished?()
             self.pumpSummarize()
         }
     }
