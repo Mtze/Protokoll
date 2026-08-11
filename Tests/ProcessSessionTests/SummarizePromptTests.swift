@@ -51,6 +51,29 @@ struct SummarizePromptTests {
         #expect(claudePrompt(in: fake)?.contains("Additional instructions from the user") == false)
     }
 
+    @Test func summarizerForcesTheSummaryLanguage() throws {
+        let (container, session) = try makeSessionWithTranscript(body: "Kurzes deutsches Transkript.")
+        let fake = FakeCommandRunner()
+        fake.stub(when: { exe, args in exe == "claude" && args.contains("-p") },
+                  return: CommandResult(exitCode: 0,
+                                        stdout: "---\ntitle: T\nlanguage: en\n---\n\n# T\n", stderr: ""))
+        let summarizer = Summarizer(runner: fake, store: container.store, summaryLanguage: "en")
+        _ = try summarizer.summarize(session: session)
+        #expect(claudePrompt(in: fake)?.contains("English") == true)
+    }
+
+    @Test func summarizerUsesTheModelOverride() throws {
+        let (container, session) = try makeSessionWithTranscript(body: "short")
+        let fake = FakeCommandRunner()
+        fake.stub(when: { exe, args in exe == "claude" && args.contains("-p") },
+                  return: CommandResult(exitCode: 0,
+                                        stdout: "---\ntitle: T\nlanguage: en\n---\n\n# T\n", stderr: ""))
+        let summarizer = Summarizer(runner: fake, store: container.store, summaryModel: "sonnet")
+        _ = try summarizer.summarize(session: session)
+        let call = fake.calls.first { $0.executable == "claude" && $0.arguments.contains("-p") }
+        #expect(call?.arguments.contains("sonnet") == true)
+    }
+
     // MARK: Helpers
 
     private func makeSessionWithTranscript(body: String) throws -> (Container, Session) {

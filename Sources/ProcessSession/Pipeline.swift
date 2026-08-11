@@ -50,10 +50,15 @@ public struct Pipeline: Sendable {
         deviceId: String
     ) {
         self.container = container
-        self.transcriber = Transcriber(runner: runner, tools: tools)
-        let customInstructions = (try? container.loadSummaryInstructions()) ?? ""
+        let config = (try? container.loadPipelineConfig()) ?? PipelineConfig()
+        self.transcriber = Transcriber(runner: runner, tools: tools,
+                                       language: config.transcriptionLanguage,
+                                       vocabulary: config.vocabulary,
+                                       model: config.transcriptionModel)
         self.summarizer = Summarizer(runner: runner, tools: tools, store: container.store,
-                                     customInstructions: customInstructions)
+                                     customInstructions: config.summaryInstructions,
+                                     summaryLanguage: config.summaryLanguage,
+                                     summaryModel: config.summaryModel)
         self.waiter = ICloudDownloadWaiter()
         self.deviceId = deviceId
     }

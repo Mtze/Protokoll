@@ -130,22 +130,18 @@ public struct Container: Sendable {
         return url
     }
 
-    /// The user's extra summary instructions, appended to the built-in prompt.
-    /// Empty when unset (tolerant, like ``loadProjects``).
-    public func loadSummaryInstructions() throws -> String {
-        let url = try configDirectory().appendingPathComponent("summary-instructions.md")
-        guard let data = try? Data(contentsOf: url) else { return "" }
-        return String(data: data, encoding: .utf8) ?? ""
+    /// The pipeline settings (transcription/summary tuning). Returns defaults
+    /// when unset or unreadable (tolerant, like ``loadProjects``).
+    public func loadPipelineConfig() throws -> PipelineConfig {
+        let url = try configDirectory().appendingPathComponent("pipeline.json")
+        guard let data = try? Data(contentsOf: url) else { return PipelineConfig() }
+        return (try? SessionStore.decoder.decode(PipelineConfig.self, from: data)) ?? PipelineConfig()
     }
 
-    /// Persists the summary instructions; a blank value removes the file so
-    /// "empty" is unambiguous.
-    public func saveSummaryInstructions(_ text: String) throws {
-        let url = try configDirectory().appendingPathComponent("summary-instructions.md")
-        if text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            try? FileManager.default.removeItem(at: url)
-        } else {
-            try store.atomicWrite(Data(text.utf8), to: url)
-        }
+    /// Atomically persists the pipeline settings.
+    public func savePipelineConfig(_ config: PipelineConfig) throws {
+        let url = try configDirectory().appendingPathComponent("pipeline.json")
+        let data = try SessionStore.encoder.encode(config)
+        try store.atomicWrite(data, to: url)
     }
 }

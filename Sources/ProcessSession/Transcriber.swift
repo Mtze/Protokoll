@@ -30,11 +30,28 @@ public enum TranscriptionError: Error, LocalizedError, Equatable {
 public struct Transcriber: Sendable {
     let runner: CommandRunning
     let tools: ToolLocator
+    /// `"auto"` (detect) or an ISO code passed to `transcribe.sh --language`.
+    let language: String
+    /// Domain vocabulary seeded via `transcribe.sh --prompt` (may be empty).
+    let vocabulary: String
+    /// Overrides ``ToolLocator/transcriptionModel`` when non-empty.
+    let model: String
 
-    public init(runner: CommandRunning, tools: ToolLocator = ToolLocator()) {
+    public init(
+        runner: CommandRunning,
+        tools: ToolLocator = ToolLocator(),
+        language: String = "auto",
+        vocabulary: String = "",
+        model: String = ""
+    ) {
         self.runner = runner
         self.tools = tools
+        self.language = language
+        self.vocabulary = vocabulary
+        self.model = model
     }
+
+    private var effectiveModel: String { model.isEmpty ? tools.transcriptionModel : model }
 
     /// Transcribes the session's `mic.m4a`, writing `transcript.md`. Progress
     /// lines from the engine are forwarded to `onProgress`.
@@ -53,12 +70,18 @@ public struct Transcriber: Sendable {
         try FileManager.default.createDirectory(at: workDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: workDir) }
 
-        let arguments = [
+        var arguments = [
             audioURL.path,
-            "--model", tools.transcriptionModel,
+            "--model", effectiveModel,
             "--output-dir", workDir.path,
         ]
-        AppLog.pipeline.debug("running transcribe.sh model=\(tools.transcriptionModel, privacy: .public) audio=\(audioURL.lastPathComponent, privacy: .public)")
+        if language != "auto", !language.trimmingCharacters(in: .whitespaces).isEmpty {
+            arguments += ["--language", language]
+        }
+        if !vocabulary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            arguments += ["--prompt", vocabulary]
+        }
+        AppLog.pipeline.debug("running transcribe.sh model=\(effectiveModel, privacy: .public) lang=\(language, privacy: .public) audio=\(audioURL.lastPathComponent, privacy: .public)")
         let result = try runner.run(
             executable: script,
             arguments: arguments,

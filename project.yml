@@ -70,6 +70,7 @@ targets:
         ENABLE_HARDENED_RUNTIME: "YES"
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: Protokoll
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         # Non-sandboxed (Developer ID, not App Store): the pipeline execs
         # user-installed CLIs (claude, whisper, ffmpeg) which the sandbox forbids.
         ENABLE_APP_SANDBOX: "NO"
@@ -81,6 +82,7 @@ targets:
       - path: Apps/iOS
       - path: Apps/Common
       - path: Apps/Shared/Localizable.xcstrings
+      - path: Apps/Shared/Resources/Assets.xcassets
     dependencies:
       - package: SharedKit
         product: SharedKit
@@ -92,6 +94,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.protokoll.ios
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: Protokoll
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "Protokoll records your microphone to capture meeting audio."
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Protokoll can tag a recording with where it was made."
@@ -104,6 +107,7 @@ targets:
       - path: Apps/Watch
       - path: Apps/Common
       - path: Apps/Shared/Localizable.xcstrings
+      - path: Apps/Shared/Resources/Assets.xcassets
     dependencies:
       - package: SharedKit
         product: SharedKit
@@ -113,5 +117,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.protokoll.watch
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: Protokoll
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         INFOPLIST_KEY_NSMicrophoneUsageDescription: "Protokoll records your microphone to capture meeting audio."
         INFOPLIST_KEY_WKApplication: "YES"

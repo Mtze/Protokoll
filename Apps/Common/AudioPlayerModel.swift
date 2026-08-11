@@ -23,7 +23,11 @@ public final class AudioPlayerModel {
     @ObservationIgnored private var player: AVAudioPlayer?
     @ObservationIgnored private var ticker: Task<Void, Never>?
 
-    public init() {}
+    public init() {
+        // Honor the user's default playback speed (Settings).
+        let stored = UserDefaults.standard.double(forKey: "defaultPlaybackSpeed")
+        if stored > 0 { rate = Float(stored) }
+    }
 
     /// Loads a file for playback. No-op if the same URL is already loaded.
     public func load(_ url: URL) {

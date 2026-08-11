@@ -1,6 +1,209 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "settings.tab.general" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Allgemein" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } }
+      }
+    },
+    "settings.tab.transcription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkription" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Transcription" } }
+      }
+    },
+    "settings.tab.summary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammenfassung" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Summary" } }
+      }
+    },
+    "settings.tab.processing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verarbeitung" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing" } }
+      }
+    },
+    "settings.tab.advanced" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erweitert" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Advanced" } }
+      }
+    },
+    "settings.playback" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wiedergabe" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Playback" } }
+      }
+    },
+    "settings.playback.speed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Standardgeschwindigkeit" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Default speed" } }
+      }
+    },
+    "settings.transcription" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkription" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Transcription" } }
+      }
+    },
+    "settings.transcription.language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprache" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } }
+      }
+    },
+    "settings.transcription.model" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Model" } }
+      }
+    },
+    "settings.transcription.model.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "large-v3 liefert die beste Qualität; large-v3-turbo ist 2-3× schneller bei etwas geringerer Genauigkeit." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "large-v3 is highest quality; large-v3-turbo is 2-3× faster with slightly lower accuracy." } }
+      }
+    },
+    "settings.transcription.vocabulary" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fachvokabular" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Domain vocabulary" } }
+      }
+    },
+    "settings.transcription.vocabulary.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Produktnamen, Abkürzungen, Hostnamen (kommagetrennt). Verbessert die Erkennung von Fachbegriffen deutlich." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Product names, acronyms, hostnames (comma-separated). Greatly improves recognition of technical terms." } }
+      }
+    },
+    "settings.summary.language" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprache" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } }
+      }
+    },
+    "settings.summary.model" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Model" } }
+      }
+    },
+    "settings.summary.model.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Opus liefert die höchste Qualität; Sonnet ist schneller; Haiku am schnellsten." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Opus is highest quality; Sonnet is faster; Haiku is fastest." } }
+      }
+    },
+    "settings.summary.instructions" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eigene Anweisungen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Custom instructions" } }
+      }
+    },
+    "settings.processing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verarbeitung" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing" } }
+      }
+    },
+    "settings.autoProcess" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neue Aufnahmen automatisch verarbeiten" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Process new recordings automatically" } }
+      }
+    },
+    "settings.autoProcess.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wenn aktiv, wird eine neue oder synchronisierte Aufnahme ohne Nachfrage zur Verarbeitung eingereiht." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "When on, a newly recorded or synced session is queued for processing without asking." } }
+      }
+    },
+    "settings.notifications" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Über neue Aufnahmen benachrichtigen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notify about new recordings" } }
+      }
+    },
+    "settings.notifications.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeigt eine Mitteilung (mit Aktion „Verarbeiten“), wenn eine neue Aufnahme erscheint - z. B. vom iPhone synchronisiert." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show a notification (with a Process action) when a new recording appears - e.g. synced from your iPhone." } }
+      }
+    },
+    "settings.container" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Container" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Container" } }
+      }
+    },
+    "settings.container.reveal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Im Finder zeigen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reveal in Finder" } }
+      }
+    },
+    "settings.tools" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Werkzeug-Pfade" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tool paths" } }
+      }
+    },
+    "settings.tools.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optionale Überschreibungen. Leer lassen, um die per PATH gefundenen bzw. mitgelieferten Versionen zu verwenden." } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional overrides. Leave empty to use the versions found on your PATH / bundled with the app." } }
+      }
+    },
+    "settings.tools.claude" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "claude-Programm" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "claude binary" } }
+      }
+    },
+    "settings.tools.transcribe" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "transcribe.sh" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "transcribe.sh" } }
+      }
+    },
+    "settings.lang.auto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Automatisch" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatic" } }
+      }
+    },
     "settings.summary" : {
       "extractionState" : "manual",
       "localizations" : {
