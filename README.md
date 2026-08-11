@@ -1,6 +1,20 @@
-# Protokoll
+<p align="center">
+  <img src="docs/branding/Protokoll-1024.png" alt="Protokoll" width="140">
+</p>
 
-[![CI](https://github.com/Mtze/Protokoll/actions/workflows/ci.yml/badge.svg)](https://github.com/Mtze/Protokoll/actions/workflows/ci.yml)
+<h1 align="center">Protokoll</h1>
+
+<p align="center">
+  <a href="https://github.com/Mtze/Protokoll/actions/workflows/ci.yml"><img src="https://github.com/Mtze/Protokoll/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
+
+**Protokoll turns your meetings into clear, decision-focused minutes - without your
+audio ever leaving your Mac.** Hit record (your microphone and the call audio
+together), and Protokoll transcribes locally with Whisper and drafts a structured
+protocol - the decisions made, the action items with owners, and the open
+questions to follow up on - using your existing Claude login. No API keys, no
+subscriptions, no uploads: it's fast, free, and private by design, with native
+apps for Mac, iPhone, and Apple Watch.
 
 A local, free, privacy-preserving meeting recorder and protocol pipeline for
 **macOS, iOS, and watchOS**. Record audio into a container of open files; a
