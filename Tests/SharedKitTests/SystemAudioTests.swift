@@ -19,13 +19,6 @@ struct SystemAudioTests {
         func stop() async -> Bool { didCapture }
     }
 
-    @Test func systemTrackAppearsOnlyWhenRequestedAndProduced() {
-        #expect(AudioTrackResolver.tracks(systemRequested: false, systemProducedAudio: false) == [.mic])
-        #expect(AudioTrackResolver.tracks(systemRequested: true, systemProducedAudio: false) == [.mic])
-        #expect(AudioTrackResolver.tracks(systemRequested: false, systemProducedAudio: true) == [.mic])
-        #expect(AudioTrackResolver.tracks(systemRequested: true, systemProducedAudio: true) == [.mic, .system])
-    }
-
     @Test func controllerReportsSuccessfulStart() async {
         let controller = SystemAudioController(capture: FakeCapture())
         let outcome = await controller.begin(to: URL(fileURLWithPath: "/tmp/system.m4a"))

@@ -151,7 +151,6 @@ final class AppModel {
     func stopRecording() async {
         guard isRecording else { return }
         #if os(macOS)
-        let requestedSystem = capturingSystemAudio
         var systemProduced = false
         if capturingSystemAudio {
             systemProduced = await systemAudio.end()
@@ -162,13 +161,14 @@ final class AppModel {
         }
         #endif
         do {
-            var session = try await recorder.stop()
-            session.metadata.pipeline.status = .recorded
+            // Mix the system-audio track into the single mic.m4a so the whole
+            // call is transcribed (ADR-7), not just the mic.
             #if os(macOS)
-            let producedFile = systemProduced && FileManager.default.fileExists(atPath: session.systemAudioURL.path)
-            session.metadata.audioTracks = AudioTrackResolver.tracks(
-                systemRequested: requestedSystem, systemProducedAudio: producedFile)
+            var session = try await recorder.stop(mixSystemAudio: systemProduced)
+            #else
+            var session = try await recorder.stop()
             #endif
+            session.metadata.pipeline.status = .recorded
             try container.store.save(session)
         } catch {
             // Leave whatever was captured; recovery handles the CAF on relaunch.

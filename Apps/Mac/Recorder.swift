@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import MediaKit
 import SharedKit
 
 /// Captures microphone audio incrementally to a streamable CAF file, then
@@ -78,9 +79,10 @@ actor Recorder {
         self.isRecording = true
     }
 
-    /// Stops capture, finalizes the CAF, converts it to `mic.m4a`, and returns
-    /// the session with updated `endedAt`/`duration`.
-    func stop() async throws -> Session {
+    /// Stops capture, finalizes the CAF, and produces `mic.m4a` - mixing in the
+    /// system-audio track when present (ADR-7) so the transcript covers the whole
+    /// call, not just the mic. Returns the session with updated `endedAt`/`duration`.
+    func stop(mixSystemAudio: Bool = false) async throws -> Session {
         guard isRecording, var session, let startedAt else {
             throw RecorderError.engineFailure(String(localized: "recorder.error.notRecording"))
         }
@@ -91,7 +93,13 @@ actor Recorder {
         meter.reset()
         isRecording = false
 
-        try await Self.convertCAFToM4A(caf: session.micCaptureURL, m4a: session.micAudioURL)
+        let systemURL = session.systemAudioURL
+        if mixSystemAudio, FileManager.default.fileExists(atPath: systemURL.path) {
+            try await AudioMixer.mix([session.micCaptureURL, systemURL], into: session.micAudioURL)
+            try? FileManager.default.removeItem(at: systemURL)
+        } else {
+            try await Self.convertCAFToM4A(caf: session.micCaptureURL, m4a: session.micAudioURL)
+        }
         try? FileManager.default.removeItem(at: session.micCaptureURL)
 
         let ended = Date()

@@ -57,6 +57,8 @@ targets:
         product: Diagnostics
       - package: SharedKit
         product: SearchIndex
+      - package: SharedKit
+        product: MediaKit
     settings:
       base:
         PRODUCT_NAME: MeetingNotes

@@ -44,12 +44,3 @@ public struct SystemAudioController: Sendable {
         await capture.stop()
     }
 }
-
-/// Decides which audio tracks a finished session has. System audio counts only
-/// when it was requested *and* produced actual audio - so a silent failure
-/// never leaves a dangling `.system` track that points at a missing/empty file.
-public enum AudioTrackResolver {
-    public static func tracks(systemRequested: Bool, systemProducedAudio: Bool) -> [AudioTrack] {
-        (systemRequested && systemProducedAudio) ? [.mic, .system] : [.mic]
-    }
-}

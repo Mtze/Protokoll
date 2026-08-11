@@ -440,3 +440,23 @@ iPhone-App; diese legt daraus eine neue Session im iCloud-Container an (Gerät
 
 **Verworfene Alternative:** CloudKit als Uhr-Sync-Schicht. Zurückgestellt wegen
 Mehrkomplexität und Redundanz zum dateibasierten Wahrheitsmodell (N3).
+
+### ADR-7 — Ein gemischter Audio-Track für die Transkription
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Wird System-Audio (F2) aufgenommen, mischt die App beim
+Stoppen die Mikrofon- und die System-Spur zu einer einzigen `mic.m4a`
+(`AudioMixer`, AVFoundation-Komposition). Die separate `system.m4a` wird nach
+dem Mischen entfernt; `audioTracks` bleibt `[.mic]`.
+
+**Kontext & Begründung:** Die Pipeline transkribiert `mic.m4a`. Bei getrennten
+Spuren landete nur das Mikrofon im Transkript - der Ton der Gegenseite (z. B.
+Discord) fehlte. Das Zusammenmischen liefert genau einen Track, der die ganze
+Unterhaltung enthält, ohne die Pipeline zu ändern.
+
+**Konsequenz:** Die in NH1 angedachte „geschenkte" grobe Sprechertrennung aus
+getrennten Spuren entfällt vorerst. Wird Diarisierung später verfolgt, können
+die Rohspuren zusätzlich unter `audio/` erhalten und ein Werkzeug wie WhisperX
+eingesetzt werden. Für die aktuelle Anforderung („ein funktionierendes
+Transkript der ganzen Besprechung") überwiegt der einzelne gemischte Track.
