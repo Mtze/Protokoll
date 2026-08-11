@@ -1,6 +1,69 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "color.blue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Blau" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Blue" } }
+      }
+    },
+    "color.green" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Grün" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Green" } }
+      }
+    },
+    "color.purple" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lila" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Purple" } }
+      }
+    },
+    "color.orange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Orange" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Orange" } }
+      }
+    },
+    "color.red" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rot" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Red" } }
+      }
+    },
+    "color.teal" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Türkis" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Teal" } }
+      }
+    },
+    "color.yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gelb" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Yellow" } }
+      }
+    },
+    "color.pink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } }
+      }
+    },
+    "color.custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Farbe" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Color" } }
+      }
+    },
     "settings.tab.projects" : {
       "extractionState" : "manual",
       "localizations" : {
