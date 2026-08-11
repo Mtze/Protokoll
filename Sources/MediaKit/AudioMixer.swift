@@ -1,5 +1,6 @@
 import AVFoundation
 import Foundation
+import SharedKit
 
 /// Mixes several audio files into one, so a meeting recorded as separate mic
 /// and system-audio tracks becomes a single track the pipeline can transcribe
@@ -33,7 +34,11 @@ public enum AudioMixer {
             try track.insertTimeRange(CMTimeRange(start: .zero, duration: duration), of: assetTrack, at: .zero)
             inserted += 1
         }
-        guard inserted > 0 else { throw MixError.noAudioTrack }
+        guard inserted > 0 else {
+            AppLog.systemAudio.error("mix failed: no audio track in \(sources.count, privacy: .public) source(s)")
+            throw MixError.noAudioTrack
+        }
+        AppLog.systemAudio.info("mixing \(inserted, privacy: .public) track(s) into \(output.lastPathComponent, privacy: .public)")
 
         guard let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPresetAppleM4A) else {
             throw MixError.exportFailed("could not create export session")

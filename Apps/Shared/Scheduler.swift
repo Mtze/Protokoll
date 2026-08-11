@@ -67,6 +67,7 @@ final class Scheduler {
         let transcribeJob = ProcessingJob(sessionID: session.id, title: session.displayTitle, step: .transcribe)
         jobs.append(transcribeJob)
         transcribeQueue.append((session.folder, transcribeJob))
+        AppLog.scheduler.info("job enqueued session=\(session.id, privacy: .public) step=transcribe")
         pumpTranscribe()
     }
 
@@ -75,6 +76,7 @@ final class Scheduler {
         let job = ProcessingJob(sessionID: session.id, title: session.displayTitle, step: .summarize)
         jobs.append(job)
         summarizeQueue.append((session.folder, job, force))
+        AppLog.scheduler.info("job enqueued session=\(session.id, privacy: .public) step=summarize force=\(force, privacy: .public)")
         pumpSummarize()
     }
 
@@ -85,18 +87,21 @@ final class Scheduler {
         let (folder, job) = transcribeQueue.removeFirst()
         transcribeBusy = true
         job.state = .running
+        AppLog.scheduler.info("job started session=\(job.sessionID, privacy: .public) step=transcribe")
         runStep(folder: folder, step: .transcribe, job: job) { [weak self] outcome in
             guard let self else { return }
             self.transcribeBusy = false
             switch outcome {
             case .success:
                 job.state = .finished
+                AppLog.scheduler.info("job finished session=\(job.sessionID, privacy: .public) step=transcribe")
                 // Chain into a summarize once transcription lands.
                 if let session = try? self.container.store.load(folder: folder) {
                     self.enqueueSummarize(session)
                 }
             case let .failure(message):
                 job.state = .failed(message)
+                AppLog.scheduler.error("job failed session=\(job.sessionID, privacy: .public) step=transcribe: \(message, privacy: .public)")
             }
             self.onFinished?()
             self.pumpTranscribe()
@@ -108,12 +113,17 @@ final class Scheduler {
         let (folder, job, force) = summarizeQueue.removeFirst()
         summarizeBusy = true
         job.state = .running
+        AppLog.scheduler.info("job started session=\(job.sessionID, privacy: .public) step=summarize")
         runStep(folder: folder, step: .summarize, force: force, job: job) { [weak self] outcome in
             guard let self else { return }
             self.summarizeBusy = false
             switch outcome {
-            case .success: job.state = .finished
-            case let .failure(message): job.state = .failed(message)
+            case .success:
+                job.state = .finished
+                AppLog.scheduler.info("job finished session=\(job.sessionID, privacy: .public) step=summarize")
+            case let .failure(message):
+                job.state = .failed(message)
+                AppLog.scheduler.error("job failed session=\(job.sessionID, privacy: .public) step=summarize: \(message, privacy: .public)")
             }
             self.onFinished?()
             self.pumpSummarize()

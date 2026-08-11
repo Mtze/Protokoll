@@ -90,6 +90,7 @@ public actor SearchIndex {
         try db.execute("DELETE FROM sessions; DELETE FROM documents;")
         let sessions = (try? container.allSessions()) ?? []
         for session in sessions { try upsert(session) }
+        AppLog.search.info("index rebuilt sessions=\(sessions.count, privacy: .public)")
     }
 
     /// Inserts or updates a single session (metadata + its documents).
@@ -151,6 +152,8 @@ public actor SearchIndex {
         sql += " ORDER BY s.startedAt DESC LIMIT \(limit)"
 
         let rows = try db.query(sql, params)
+        // Log hit count and filter presence, never the query text itself.
+        AppLog.search.debug("search hits=\(rows.count, privacy: .public) filtered=\(!filter.isEmpty, privacy: .public)")
         return rows.compactMap { row in
             guard let sessionID = row[0], let kindRaw = row[2],
                   let kind = DocumentKind(rawValue: kindRaw) else { return nil }

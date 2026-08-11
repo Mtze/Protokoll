@@ -29,7 +29,18 @@ public struct DiagnosticsRunner: Sendable {
 
     /// Runs every check and returns results in check order.
     public func runAll() -> [CheckResult] {
-        checks.map { $0.run(runner: runner) }
+        checks.map { check in
+            let result = check.run(runner: runner)
+            switch result.outcome {
+            case .passed:
+                AppLog.diagnostics.info("check \(check.id.rawValue, privacy: .public): passed")
+            case .warning, .unknown:
+                AppLog.diagnostics.info("check \(check.id.rawValue, privacy: .public): \(result.outcome.rawValue, privacy: .public)")
+            case .failed:
+                AppLog.diagnostics.error("check \(check.id.rawValue, privacy: .public): failed - \(result.detail ?? "", privacy: .public)")
+            }
+            return result
+        }
     }
 
     /// Looks up the remediation for a given check id.

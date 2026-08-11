@@ -58,6 +58,7 @@ public struct Transcriber: Sendable {
             "--model", tools.transcriptionModel,
             "--output-dir", workDir.path,
         ]
+        AppLog.pipeline.debug("running transcribe.sh model=\(tools.transcriptionModel, privacy: .public) audio=\(audioURL.lastPathComponent, privacy: .public)")
         let result = try runner.run(
             executable: script,
             arguments: arguments,
@@ -66,7 +67,9 @@ public struct Transcriber: Sendable {
             onStderrLine: onProgress
         )
         guard result.succeeded else {
-            throw TranscriptionError.engineFailed(result.stderr.isEmpty ? result.stdout : result.stderr)
+            let stderr = result.stderr.isEmpty ? result.stdout : result.stderr
+            AppLog.pipeline.error("transcribe.sh exited \(result.exitCode, privacy: .public): \(stderr, privacy: .public)")
+            throw TranscriptionError.engineFailed(stderr)
         }
 
         // transcribe.sh names outputs after the input basename ("mic").

@@ -90,6 +90,7 @@ public struct Summarizer: Sendable {
         stdin: String,
         onProgress: (@Sendable (String) -> Void)?
     ) throws -> String {
+        AppLog.pipeline.debug("running claude model=\(tools.claudeModel, privacy: .public)")
         let result = try runner.run(
             executable: tools.claudeBinary,
             arguments: ["-p", prompt, "--model", tools.claudeModel],
@@ -98,7 +99,9 @@ public struct Summarizer: Sendable {
             onStderrLine: onProgress
         )
         guard result.succeeded else {
-            throw SummarizationError.claudeFailed(result.stderr.isEmpty ? result.stdout : result.stderr)
+            let stderr = result.stderr.isEmpty ? result.stdout : result.stderr
+            AppLog.pipeline.error("claude exited \(result.exitCode, privacy: .public): \(stderr, privacy: .public)")
+            throw SummarizationError.claudeFailed(stderr)
         }
         let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !output.isEmpty else { throw SummarizationError.emptyOutput }

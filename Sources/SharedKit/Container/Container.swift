@@ -53,6 +53,7 @@ public struct Container: Sendable {
         )
         let session = Session(folder: folder, metadata: metadata)
         try store.save(session)
+        AppLog.container.info("session created id=\(id, privacy: .public) device=\(device.rawValue, privacy: .public) folder=\(folderName, privacy: .public)")
         return session
     }
 
@@ -70,8 +71,17 @@ public struct Container: Sendable {
         for entry in entries {
             let isDirectory = (try? entry.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory ?? false
             guard isDirectory else { continue }
-            if let session = try? store.load(folder: entry) {
-                sessions.append(session)
+            // Only surface a load failure for folders that actually claim to be a
+            // session (have a session.json); folders without one are not sessions.
+            let hasMetadata = FileManager.default.fileExists(
+                atPath: entry.appendingPathComponent("session.json").path
+            )
+            do {
+                sessions.append(try store.load(folder: entry))
+            } catch where hasMetadata {
+                AppLog.container.error("skipping malformed session folder=\(AppLog.folderName(entry), privacy: .public): \(AppLog.describe(error), privacy: .public)")
+            } catch {
+                // Not a session folder; ignore quietly.
             }
         }
         return sessions.sorted { $0.metadata.startedAt > $1.metadata.startedAt }

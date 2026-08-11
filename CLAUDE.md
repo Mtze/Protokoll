@@ -21,6 +21,8 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   UI-free and testable.
 - `Apps/Mac/` - `MenuBarExtra` app + `Recorder` actor (CAF→m4a, ADR-3).
 - `Apps/Shared/` - SwiftUI views, `Scheduler` (ADR-4), `Localizable.xcstrings`.
+- `Sources/SharedKit/AppLog.swift` - the one logging facility (`os.Logger`,
+  subsystem `com.meetingnotes`, a category per flow). Every module + app uses it.
 
 ## Hard rules (do not violate)
 
@@ -36,6 +38,13 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   `protocol.md` → `protocol.vN.md`.
 - **Subprocess boundary is `CommandRunning`** (in SharedKit) - fake it in tests,
   never shell out for real in unit tests.
+- **Log via `AppLog`, never `print`** in library/app code. Pick the matching
+  category (`recording`/`systemaudio`/`pipeline`/`scheduler`/`diagnostics`/
+  `container`/`search`); mark non-sensitive interpolations `privacy: .public` so
+  they show in the stream. **Never log transcript/audio content or absolute
+  paths with a user name** - log session IDs, `AppLog.folderName(url)`, states,
+  durations, exit codes, `AppLog.describe(error)`. View with
+  `log stream --predicate 'subsystem == "com.meetingnotes"'`.
 - **Deviations from the spec** get a short ADR appended to `ARCHITECTURE.md`
   *first*.
 - **Docs are part of the change**: update `README.md`, this file, `AGENTS.md`,

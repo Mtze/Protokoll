@@ -46,6 +46,7 @@ actor IOSRecorder {
         self.session = session
         self.startedAt = Date()
         self.isRecording = true
+        AppLog.recording.info("recording started session=\(session.id, privacy: .public) folder=\(AppLog.folderName(session.folder), privacy: .public)")
     }
 
     func stop() async throws -> Session {
@@ -65,6 +66,7 @@ actor IOSRecorder {
         session.metadata.audioTracks = [.mic]
         self.session = nil
         self.startedAt = nil
+        AppLog.recording.info("recording stopped session=\(session.id, privacy: .public) duration=\(session.metadata.duration ?? 0, format: .fixed(precision: 1), privacy: .public)s")
         return session
     }
 
