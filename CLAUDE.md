@@ -104,10 +104,18 @@ Dev env overrides: see the table in `README.md`.
   (assets in `site/`), deployed to GitHub Pages by `.github/workflows/pages.yml`
   on pushes touching `site/`. Published at `https://mtze.github.io/Protokoll/`.
 
+Session actions (macOS): the sidebar row **context menu** is the home for
+per-session actions (`LibraryView.sessionMenuItems(for:)`) - Process/Retry/
+Regenerate, Rename, Reveal in Finder, Assign to Project, Delete - and the
+"Session" system menu (`AppCommands`) mirrors them for the selected session via
+`DetailActions`. The detail pane keeps only the primary action + project menu (no
+Reveal/Delete icons). Rename persists a custom title via `AppModel.rename(_:to:)`
+(sets `metadata.title`, reindexes; empty reverts to the derived `displayTitle`).
+
 Session deletion: `Container.deleteSession(_:)` removes the whole session folder
 (Trash on macOS, outright elsewhere); `AppModel`/`IOSAppModel` `deleteSession(_:)`
-also prune the FTS index. Mac exposes it via a sidebar context menu + a detail
-trash button (destructive confirmation); iOS via swipe-to-delete + confirmation.
+also prune the FTS index. Mac exposes it via the sidebar context menu (destructive
+confirmation); iOS via swipe-to-delete + confirmation.
 
 Targets build via XcodeGen: `Protokoll-Mac`, `Protokoll-iOS`,
 `Protokoll-Watch`. See "Manual verification required" in the PR/report for

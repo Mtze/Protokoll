@@ -1,6 +1,34 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "action.rename" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Umbenennen…" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename…" } }
+      }
+    },
+    "common.save" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sichern" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } }
+      }
+    },
+    "rename.placeholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Titel" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Title" } }
+      }
+    },
+    "rename.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sitzung umbenennen" } },
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename session" } }
+      }
+    },
     "commands.menu.session" : {
       "extractionState" : "manual",
       "localizations" : {

@@ -116,6 +116,18 @@ final class AppModel {
         Task { await rebuildIndex() }
     }
 
+    /// Renames a session by persisting a custom title (F9). An empty title clears
+    /// it, reverting `displayTitle` to the derived name. Reindexes so search
+    /// matches the new title.
+    func rename(_ session: Session, to title: String) {
+        let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        var updated = session
+        updated.metadata.title = trimmed.isEmpty ? nil : trimmed
+        try? container.store.save(updated)
+        reloadSessions()
+        Task { await rebuildIndex() }
+    }
+
     /// Rebuilds the local FTS index from the files (ADR-2).
     func rebuildIndex() async {
         guard let index else { return }
