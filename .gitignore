@@ -30,3 +30,6 @@ xcuserdata/
 # Scratch / local
 *.log
 .env
+
+# Local git worktrees
+.worktrees/
