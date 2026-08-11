@@ -68,6 +68,7 @@ struct LibraryView: View {
             }
         }
         .searchable(text: $searchText, prompt: Text("library.search.prompt"))
+        .focusedSceneValue(\.recordAction, recordTapped)
         .task(id: searchText + "\u{1}" + (projectFilter ?? "")) {
             await model.search(searchText, filter: SearchFilter(projectID: projectFilter))
         }
@@ -143,16 +144,23 @@ struct LibraryView: View {
         .help("library.filter")
     }
 
+    /// Record / stop, creating a new session right from the main window. Shared
+    /// by the toolbar button and the `⌘N` menu command (published as a scene
+    /// value) so both honor the consent reminder.
+    private func recordTapped() {
+        if model.isRecording {
+            Task { await model.stopRecording() }
+        } else if consentReminder {
+            showingConsent = true
+        } else {
+            Task { await model.startRecording() }
+        }
+    }
+
     /// Record / stop, creating a new session right from the main window.
     private var recordButton: some View {
         Button {
-            if model.isRecording {
-                Task { await model.stopRecording() }
-            } else if consentReminder {
-                showingConsent = true
-            } else {
-                Task { await model.startRecording() }
-            }
+            recordTapped()
         } label: {
             Label(model.isRecording ? "menu.stop" : "menu.record",
                   systemImage: model.isRecording ? "stop.circle.fill" : "record.circle")

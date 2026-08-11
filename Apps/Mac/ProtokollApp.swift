@@ -21,6 +21,7 @@ struct ProtokollApp: App {
                 .task { await model.bootstrap() }
         }
         .defaultSize(width: 900, height: 600)
+        .commands { ProtokollCommands(model: model) }
 
         // Quick-access recorder in the menu bar, alongside the full app.
         MenuBarExtra {

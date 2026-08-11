@@ -80,6 +80,24 @@ brew install --cask --no-quarantine protokoll
   summary with **Copy** and **Export**.
 - **Delete** sessions (moved to the Trash on macOS).
 
+**Keyboard control** (macOS): the app is fully operable from the keyboard via a
+"Session" menu and the standard Window menu. Shortcuts:
+
+| Shortcut | Action |
+|---|---|
+| `⌘N` | Start / stop recording |
+| `⌘0` / `⇧⌘D` | Open Library / Diagnostics window |
+| `⌘F` | Search the library |
+| `⌘↩` | Primary action for the selected session (Process / Retry / Regenerate) |
+| `⌘1` / `⌘2` | Show Protocol / Transcript |
+| `⇧⌘C` | Copy the shown document |
+| `⇧⌘R` | Reveal the session in Finder |
+| `⌘⌫` | Delete the selected session |
+| `Space` | Play / pause (while a session with audio is selected) |
+| `←` / `→` | Seek ∓10s (while the audio player is focused) |
+
+Menu items disable when nothing is selected; all labels are localized.
+
 **Settings** (tabbed): General (consent reminder, system audio, playback speed),
 Transcription (language, domain vocabulary, model), Summary (language, model,
 custom instructions), Processing (auto-process, notifications), Advanced

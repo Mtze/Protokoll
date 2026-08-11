@@ -75,6 +75,7 @@ struct MenuContentView: View {
         .tint(model.isRecording ? .red : .accentColor)
         .controlSize(.large)
         .frame(maxWidth: .infinity)
+        .keyboardShortcut("n", modifiers: .command)
         .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
             Button("consent.confirm") { Task { await model.startRecording() } }
             Button("common.cancel", role: .cancel) {}
