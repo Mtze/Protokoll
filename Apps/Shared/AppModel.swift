@@ -189,7 +189,16 @@ final class AppModel {
         levelTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self, self.isRecording else { break }
-                let level = self.recorder.meter.value
+                let mic = self.recorder.meter.value
+                #if os(macOS)
+                // While capturing system audio (F2), light the waveform for either
+                // source so the other side of the call shows up too.
+                let level = self.capturingSystemAudio
+                    ? RecordingLevel.combined(mic: mic, system: self.systemAudio.currentLevel())
+                    : mic
+                #else
+                let level = mic
+                #endif
                 var levels = self.recordingLevels
                 levels.append(level)
                 if levels.count > barCount { levels.removeFirst(levels.count - barCount) }
