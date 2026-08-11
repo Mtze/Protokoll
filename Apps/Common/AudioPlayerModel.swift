@@ -79,6 +79,14 @@ public final class AudioPlayerModel {
         currentTime = clamped
     }
 
+    /// Seeks to `time` and starts playing from there. Used by the tap-to-seek
+    /// transcript list; a no-op until a file is loaded.
+    public func seekAndPlay(to time: TimeInterval) {
+        guard isLoaded else { return }
+        seek(to: time)
+        play()
+    }
+
     /// Advances to the next preset speed (used on watchOS where menus are awkward).
     public func cycleRate() {
         let speeds = Self.speeds

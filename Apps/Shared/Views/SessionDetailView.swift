@@ -14,6 +14,8 @@ struct SessionDetailView: View {
 
     enum Pane: String, CaseIterable, Identifiable { case protocolDoc, transcript; var id: String { rawValue } }
     @State private var pane: Pane = .protocolDoc
+    /// One player shared by the audio control and the tap-to-seek transcript list.
+    @State private var audioModel = AudioPlayerModel()
 
     private var status: PipelineStatus { session.metadata.pipeline.status }
 
@@ -145,7 +147,9 @@ struct SessionDetailView: View {
     @ViewBuilder private var audioPlayers: some View {
         let fileManager = FileManager.default
         VStack(alignment: .leading, spacing: 10) {
-            AudioPlayerView(url: session.micAudioURL, title: "player.mic")
+            // Single combined mic+system track (ADR-7) - no misleading "Microphone".
+            AudioPlayerView(url: session.micAudioURL, model: audioModel, title: "player.recording")
+            // Legacy sessions may still carry a separate system-audio track.
             if session.metadata.audioTracks.contains(.system),
                fileManager.fileExists(atPath: session.systemAudioURL.path) {
                 Divider()
@@ -158,31 +162,61 @@ struct SessionDetailView: View {
 
     private var documentSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Picker("detail.pane", selection: $pane) {
-                Text("detail.pane.protocol").tag(Pane.protocolDoc)
-                Text("detail.pane.transcript").tag(Pane.transcript)
+            HStack {
+                Picker("detail.pane", selection: $pane) {
+                    Text("detail.pane.protocol").tag(Pane.protocolDoc)
+                    Text("detail.pane.transcript").tag(Pane.transcript)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .fixedSize()
+                Spacer()
+                if let body = documentBody, !body.isEmpty {
+                    DocumentActions(bodyText: body, fileURL: currentDocumentURL, exportName: exportName)
+                }
             }
-            .pickerStyle(.segmented)
-            .labelsHidden()
 
             ScrollView {
-                Text(documentText)
-                    .font(.body)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
-                    .padding(.vertical, 4)
+                documentContent.padding(.vertical, 4)
             }
         }
         .frame(maxHeight: .infinity)
     }
 
-    private var documentText: String {
-        let url = pane == .protocolDoc ? session.protocolURL : session.transcriptURL
-        guard let raw = try? String(contentsOf: url, encoding: .utf8) else {
-            return String(localized: pane == .protocolDoc ? "detail.noProtocol" : "detail.noTranscript")
-        }
-        // Show just the body, not our YAML frontmatter.
+    private var currentDocumentURL: URL {
+        pane == .protocolDoc ? session.protocolURL : session.transcriptURL
+    }
+
+    /// The document body with our YAML frontmatter stripped, or `nil` when the
+    /// file is missing/unreadable.
+    private var documentBody: String? {
+        guard let raw = try? String(contentsOf: currentDocumentURL, encoding: .utf8) else { return nil }
         return Frontmatter.split(raw).body
+    }
+
+    @ViewBuilder private var documentContent: some View {
+        if let body = documentBody, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            switch pane {
+            case .protocolDoc:
+                MarkdownText(markdown: body)
+            case .transcript:
+                let segments = TranscriptParser.parse(body)
+                if segments.isEmpty {
+                    MarkdownText(markdown: body)
+                } else {
+                    TranscriptSegmentList(segments: segments, model: audioModel, canSeek: hasMicAudio)
+                }
+            }
+        } else {
+            Text(pane == .protocolDoc ? "detail.noProtocol" : "detail.noTranscript")
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private var exportName: String {
+        let kind = String(localized: pane == .protocolDoc ? "detail.pane.protocol" : "detail.pane.transcript")
+        return "\(session.displayTitle) - \(kind).md"
     }
 
     private func revealInFinder() {

@@ -8,13 +8,28 @@ public struct AudioPlayerView: View {
     private let url: URL
     private let titleKey: LocalizedStringKey?
 
-    @State private var player = AudioPlayerModel()
+    /// Model owned by this view when no external one is supplied.
+    @State private var ownedModel = AudioPlayerModel()
+    /// An externally-owned model, shared with e.g. a tap-to-seek transcript list
+    /// so both drive the same playback. When present it wins over `ownedModel`.
+    private let externalModel: AudioPlayerModel?
     @State private var scrubbing = false
     @State private var scrubValue: Double = 0
+
+    private var player: AudioPlayerModel { externalModel ?? ownedModel }
 
     public init(url: URL, title: LocalizedStringKey? = nil) {
         self.url = url
         self.titleKey = title
+        self.externalModel = nil
+    }
+
+    /// Drives an externally-owned ``AudioPlayerModel`` so a detail view can share
+    /// one player between this control and a tap-to-seek transcript list.
+    public init(url: URL, model: AudioPlayerModel, title: LocalizedStringKey? = nil) {
+        self.url = url
+        self.titleKey = title
+        self.externalModel = model
     }
 
     public var body: some View {
