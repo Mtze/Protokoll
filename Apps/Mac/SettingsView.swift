@@ -75,6 +75,7 @@ private struct GeneralTab: View {
             }
         }
         .formStyle(.grouped)
+        .settingsPane()
     }
 }
 
@@ -104,6 +105,7 @@ private struct TranscriptionTab: View {
             }
         }
         .formStyle(.grouped)
+        .settingsPane()
     }
 }
 
@@ -139,6 +141,7 @@ private struct SummaryTab: View {
             }
         }
         .formStyle(.grouped)
+        .settingsPane()
     }
 }
 
@@ -158,6 +161,7 @@ private struct ProcessingTab: View {
             }
         }
         .formStyle(.grouped)
+        .settingsPane()
     }
 }
 
@@ -193,6 +197,23 @@ private struct AdvancedTab: View {
         NSWorkspace.shared.activateFileViewerSelecting([root])
         #endif
     }
+}
+
+// MARK: - Layout
+
+/// Adds a hairline divider between the tab bar (in the window toolbar) and the
+/// tab's content, so the two are visually separated.
+private struct SettingsPane: ViewModifier {
+    func body(content: Content) -> some View {
+        VStack(spacing: 0) {
+            Divider()
+            content
+        }
+    }
+}
+
+private extension View {
+    func settingsPane() -> some View { modifier(SettingsPane()) }
 }
 
 // MARK: - Formatting helpers
