@@ -1,4 +1,4 @@
-# MeetingNotes
+# Protokoll
 
 A local, free, privacy-preserving meeting recorder and protocol pipeline for
 macOS (and iOS/watchOS in later milestones). Record audio into an iCloud
@@ -43,7 +43,7 @@ swift test
 xcodegen generate
 
 # 3. Build the Mac app (unsigned dev build)
-xcodebuild -project MeetingNotes.xcodeproj -scheme MeetingNotes-Mac \
+xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Mac \
   -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO
 
 # 4. Run the pipeline by hand on a session folder
@@ -62,7 +62,7 @@ xcodebuild -project MeetingNotes.xcodeproj -scheme MeetingNotes-Mac \
 | `CLAUDE_MODEL` | Summarization model (default `opus`). |
 
 In dev the app stores sessions under
-`~/Library/Application Support/MeetingNotes/Container`. The real iCloud
+`~/Library/Application Support/Protokoll/Container`. The real iCloud
 container is wired in M3.
 
 ## Layout
@@ -95,7 +95,7 @@ shell out to Whisper or `claude`. `fastlane test` wraps the same.
 
 All apps and the `process-session` CLI log through one facility, `AppLog`
 (`Sources/SharedKit/AppLog.swift`), built on Apple's unified logging
-(`os.Logger`). Everything shares the subsystem `com.meetingnotes` with a category
+(`os.Logger`). Everything shares the subsystem `com.protokoll` with a category
 per flow: `recording`, `systemaudio`, `pipeline`, `scheduler`, `diagnostics`,
 `container`, `search`.
 
@@ -103,13 +103,13 @@ View logs live from the terminal or in Console.app:
 
 ```bash
 # Everything from the app + pipeline
-log stream --predicate 'subsystem == "com.meetingnotes"'
+log stream --predicate 'subsystem == "com.protokoll"'
 
 # Just one flow
-log stream --predicate 'subsystem == "com.meetingnotes" && category == "pipeline"'
+log stream --predicate 'subsystem == "com.protokoll" && category == "pipeline"'
 
 # Past hour, including debug/info
-log show --last 1h --debug --info --predicate 'subsystem == "com.meetingnotes"'
+log show --last 1h --debug --info --predicate 'subsystem == "com.protokoll"'
 ```
 
 Privacy: logs never contain transcript or audio content - only session IDs,

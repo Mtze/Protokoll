@@ -55,12 +55,12 @@ public actor SearchIndex {
         try Self.createSchema(db)
     }
 
-    /// Default index location: `~/Library/Application Support/MeetingNotes/index.sqlite`.
+    /// Default index location: `~/Library/Application Support/Protokoll/index.sqlite`.
     public static func defaultURL() -> URL {
         let base = (try? FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true
         )) ?? FileManager.default.temporaryDirectory
-        return base.appendingPathComponent("MeetingNotes/index.sqlite")
+        return base.appendingPathComponent("Protokoll/index.sqlite")
     }
 
     private static func createSchema(_ db: SQLiteDatabase) throws {

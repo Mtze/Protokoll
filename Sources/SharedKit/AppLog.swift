@@ -6,9 +6,9 @@ import os
 /// can be filtered in Console.app or streamed from the terminal:
 ///
 /// ```sh
-/// log stream --predicate 'subsystem == "com.meetingnotes"'
+/// log stream --predicate 'subsystem == "com.protokoll"'
 /// # or one flow:
-/// log stream --predicate 'subsystem == "com.meetingnotes" && category == "pipeline"'
+/// log stream --predicate 'subsystem == "com.protokoll" && category == "pipeline"'
 /// ```
 ///
 /// Foundation + `os` only, so it stays usable from the Foundation-only SharedKit
@@ -21,7 +21,7 @@ import os
 /// interpolations otherwise redact to `<private>`).
 public enum AppLog {
     /// The unified-logging subsystem shared by every logger.
-    public static let subsystem = "com.meetingnotes"
+    public static let subsystem = "com.protokoll"
 
     /// Microphone recording: start/stop, CAF→m4a conversion, orphan recovery.
     public static let recording = Logger(subsystem: subsystem, category: "recording")

@@ -17,12 +17,12 @@ enum AppEnvironment {
         return generated
     }
 
-    /// The dev container root: `~/Library/Application Support/MeetingNotes/Container`.
+    /// The dev container root: `~/Library/Application Support/Protokoll/Container`.
     static func devContainerRoot() -> URL {
         let base = (try? FileManager.default.url(
             for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true
         )) ?? FileManager.default.temporaryDirectory
-        return base.appendingPathComponent("MeetingNotes/Container", isDirectory: true)
+        return base.appendingPathComponent("Protokoll/Container", isDirectory: true)
     }
 
     /// The container used by the app. Honors `MN_CONTAINER_ROOT` for the dev

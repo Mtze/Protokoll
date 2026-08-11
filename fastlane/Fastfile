@@ -1,4 +1,4 @@
-# Fastlane lanes for MeetingNotes.
+# Fastlane lanes for Protokoll.
 # `test` and `build` work today; screenshots/distribution are scaffolded TODOs
 # wired up in later milestones (M4 snapshot, M5 distribution).
 
@@ -14,8 +14,8 @@ platform :mac do
   lane :build do
     sh("cd .. && xcodegen generate")
     build_mac_app(
-      project: "../MeetingNotes.xcodeproj",
-      scheme: "MeetingNotes-Mac",
+      project: "../Protokoll.xcodeproj",
+      scheme: "Protokoll-Mac",
       skip_package_pkg: true,
       skip_codesigning: true,
       export_method: "developer-id",

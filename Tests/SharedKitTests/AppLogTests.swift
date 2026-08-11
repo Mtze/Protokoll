@@ -7,7 +7,7 @@ import Testing
 struct AppLogTests {
     @Test func subsystemIsStable() {
         // The documented `log stream` predicate depends on this exact value.
-        #expect(AppLog.subsystem == "com.meetingnotes")
+        #expect(AppLog.subsystem == "com.protokoll")
     }
 
     @Test func folderNameReducesToOpaqueSessionFolder() {

@@ -39,7 +39,7 @@ final class IOSAppModel {
         // behind the same seam for production.
         let docs = (try? FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
             ?? FileManager.default.temporaryDirectory
-        return Container(locator: LocalFolderContainer(root: docs.appendingPathComponent("MeetingNotes")))
+        return Container(locator: LocalFolderContainer(root: docs.appendingPathComponent("Protokoll")))
     }
 
     func bootstrap() async {

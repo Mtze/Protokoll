@@ -1,6 +1,15 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "·" : {
+
+    },
+    "%@." : {
+
+    },
+    "•" : {
+
+    },
     "action.copied" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -35,6 +44,23 @@
         }
       }
     },
+    "action.delete" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Löschen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete"
+          }
+        }
+      }
+    },
     "action.export" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -50,125 +76,6 @@
             "value" : "Export"
           }
         }
-      }
-    },
-    "player.recording" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording"
-          }
-        }
-      }
-    },
-    "transcript.seek.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zu dieser Stelle springen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jump to this point"
-          }
-        }
-      }
-    },
-    "·" : {
-
-    },
-    "systemaudio.error.permission" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erlaube die Bildschirmaufnahme, um den Systemton (z. B. Discord, Anrufe) aufzunehmen: Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme, danach App neu starten."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Screen Recording to capture system audio (e.g. Discord, calls): System Settings › Privacy & Security › Screen Recording, then restart the app."
-          }
-        }
-      }
-    },
-    "systemaudio.error.noDisplay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Bildschirm für die Systemton-Aufnahme verfügbar."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No display available for system-audio capture."
-          }
-        }
-      }
-    },
-    "systemaudio.error.empty" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Es wurde kein Systemton aufgenommen. Läuft gerade Audio, und ist die Bildschirmaufnahme erlaubt?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No system audio was captured. Is anything playing, and is Screen Recording allowed?"
-          }
-        }
-      }
-    },
-    "systemaudio.openSettings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirmaufnahme-Einstellungen öffnen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Screen Recording settings"
-          }
-        }
-      }
-    },
-    "action.retry" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erneut versuchen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Retry" } }
-      }
-    },
-    "detail.processing.queued" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "In Warteschlange …" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Queued …" } }
       }
     },
     "action.newRecording" : {
@@ -222,6 +129,23 @@
         }
       }
     },
+    "action.retry" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erneut versuchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Retry"
+          }
+        }
+      }
+    },
     "action.reveal" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -239,70 +163,19 @@
         }
       }
     },
-    "action.delete" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Löschen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
-          }
-        }
-      }
-    },
     "app.name" : {
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MeetingNotes"
+            "value" : "Protokoll"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MeetingNotes"
-          }
-        }
-      }
-    },
-    "delete.confirm.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme, Transkript und Protokoll dieser Sitzung werden gelöscht. Auf dem Mac wandert der Ordner in den Papierkorb."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The recording, transcript, and protocol for this session will be deleted. On the Mac the folder moves to the Trash."
-          }
-        }
-      }
-    },
-    "delete.confirm.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diese Sitzung löschen?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete this session?"
+            "value" : "Protokoll"
           }
         }
       }
@@ -392,6 +265,40 @@
         }
       }
     },
+    "delete.confirm.message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahme, Transkript und Protokoll dieser Sitzung werden gelöscht. Auf dem Mac wandert der Ordner in den Papierkorb."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The recording, transcript, and protocol for this session will be deleted. On the Mac the folder moves to the Trash."
+          }
+        }
+      }
+    },
+    "delete.confirm.title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Diese Sitzung löschen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete this session?"
+          }
+        }
+      }
+    },
     "detail.noProtocol" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -473,6 +380,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transcript"
+          }
+        }
+      }
+    },
+    "detail.processing.queued" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "In Warteschlange …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Queued …"
           }
         }
       }
@@ -1548,6 +1472,23 @@
         }
       }
     },
+    "player.recording" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aufnahme"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recording"
+          }
+        }
+      }
+    },
     "player.speed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1935,6 +1876,91 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Transcribe"
+          }
+        }
+      }
+    },
+    "systemaudio.error.empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Es wurde kein Systemton aufgenommen. Läuft gerade Audio, und ist die Bildschirmaufnahme erlaubt?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No system audio was captured. Is anything playing, and is Screen Recording allowed?"
+          }
+        }
+      }
+    },
+    "systemaudio.error.noDisplay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kein Bildschirm für die Systemton-Aufnahme verfügbar."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No display available for system-audio capture."
+          }
+        }
+      }
+    },
+    "systemaudio.error.permission" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Erlaube die Bildschirmaufnahme, um den Systemton (z. B. Discord, Anrufe) aufzunehmen: Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme, danach App neu starten."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Allow Screen Recording to capture system audio (e.g. Discord, calls): System Settings › Privacy & Security › Screen Recording, then restart the app."
+          }
+        }
+      }
+    },
+    "systemaudio.openSettings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmaufnahme-Einstellungen öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Screen Recording settings"
+          }
+        }
+      }
+    },
+    "transcript.seek.help" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zu dieser Stelle springen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Jump to this point"
           }
         }
       }

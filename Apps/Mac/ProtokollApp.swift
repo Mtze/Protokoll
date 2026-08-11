@@ -8,7 +8,7 @@ import SharedKit
 /// diagnostics are separate windows. Confirm-on-quit guards active processing
 /// (ADR-4: killed jobs leave a checkpoint and are re-runnable).
 @main
-struct MeetingNotesApp: App {
+struct ProtokollApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var model = AppModel()
 

@@ -22,10 +22,10 @@ model and container access, reused unchanged by Mac/iOS/watch.
   list; tolerant of malformed input (unparseable lines skipped). Unit-tested.
 - `CommandRunner` - the `CommandRunning` subprocess boundary (fakeable) reused
   by the pipeline and Diagnostics.
-- `AppLog` - the one logging facility (`os.Logger`, subsystem `com.meetingnotes`,
+- `AppLog` - the one logging facility (`os.Logger`, subsystem `com.protokoll`,
   a category per flow). Used by every module and app; `MediaKit` depends on
   SharedKit solely for this. Pure helpers `folderName`/`describe` are unit-tested.
-  View with `log stream --predicate 'subsystem == "com.meetingnotes"'`.
+  View with `log stream --predicate 'subsystem == "com.protokoll"'`.
 
 ## ProcessSession (`Sources/ProcessSession`)
 
@@ -47,7 +47,7 @@ bootstrap gate. `SystemTest` runs a bundled clip through the real
 
 ## Mac app (`Apps/Mac`, `Apps/Shared`)
 
-- `MeetingNotesApp` - `MenuBarExtra` + Library/Diagnostics windows.
+- `ProtokollApp` - `MenuBarExtra` + Library/Diagnostics windows.
 - `Recorder` (actor) - AVAudioEngine → CAF, convert to m4a on stop, orphan
   recovery (ADR-3).
 - `Scheduler` (`@Observable`) - resource-aware (transcribe=1, summarize overlaps;

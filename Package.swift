@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "MeetingNotes",
+    name: "Protokoll",
     platforms: [
         .macOS(.v14),
         .iOS(.v17),

@@ -1,6 +1,6 @@
-name: MeetingNotes
+name: Protokoll
 options:
-  bundleIdPrefix: com.meetingnotes
+  bundleIdPrefix: com.protokoll
   deploymentTarget:
     macOS: "14.0"
     iOS: "17.0"
@@ -24,7 +24,7 @@ packages:
     path: .
 
 targets:
-  MeetingNotes-Mac:
+  Protokoll-Mac:
     type: application
     platform: macOS
     postCompileScripts:
@@ -61,20 +61,20 @@ targets:
         product: MediaKit
     settings:
       base:
-        PRODUCT_NAME: MeetingNotes
-        PRODUCT_BUNDLE_IDENTIFIER: com.meetingnotes.mac
+        PRODUCT_NAME: Protokoll
+        PRODUCT_BUNDLE_IDENTIFIER: com.protokoll.mac
         # Full app: Dock icon + Library as the main window, plus a MenuBarExtra
         # for quick record. (Was LSUIElement/menubar-only.)
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "MeetingNotes records your microphone to capture meeting audio locally on this Mac."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Protokoll records your microphone to capture meeting audio locally on this Mac."
         INFOPLIST_KEY_NSHumanReadableCopyright: "Local, private meeting recorder."
         ENABLE_HARDENED_RUNTIME: "YES"
         GENERATE_INFOPLIST_FILE: "YES"
-        INFOPLIST_KEY_CFBundleDisplayName: MeetingNotes
+        INFOPLIST_KEY_CFBundleDisplayName: Protokoll
         # Non-sandboxed (Developer ID, not App Store): the pipeline execs
         # user-installed CLIs (claude, whisper, ffmpeg) which the sandbox forbids.
         ENABLE_APP_SANDBOX: "NO"
 
-  MeetingNotes-iOS:
+  Protokoll-iOS:
     type: application
     platform: iOS
     sources:
@@ -88,16 +88,16 @@ targets:
         product: SearchIndex
     settings:
       base:
-        PRODUCT_NAME: MeetingNotes
-        PRODUCT_BUNDLE_IDENTIFIER: com.meetingnotes.ios
+        PRODUCT_NAME: Protokoll
+        PRODUCT_BUNDLE_IDENTIFIER: com.protokoll.ios
         GENERATE_INFOPLIST_FILE: "YES"
-        INFOPLIST_KEY_CFBundleDisplayName: MeetingNotes
+        INFOPLIST_KEY_CFBundleDisplayName: Protokoll
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "MeetingNotes records your microphone to capture meeting audio."
-        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "MeetingNotes can tag a recording with where it was made."
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Protokoll records your microphone to capture meeting audio."
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Protokoll can tag a recording with where it was made."
         TARGETED_DEVICE_FAMILY: "1,2"
 
-  MeetingNotes-Watch:
+  Protokoll-Watch:
     type: application
     platform: watchOS
     sources:
@@ -109,9 +109,9 @@ targets:
         product: SharedKit
     settings:
       base:
-        PRODUCT_NAME: MeetingNotes
-        PRODUCT_BUNDLE_IDENTIFIER: com.meetingnotes.watch
+        PRODUCT_NAME: Protokoll
+        PRODUCT_BUNDLE_IDENTIFIER: com.protokoll.watch
         GENERATE_INFOPLIST_FILE: "YES"
-        INFOPLIST_KEY_CFBundleDisplayName: MeetingNotes
-        INFOPLIST_KEY_NSMicrophoneUsageDescription: "MeetingNotes records your microphone to capture meeting audio."
+        INFOPLIST_KEY_CFBundleDisplayName: Protokoll
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: "Protokoll records your microphone to capture meeting audio."
         INFOPLIST_KEY_WKApplication: "YES"

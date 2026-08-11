@@ -4,7 +4,7 @@ import SharedKit
 /// iOS app entry (F11/F12): a Record tab and a Library tab. Reuses SharedKit and
 /// the shared String Catalog unchanged.
 @main
-struct MeetingNotesiOSApp: App {
+struct ProtokolliOSApp: App {
     @State private var model = IOSAppModel()
 
     var body: some Scene {

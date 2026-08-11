@@ -12,7 +12,7 @@ enum HelperLocator {
         }
         let fileManager = FileManager.default
         var candidates: [String] = []
-        // Packaged location: MeetingNotes.app/Contents/Helpers/process-session.
+        // Packaged location: Protokoll.app/Contents/Helpers/process-session.
         candidates.append(Bundle.main.bundleURL
             .appendingPathComponent("Contents/Helpers/process-session").path)
         if let auxiliary = Bundle.main.url(forAuxiliaryExecutable: "process-session") {
@@ -39,7 +39,7 @@ enum HelperLocator {
         return candidates.first { fileManager.isExecutableFile(atPath: $0) }
     }
 
-    /// Best-effort repo root for dev fallbacks (…/MeetingNotes.app is deep in
+    /// Best-effort repo root for dev fallbacks (…/Protokoll.app is deep in
     /// DerivedData, so we also honor a `MN_REPO_ROOT` override).
     static func repoRoot() -> URL {
         if let override = ProcessInfo.processInfo.environment["MN_REPO_ROOT"], !override.isEmpty {

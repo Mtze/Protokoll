@@ -4,7 +4,7 @@ import SwiftUI
 /// audio to the paired iPhone via WatchConnectivity (ADR-6); the iPhone writes
 /// it into the container. Reuses SharedKit's models unchanged.
 @main
-struct MeetingNotesWatchApp: App {
+struct ProtokollWatchApp: App {
     var body: some Scene {
         WindowGroup {
             WatchRecordView()

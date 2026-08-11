@@ -1,4 +1,4 @@
-# CLAUDE.md - AI onboarding for MeetingNotes
+# CLAUDE.md - AI onboarding for Protokoll
 
 Authoritative spec: `ARCHITECTURE.md` (German). Milestone plan:
 `docs/IMPLEMENTATION_PLAN.md`. Read both before non-trivial work.
@@ -22,7 +22,7 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
 - `Apps/Mac/` - `MenuBarExtra` app + `Recorder` actor (CAF→m4a, ADR-3).
 - `Apps/Shared/` - SwiftUI views, `Scheduler` (ADR-4), `Localizable.xcstrings`.
 - `Sources/SharedKit/AppLog.swift` - the one logging facility (`os.Logger`,
-  subsystem `com.meetingnotes`, a category per flow). Every module + app uses it.
+  subsystem `com.protokoll`, a category per flow). Every module + app uses it.
 
 ## Hard rules (do not violate)
 
@@ -44,7 +44,7 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   they show in the stream. **Never log transcript/audio content or absolute
   paths with a user name** - log session IDs, `AppLog.folderName(url)`, states,
   durations, exit codes, `AppLog.describe(error)`. View with
-  `log stream --predicate 'subsystem == "com.meetingnotes"'`.
+  `log stream --predicate 'subsystem == "com.protokoll"'`.
 - **Deviations from the spec** get a short ADR appended to `ARCHITECTURE.md`
   *first*.
 - **Docs are part of the change**: update `README.md`, this file, `AGENTS.md`,
@@ -55,7 +55,7 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
 ```bash
 swift build && swift test            # package + tests (Swift Testing)
 xcodegen generate                    # regenerate the gitignored .xcodeproj
-xcodebuild -project MeetingNotes.xcodeproj -scheme MeetingNotes-Mac \
+xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Mac \
   -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO
 ```
 
@@ -90,7 +90,7 @@ Session deletion: `Container.deleteSession(_:)` removes the whole session folder
 also prune the FTS index. Mac exposes it via a sidebar context menu + a detail
 trash button (destructive confirmation); iOS via swipe-to-delete + confirmation.
 
-Targets build via XcodeGen: `MeetingNotes-Mac`, `MeetingNotes-iOS`,
-`MeetingNotes-Watch`. See "Manual verification required" in the PR/report for
+Targets build via XcodeGen: `Protokoll-Mac`, `Protokoll-iOS`,
+`Protokoll-Watch`. See "Manual verification required" in the PR/report for
 what can't be checked headlessly (live mic, permissions, real iCloud, signing).
 Projects UI (group/filter chips) and F5 agenda integration remain future work.
