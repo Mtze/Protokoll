@@ -499,3 +499,51 @@ Start (unter macOS 15 ohne den alten Rechtsklick-Öffnen-Umweg); Nutzer bestäti
 über *Systemeinstellungen > Datenschutz & Sicherheit* oder installieren mit
 `--no-quarantine`. Der Cask-Bump-Schritt pusht auf `main` - bei Branch-Schutz muss
 der Bump stattdessen per PR erfolgen.
+
+### ADR-9 — Die Zusammenfassungs-Struktur ist eine Nutzerdatei, der Frontmatter-Vertrag nicht
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Der Summarize-Prompt wird in drei Teile zerlegt:
+
+1. **Erzwungener Vertrag** (`SummarizePrompt.systemPrompt`), übergeben via
+   `claude --append-system-prompt`. Er besitzt den YAML-Frontmatter-Vertrag
+   (`title:` + `language:`), die Titel- und Sprachregeln sowie die
+   **Grounding-Regeln**. Nicht editierbar.
+2. **Struktur-Vorgabe** (`SummaryTemplate.default` in SharedKit), editierbar über
+   `<container>/config/summary-prompt.md`. Sie beschreibt nur, *was* im Protokoll
+   stehen soll. Standard ist ein **chronologischer Verlauf**.
+3. **Postambel**, eine Zeile Vertrags-Erinnerung nach dem Nutzertext (Recency).
+
+Zusätzlich: eine **deterministische Frontmatter-Reparatur** in Swift
+(`FrontmatterRepair.swift`) garantiert den Vertrag unabhängig davon, was das Modell
+liefert, und der **Map-Schritt bleibt eingebaut und formneutral**.
+
+**Kontext & Begründung:**
+- Der alte Prompt erzwang vier Abschnitte (`Beschlüsse` / `Action Items` /
+  `Themen` / `Offene Punkte`) und eine Owner-Spalte pro Aufgabe. `transcript.md`
+  enthält aber **keine Sprecherzuordnung** - `Transcriber` schreibt nur
+  `**[HH:MM:SS]** Text`. Der Prompt forderte damit strukturell eine Halluzination.
+  Die Grounding-Regeln verbieten das jetzt explizit.
+- `extraBlock` wies das Modell an, die eingebaute Struktur den Nutzeranweisungen
+  **vorzuziehen** - deshalb half es nicht, eigene Instruktionen zu ergänzen.
+- Eine Datei statt eines `PipelineConfig`-Feldes, weil mehrzeilige Prosa als
+  JSON-String nicht lesbar und nicht diffbar ist, und weil **„Datei fehlt“ =
+  „Standard“** jede Migration erspart (N3/ADR-2: die Dateien sind die Wahrheit).
+- **Ein** Template für Einzeldurchlauf *und* Reduce-Schritt. Drei editierbare
+  Templates wurden verworfen: Nutzer würden `build` anpassen und `reduce`
+  vergessen, wodurch ein 55-Minuten-Meeting still anders aussieht als ein
+  40-Minuten-Meeting - ohne jeden Hinweis in der UI.
+- Der Map-Schritt filterte bisher jeden Chunk in dieselben vier Kategorien,
+  **bevor** der Reduce-Schritt lief. Bei `characterBudget = 48_000` griff dieser
+  Pfad ab ca. 45 Minuten, also im Medianfall. Ein formneutrales Zwischenergebnis
+  hält jede mögliche Struktur-Vorgabe erreichbar; das Budget steigt auf 200 000
+  Zeichen (~3 h), damit der Einzeldurchlauf der Normalfall bleibt.
+
+**Konsequenz (bewusst):** Wer das Template anpasst, erhält künftige Verbesserungen
+des Standardtexts nicht mehr automatisch (die sicherheitsrelevanten Teile liegen
+aber außerhalb und verbessern sich weiter). Ein unverändertes Template löscht die
+Datei statt sie zu schreiben, damit genau das nur bewusst passiert. Erholung ist
+immer „zurücksetzen und neu erzeugen“: `writeProtocol` rotiert nach
+`protocol.vN.md` und `transcript.md` ist unveränderlich (N10), es geht also nie
+etwas verloren.

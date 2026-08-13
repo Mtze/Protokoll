@@ -33,12 +33,29 @@ The `process-session` CLI (ADR-1). Steps: iCloud download-wait (N7) → transcri
 (`Transcriber` shells out to `scripts/transcribe.sh`, assembles timestamped
 `transcript.md`) → summarize (`Summarizer` pipes the transcript into `claude -p`;
 the pipeline owns the write + title lift F9). `Pipeline` manages status + claim.
-`TranscriptChunker` is the M2 map-reduce seam (N9). `SummarizePrompt` embeds the
-decision-vs-discussion conventions from the meeting-notes skill.
+`TranscriptChunker` is the map-reduce seam (N9), and `TranscriptChunk.timeRange`
+labels each partial with the wall-clock span it covers so the reduce step has
+absolute time to order by.
+
+`SummarizePrompt` splits the prompt three ways (ADR-9): the **enforced contract**
+in `systemPrompt` (frontmatter, title/language, grounding rules - passed via
+`--append-system-prompt`), the **body spec** from `SummaryTemplate.default` /
+`config/summary-prompt.md` (user-editable, chronological by default), and a
+one-line postamble. `userMessage` puts the transcript *before* the instructions,
+per Anthropic's long-context guidance. `FrontmatterRepair.swift` then guarantees
+the contract deterministically - stripping fences and short chatter, synthesizing
+a missing title/language, and stamping the pipeline-owned `date`/`duration`/
+`session` keys - so a non-compliant model response can no longer be written
+verbatim with the title silently skipped. `map` is deliberately shape-neutral so
+any body spec stays reachable on long meetings.
+
+`Transcriber` also enforces a wall-clock budget (`max(15 min, 10x audio)`) via
+`CommandRunning`'s `timeout:` overload, so a wedged engine fails visibly instead
+of renewing its claim heartbeat forever.
 
 ## Diagnostics (`Sources/Diagnostics`)
 
-UI-free preflight. `DiagnosticCheck`s (claude, whisper engine, model, ffmpeg,
+UI-free preflight. `DiagnosticCheck`s (claude, whisper engine, **engine speed**, model, ffmpeg,
 PATH, container) each carry a localized title/explanation key and a tiered
 `Remediation` (auto-fix / bootstrap-gated / guided). `DiagnosticsRunner`
 aggregates `HealthLevel`. `RemediationExecutor` runs auto-fixes with the
@@ -68,7 +85,16 @@ holds `MarkdownText` (dependency-free block renderer - headings/lists/quotes/
 code over `AttributedString` inline spans, light+dark), `TranscriptSegmentList`
 (time+text rows; tap seeks the shared player, current row highlighted),
 and `DocumentActions` (Copy to the platform pasteboard + Export via
-`NSSavePanel` on macOS / `ShareLink` on iOS). The recording is one combined
+`NSSavePanel` on macOS / `ShareLink` on iOS).
+
+`DocumentLoader`/`LoadedDocument` read and parse a document **off the main actor**
+and cache it keyed on URL + mtime, so the detail views no longer re-read and
+re-parse on every body pass. Both renderers take pre-parsed input
+(`MarkdownRenderBlock` / `TranscriptRowItem`, with time labels precomputed) and use
+`LazyVStack`, and the transcript highlight is driven by
+`AudioPlayerModel.currentSegment` - an `Int?` that changes once per segment, where
+`currentTime` changes on every 10 Hz tick. See the performance notes in
+`CLAUDE.md` before changing any of this; an hour-long meeting is 1000-1500 rows. The recording is one combined
 mic+system track (ADR-7), so the detail views label it neutrally
 (`player.recording`), not "Microphone"; a separate `System audio` player only
 appears for legacy sessions that still carry `system.m4a`.

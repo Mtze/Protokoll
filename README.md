@@ -120,9 +120,14 @@ Localized **English + German** throughout.
   engine, the model) with one-click Fix buttons. Manual fallback:
   ```bash
   brew install ffmpeg
-  pip install mlx-whisper          # Apple Silicon, primary engine
+  uv tool install mlx-whisper      # Apple Silicon, primary engine
   # or: brew install whisper-cpp && scripts/setup.sh --model large-v3
   ```
+  **Install mlx-whisper, and use `uv` rather than `pip`.** Without a GPU engine
+  the script falls back to `openai-whisper`, which runs on the CPU only: a
+  52-minute meeting took 2 h 51 m that way versus 6 m 38 s with mlx-whisper.
+  `pip install` fails on Homebrew Python with `externally-managed-environment`
+  (PEP 668). Settings > Diagnostics warns when the slow fallback is in use.
 - `claude` CLI installed and logged in (`claude login`) - no API key (N1).
 
 ## Build & run
@@ -187,10 +192,17 @@ Notes:
 
 ### Configuration
 
-Transcription and summary tuning (language, vocabulary, models, custom
-instructions) is edited in the app's **Settings** and stored in
+Transcription and summary tuning (language, vocabulary, models, audio
+preparation, custom instructions) is edited in the app's **Settings** and stored in
 `<container>/config/pipeline.json`, which `process-session` also reads - so
 standalone runs honor the same settings.
+
+The **structure of the summary** is a separate, editable file:
+`<container>/config/summary-prompt.md`. When it is absent you get the built-in
+default, a chronological account of the meeting. Settings > Summary edits it, and
+"Reset to default" deletes it. The meeting title and language are always extracted
+regardless of what the file says (ADR-9), and previous protocols are kept as
+`protocol.vN.md`, so an edit that turns out badly is always recoverable.
 
 Environment overrides for dev / standalone runs:
 

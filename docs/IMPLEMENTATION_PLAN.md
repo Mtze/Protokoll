@@ -96,7 +96,7 @@ End state: install-time setup is friendly and self-verifying; record in the menu
 
 ### 1c. Diagnostics / Preflight subsystem (first-class)
 A `Diagnostics` module: an ordered list of `Check`s (claude installed+logged in, whisper engine + `large-v3` model, `ffmpeg`, PATH, container writable, mic permission), each with a plain-language title/explanation, a **"Details" disclosure** for the raw error, and an optional tiered `Remediation`:
-- **Auto-fix (one click, live progress log):** `brew install ffmpeg`, `pip install mlx-whisper`, model download via `setup.sh`.
+- **Auto-fix (one click, live progress log):** `brew install ffmpeg`, `uv tool install mlx-whisper`, model download via `setup.sh`.
 - **Bootstrap-gated:** if `brew`/`python3` missing, offer to install that first as an explicit, clearly-labeled bigger step; decline → copy-paste instructions. Never silently install a package manager.
 - **Guided (deep-link):** `claude` login → open Terminal with the command; mic/Screen-Recording → deep-link the exact System Settings pane.
 Menubar shows an **aggregate health dot** (green/yellow/red). An explicit **"System-Test" (Selbsttest)** runs all checks **plus an end-to-end dry run** - a bundled ~3 s clip pushed through transcribe → summarize - so green proves the whole chain. All strings localized.
