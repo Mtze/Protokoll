@@ -547,3 +547,42 @@ Datei statt sie zu schreiben, damit genau das nur bewusst passiert. Erholung ist
 immer „zurücksetzen und neu erzeugen“: `writeProtocol` rotiert nach
 `protocol.vN.md` und `transcript.md` ist unveränderlich (N10), es geht also nie
 etwas verloren.
+
+### ADR-10 — Erneutes Transkribieren rotiert, statt zu überschreiben
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Die Sessionliste bekommt eine Aktion **„Erneut
+transkribieren“** (Kontextmenü + „Session“-Systemmenü). Sie führt den
+Transcribe-Schritt mit `--force` erneut aus und erzeugt anschließend das
+Protokoll aus dem *neuen* Transkript neu. Dabei wird `transcript.md` **nicht
+überschrieben**, sondern nach `transcript.vN.md` rotiert - analog zur bereits
+bestehenden Protokoll-Rotation (N10). Der Schreibvorgang läuft dafür jetzt über
+`SessionStore.writeTranscript`, nicht mehr direkt aus `Transcriber`.
+
+**Kontext & Begründung:**
+- N10 hält `transcript.md` für unveränderlich, weil das Transkript die
+  Rohaufzeichnung des Meetings ist und nichts es automatisch ersetzen soll. Das
+  bleibt so: **nur eine ausdrückliche Nutzeraktion** ersetzt es.
+- Der Bedarf ist real und belegt: früh erzeugte Transkripte enthalten
+  Halluzinationsschleifen (gemessen: 38,9 % der Segmente exakt 1 s auseinander,
+  längste Kette 140 Segmente), die die aktuelle Pipeline nicht mehr produziert.
+  Ohne diese Aktion bliebe die einzige Möglichkeit, die Session zu löschen und
+  die Aufnahme zu verlieren.
+- Ebenso nach dem Ändern von Sprache, Vokabular oder Modell in den Einstellungen.
+- **Rotation statt Überschreiben**, weil ein erneuter Lauf nicht zwangsläufig
+  besser ist. Wer neu transkribiert, vergleicht in der Regel mit dem, was er
+  vorher hatte; ein zerstörender Schreibvorgang würde genau diesen Vergleich
+  unmöglich machen.
+- **Der Summarize-Schritt wird mitgezwungen.** Ohne das existiert `protocol.md`
+  weiterhin, der Schritt wird übersprungen, und die Session bliebe mit einem
+  Protokoll zurück, das das *alte* Transkript beschreibt - stillschweigend
+  inkonsistent.
+- Eine **Rückfrage** vor dem Start, weil der Lauf je nach Länge Minuten dauert
+  und das sichtbare Transkript austauscht. Der Dialog nennt ausdrücklich, dass
+  die bisherigen Fassungen erhalten bleiben.
+
+**Konsequenz (bewusst):** Sessionordner können mit der Zeit mehrere
+`transcript.vN.md` ansammeln. Das ist derselbe Kompromiss, den N10 für Protokolle
+bereits eingeht, und Aufräumen bleibt eine bewusste Nutzerentscheidung (siehe
+Issue #14, Retention).

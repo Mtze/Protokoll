@@ -32,6 +32,15 @@ public struct Session: Sendable, Equatable, Identifiable {
         folder.appendingPathComponent("protocol.v\(version).md")
     }
 
+    /// Path for the Nth rotated transcript (`transcript.v1.md`, …), ADR-10.
+    ///
+    /// `transcript.md` stays immutable in normal operation (N10); only an
+    /// explicit user-invoked re-transcription replaces it, and then the previous
+    /// one is rotated here rather than destroyed.
+    public func rotatedTranscriptURL(version: Int) -> URL {
+        folder.appendingPathComponent("transcript.v\(version).md")
+    }
+
     /// A human-facing title that is never an empty date-desert (F9): the
     /// explicit title if set, otherwise a localized-friendly fallback derived
     /// from the start time. The pipeline replaces the fallback with a generated

@@ -17,6 +17,7 @@ struct LibraryView: View {
     @State private var showingConsent = false
     @State private var sessionToDelete: Session?
     @State private var sessionToRename: Session?
+    @State private var sessionToRetranscribe: Session?
     @State private var renameText = ""
     @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
     @State private var showOnboarding = false
@@ -43,7 +44,8 @@ struct LibraryView: View {
             if let selection, let session = model.sessions.first(where: { $0.id == selection }) {
                 SessionDetailView(session: session,
                                   onDelete: { sessionToDelete = $0 },
-                                  onRename: { beginRename($0) })
+                                  onRename: { beginRename($0) },
+                                  onRetranscribe: { sessionToRetranscribe = $0 })
             } else {
                 ContentUnavailableView("library.selectPrompt", systemImage: "sidebar.left")
             }
@@ -85,6 +87,7 @@ struct LibraryView: View {
                                  showingConsent: $showingConsent,
                                  sessionToDelete: $sessionToDelete,
                                  sessionToRename: $sessionToRename,
+                                 sessionToRetranscribe: $sessionToRetranscribe,
                                  renameText: $renameText))
     }
 
@@ -134,6 +137,16 @@ struct LibraryView: View {
             }
         case .none:
             EmptyView()
+        }
+
+        // Re-transcribe from the audio. Offered whenever a transcript exists and
+        // nothing is running: useful after changing the language/vocabulary/model
+        // or installing a faster, less hallucination-prone engine. For a session
+        // that has never been processed, Process above already does this.
+        if model.canRetranscribe(session) {
+            Button { sessionToRetranscribe = session } label: {
+                Label("action.retranscribe", systemImage: "waveform.badge.magnifyingglass")
+            }
         }
 
         Button { beginRename(session) } label: { Label("action.rename", systemImage: "pencil") }
@@ -273,10 +286,23 @@ private struct SessionDialogs: ViewModifier {
     @Binding var showingConsent: Bool
     @Binding var sessionToDelete: Session?
     @Binding var sessionToRename: Session?
+    @Binding var sessionToRetranscribe: Session?
     @Binding var renameText: String
 
     func body(content: Content) -> some View {
         content
+            .confirmationDialog(
+                "retranscribe.confirm.title",
+                isPresented: Binding(get: { sessionToRetranscribe != nil },
+                                     set: { if !$0 { sessionToRetranscribe = nil } }),
+                titleVisibility: .visible,
+                presenting: sessionToRetranscribe
+            ) { session in
+                Button("action.retranscribe") { model.retranscribe(session) }
+                Button("common.cancel", role: .cancel) {}
+            } message: { _ in
+                Text("retranscribe.confirm.message")
+            }
             .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
                 Button("consent.confirm") { Task { await model.startRecording() } }
                 Button("common.cancel", role: .cancel) {}

@@ -282,6 +282,29 @@ final class AppModel {
         scheduler.enqueueSummarize(session, force: true)
     }
 
+    /// Whether re-transcription makes sense: there is audio to work from, a
+    /// transcript already exists (otherwise plain Process is the right action),
+    /// and nothing is currently running for this session.
+    func canRetranscribe(_ session: Session) -> Bool {
+        guard activeJob(for: session.id) == nil else { return false }
+        let fileManager = FileManager.default
+        return fileManager.fileExists(atPath: session.micAudioURL.path)
+            && fileManager.fileExists(atPath: session.transcriptURL.path)
+    }
+
+    /// Re-runs transcription from the audio, then rebuilds the protocol from the
+    /// new transcript (ADR-10).
+    ///
+    /// Useful after changing the transcription language, vocabulary or model, or
+    /// after installing a better engine - an early transcript may contain
+    /// hallucination loops the current pipeline no longer produces. The previous
+    /// transcript and protocol are rotated to `transcript.vN.md` /
+    /// `protocol.vN.md`, so nothing is lost.
+    func retranscribe(_ session: Session) {
+        scheduler.clearCompleted()
+        scheduler.enqueueProcess(session, force: true)
+    }
+
     /// Deletes a session: removes its folder from disk (Trash on macOS), drops it
     /// from the in-memory list, and prunes it from the FTS index (ADR-2).
     func deleteSession(_ session: Session) {

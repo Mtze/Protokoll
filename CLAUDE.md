@@ -52,7 +52,11 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   are `Sendable` value types.
 - **`session.json` is canonical.** Only `SessionStore` reads/writes it.
 - **`transcript.md` is immutable** once written (N10); regen rotates
-  `protocol.md` → `protocol.vN.md`.
+  `protocol.md` → `protocol.vN.md`. The **one** exception is the user-invoked
+  "Transcribe Again" action (ADR-10), which rotates `transcript.md` →
+  `transcript.vN.md` and forces the summarize too, so the protocol never
+  silently describes the previous transcript. All transcript writes go through
+  `SessionStore.writeTranscript` so the rotation cannot be bypassed.
 - **Pipeline tuning lives in the container**, not env. `PipelineConfig` at
   `<container>/config/pipeline.json` (transcription language/vocabulary/model/
   audio preprocessing, summary language/model, custom instructions) is written by
@@ -212,9 +216,11 @@ before pushing**, never force-push; `.worktrees/` is gitignored.
 
 Session actions (macOS): the sidebar row **context menu** is the home for
 per-session actions (`LibraryView.sessionMenuItems(for:)`) - Process/Retry/
-Regenerate, Rename, Reveal in Finder, Assign to Project, Delete - and the
-"Session" system menu (`AppCommands`) mirrors them for the selected session via
-`DetailActions`. The detail pane keeps only the primary action + project menu (no
+Regenerate, **Transcribe Again**, Rename, Reveal in Finder, Assign to Project,
+Delete - and the "Session" system menu (`AppCommands`) mirrors them for the
+selected session via `DetailActions`. "Transcribe Again" appears only when
+`AppModel.canRetranscribe` holds (audio + an existing transcript, nothing
+running) and confirms first, since it costs minutes. The detail pane keeps only the primary action + project menu (no
 Reveal/Delete icons). Rename persists a custom title via `AppModel.rename(_:to:)`
 (sets `metadata.title`, reindexes; empty reverts to the derived `displayTitle`).
 

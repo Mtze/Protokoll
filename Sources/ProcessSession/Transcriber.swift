@@ -38,6 +38,8 @@ public enum TranscriptionError: Error, LocalizedError, Equatable {
 public struct Transcriber: Sendable {
     let runner: CommandRunning
     let tools: ToolLocator
+    /// Owns the transcript write, including rotation on re-transcription.
+    let store: SessionStore
     /// `"auto"` (detect) or an ISO code passed to `transcribe.sh --language`.
     let language: String
     /// Domain vocabulary seeded via `transcribe.sh --prompt` (may be empty).
@@ -50,6 +52,7 @@ public struct Transcriber: Sendable {
     public init(
         runner: CommandRunning,
         tools: ToolLocator = ToolLocator(),
+        store: SessionStore = SessionStore(),
         language: String = "auto",
         vocabulary: String = "",
         model: String = "",
@@ -57,6 +60,7 @@ public struct Transcriber: Sendable {
     ) {
         self.runner = runner
         self.tools = tools
+        self.store = store
         self.language = language
         self.vocabulary = vocabulary
         self.model = model
@@ -141,7 +145,11 @@ public struct Transcriber: Sendable {
         let txtURL = workDir.appendingPathComponent("mic.txt")
         let transcript = try assembleTranscript(jsonURL: jsonURL, txtURL: txtURL)
 
-        try Data(transcript.markdown.utf8).write(to: session.transcriptURL, options: .atomic)
+        // Through the store, so a re-transcription rotates the previous
+        // transcript to transcript.vN.md instead of destroying it (ADR-10).
+        if let rotated = try store.writeTranscript(transcript.markdown, for: session) {
+            AppLog.pipeline.info("rotated previous transcript to \(rotated.lastPathComponent, privacy: .public) session=\(session.id, privacy: .public)")
+        }
 
         var updated = session
         updated.metadata.language = transcript.language ?? updated.metadata.language

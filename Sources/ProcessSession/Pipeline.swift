@@ -51,7 +51,7 @@ public struct Pipeline: Sendable {
     ) {
         self.container = container
         let config = (try? container.loadPipelineConfig()) ?? PipelineConfig()
-        self.transcriber = Transcriber(runner: runner, tools: tools,
+        self.transcriber = Transcriber(runner: runner, tools: tools, store: container.store,
                                        language: config.transcriptionLanguage,
                                        vocabulary: config.vocabulary,
                                        model: config.transcriptionModel,

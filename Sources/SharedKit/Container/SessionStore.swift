@@ -46,13 +46,34 @@ public struct SessionStore: Sendable {
         AppLog.container.debug("session saved id=\(session.id, privacy: .public) status=\(session.metadata.pipeline.status.name, privacy: .public)")
     }
 
-    // MARK: Protocol rotation (N10)
+    // MARK: Document rotation (N10, ADR-10)
+
+    /// Writes `transcript.md`, rotating any existing one to `transcript.vN.md`.
+    ///
+    /// In normal operation the transcript is written exactly once and then
+    /// treated as immutable (N10). A user-invoked re-transcription is the sole
+    /// exception (ADR-10), and it rotates rather than overwrites so the earlier
+    /// transcript - and whatever a protocol was derived from - is never lost.
+    /// Returns the rotated URL, or `nil` when there was nothing to rotate.
+    @discardableResult
+    public func writeTranscript(_ text: String, for session: Session) throws -> URL? {
+        let fileManager = FileManager.default
+        var rotatedTo: URL?
+        if fileManager.fileExists(atPath: session.transcriptURL.path) {
+            var version = 1
+            while fileManager.fileExists(atPath: session.rotatedTranscriptURL(version: version).path) {
+                version += 1
+            }
+            let destination = session.rotatedTranscriptURL(version: version)
+            try fileManager.moveItem(at: session.transcriptURL, to: destination)
+            rotatedTo = destination
+        }
+        try atomicWrite(Data(text.utf8), to: session.transcriptURL)
+        return rotatedTo
+    }
 
     /// Rotates an existing `protocol.md` to the next free `protocol.vN.md` and
     /// writes fresh protocol text. Returns the rotated URL if one was made.
-    ///
-    /// The raw transcript is never touched; only protocols rotate, so nothing is
-    /// lost when a protocol is regenerated.
     @discardableResult
     public func writeProtocol(_ text: String, for session: Session) throws -> URL? {
         let fileManager = FileManager.default

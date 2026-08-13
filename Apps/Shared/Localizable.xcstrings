@@ -155,6 +155,23 @@
         }
       }
     },
+    "action.retranscribe": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut transkribieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe Again"
+          }
+        }
+      }
+    },
     "action.retry": {
       "extractionState": "manual",
       "localizations": {
@@ -2463,6 +2480,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rename session"
+          }
+        }
+      }
+    },
+    "retranscribe.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Aufnahme wird mit den aktuellen Einstellungen neu transkribiert, danach wird das Protokoll aus dem neuen Transkript erzeugt. Das dauert einige Minuten. Das bisherige Transkript und Protokoll bleiben als transcript.v1.md und protocol.v1.md erhalten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording is transcribed from scratch with the current settings, and the protocol is then rebuilt from the new transcript. This takes a few minutes. The previous transcript and protocol are kept as transcript.v1.md and protocol.v1.md."
+          }
+        }
+      }
+    },
+    "retranscribe.confirm.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufnahme erneut transkribieren?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe this recording again?"
           }
         }
       }

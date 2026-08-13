@@ -14,6 +14,9 @@ struct SessionDetailView: View {
     /// Invoked when the user asks to rename this session; the library owns the
     /// rename dialog.
     var onRename: (Session) -> Void = { _ in }
+    /// Invoked when the user asks to re-transcribe; the library owns the
+    /// confirmation dialog.
+    var onRetranscribe: (Session) -> Void = { _ in }
 
     enum Pane: String, CaseIterable, Identifiable { case protocolDoc, transcript; var id: String { rawValue } }
     @State private var pane: Pane = .protocolDoc
@@ -59,8 +62,11 @@ struct SessionDetailView: View {
         case .none: primary = nil
         }
         let playPause: (() -> Void)? = hasMicAudio ? { audioModel.playPause() } : nil
+        let retranscribe: (() -> Void)? = model.canRetranscribe(session)
+            ? { onRetranscribe(session) } : nil
         return DetailActions(
             primary: primary,
+            retranscribe: retranscribe,
             rename: { onRename(session) },
             delete: { onDelete(session) },
             reveal: { revealInFinder() },

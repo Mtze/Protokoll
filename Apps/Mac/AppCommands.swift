@@ -29,6 +29,9 @@ struct DetailActions {
         let run: () -> Void
     }
     let primary: Primary?
+    /// Re-transcribe from the audio, or `nil` when it does not apply (no
+    /// transcript yet, or a job is already running for this session).
+    let retranscribe: (() -> Void)?
     let rename: () -> Void
     let delete: () -> Void
     let reveal: () -> Void
@@ -85,6 +88,9 @@ struct ProtokollCommands: Commands {
             }
             .keyboardShortcut(.return, modifiers: .command)
             .disabled(detailActions?.primary == nil)
+
+            Button("action.retranscribe") { detailActions?.retranscribe?() }
+                .disabled(detailActions?.retranscribe == nil)
 
             Button("action.rename") { detailActions?.rename() }
                 .disabled(detailActions == nil)
