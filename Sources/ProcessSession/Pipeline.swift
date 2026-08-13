@@ -54,11 +54,16 @@ public struct Pipeline: Sendable {
         self.transcriber = Transcriber(runner: runner, tools: tools,
                                        language: config.transcriptionLanguage,
                                        vocabulary: config.vocabulary,
-                                       model: config.transcriptionModel)
+                                       model: config.transcriptionModel,
+                                       preprocess: config.audioPreprocessing)
+        // Absent template file → built-in default, so standalone runs and app runs
+        // agree and there is nothing to migrate.
+        let template = (try? container.loadSummaryTemplate()) ?? nil
         self.summarizer = Summarizer(runner: runner, tools: tools, store: container.store,
                                      customInstructions: config.summaryInstructions,
                                      summaryLanguage: config.summaryLanguage,
-                                     summaryModel: config.summaryModel)
+                                     summaryModel: config.summaryModel,
+                                     template: template ?? "")
         self.waiter = ICloudDownloadWaiter()
         self.deviceId = deviceId
     }

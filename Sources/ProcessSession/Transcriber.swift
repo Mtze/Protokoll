@@ -7,6 +7,7 @@ public enum TranscriptionError: Error, LocalizedError, Equatable {
     case audioMissing(String)
     case engineFailed(String)
     case noOutput
+    case timedOut(minutes: Int)
 
     public var errorDescription: String? {
         switch self {
@@ -18,6 +19,13 @@ public enum TranscriptionError: Error, LocalizedError, Equatable {
             return "Transcription failed: \(message)"
         case .noOutput:
             return "The transcription engine produced no output."
+        case let .timedOut(minutes):
+            return """
+            Transcription did not finish within \(minutes) minutes and was stopped. \
+            This usually means the engine is stuck re-decoding a passage. Check \
+            Settings > Diagnostics: a GPU engine (mlx-whisper) is far faster and \
+            far less prone to this than the CPU fallback.
+            """
         }
     }
 }
@@ -36,22 +44,42 @@ public struct Transcriber: Sendable {
     let vocabulary: String
     /// Overrides ``ToolLocator/transcriptionModel`` when non-empty.
     let model: String
+    /// `"off"` disables the safe ffmpeg prep chain (high-pass + static gain).
+    let preprocess: String
 
     public init(
         runner: CommandRunning,
         tools: ToolLocator = ToolLocator(),
         language: String = "auto",
         vocabulary: String = "",
-        model: String = ""
+        model: String = "",
+        preprocess: String = "safe"
     ) {
         self.runner = runner
         self.tools = tools
         self.language = language
         self.vocabulary = vocabulary
         self.model = model
+        self.preprocess = preprocess
     }
 
     private var effectiveModel: String { model.isEmpty ? tools.transcriptionModel : model }
+
+    /// Wall-clock budget for one transcription, from the recording's length.
+    ///
+    /// A GPU engine runs at roughly 0.13x realtime and even the CPU fallback
+    /// manages ~3.3x, so 10x realtime is generous for every healthy
+    /// configuration while still catching a wedged engine. The 15-minute floor
+    /// keeps short clips from tripping on model-download or warm-up time.
+    static func timeout(forAudioSeconds seconds: TimeInterval) -> TimeInterval {
+        max(15 * 60, seconds * 10)
+    }
+
+    /// The recording's duration, or `nil` when it cannot be read.
+    private func audioDuration(of session: Session) -> TimeInterval? {
+        if let recorded = session.metadata.duration, recorded > 0 { return recorded }
+        return nil
+    }
 
     /// Transcribes the session's `mic.m4a`, writing `transcript.md`. Progress
     /// lines from the engine are forwarded to `onProgress`.
@@ -81,14 +109,27 @@ public struct Transcriber: Sendable {
         if !vocabulary.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             arguments += ["--prompt", vocabulary]
         }
-        AppLog.pipeline.debug("running transcribe.sh model=\(effectiveModel, privacy: .public) lang=\(language, privacy: .public) audio=\(audioURL.lastPathComponent, privacy: .public)")
-        let result = try runner.run(
-            executable: script,
-            arguments: arguments,
-            stdin: nil,
-            environment: nil,
-            onStderrLine: onProgress
-        )
+        if preprocess != "safe" {
+            arguments += ["--preprocess", preprocess]
+        }
+
+        let budget = Self.timeout(forAudioSeconds: audioDuration(of: session) ?? 0)
+        AppLog.pipeline.debug("running transcribe.sh model=\(effectiveModel, privacy: .public) lang=\(language, privacy: .public) audio=\(audioURL.lastPathComponent, privacy: .public) budget=\(budget, format: .fixed(precision: 0), privacy: .public)s")
+        let result: CommandResult
+        do {
+            result = try runner.run(
+                executable: script,
+                arguments: arguments,
+                stdin: nil,
+                environment: nil,
+                workingDirectory: session.folder,
+                timeout: budget,
+                onStderrLine: onProgress
+            )
+        } catch let timeout as CommandTimedOut {
+            AppLog.pipeline.error("transcribe timed out session=\(session.id, privacy: .public) after \(timeout.timeout, format: .fixed(precision: 0), privacy: .public)s")
+            throw TranscriptionError.timedOut(minutes: Int((timeout.timeout / 60).rounded()))
+        }
         guard result.succeeded else {
             let stderr = result.stderr.isEmpty ? result.stdout : result.stderr
             AppLog.pipeline.error("transcribe.sh exited \(result.exitCode, privacy: .public): \(stderr, privacy: .public)")

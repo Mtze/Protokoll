@@ -53,4 +53,46 @@ struct TranscriberConfigTests {
         #expect(!call.arguments.contains("--language"))
         #expect(!call.arguments.contains("--prompt"))
     }
+
+    /// The safe chain is the default, so it is not passed explicitly; turning it
+    /// off must be.
+    @Test func passesPreprocessOnlyWhenNotTheDefault() throws {
+        let (_, session) = try makeSession()
+
+        let safeRunner = stubbedRunner()
+        _ = try Transcriber(runner: safeRunner, tools: tools(), preprocess: "safe")
+            .transcribe(session: session)
+        let safeCall = try #require(safeRunner.calls.first { $0.executable.hasSuffix("transcribe.sh") })
+        #expect(!safeCall.arguments.contains("--preprocess"))
+
+        let offRunner = stubbedRunner()
+        _ = try Transcriber(runner: offRunner, tools: tools(), preprocess: "off")
+            .transcribe(session: session)
+        let offCall = try #require(offRunner.calls.first { $0.executable.hasSuffix("transcribe.sh") })
+        #expect(offCall.arguments.contains("--preprocess"))
+        #expect(offCall.arguments.contains("off"))
+    }
+
+    /// The watchdog budget: generous for every healthy configuration (a GPU engine
+    /// runs at ~0.13x realtime, the CPU fallback at ~3.3x) while still catching a
+    /// wedged engine, with a floor so short clips survive model download/warm-up.
+    @Test func timeoutScalesWithAudioDurationAboveAFloor() {
+        #expect(Transcriber.timeout(forAudioSeconds: 0) == 15 * 60)
+        #expect(Transcriber.timeout(forAudioSeconds: 60) == 15 * 60)      // floor wins
+        #expect(Transcriber.timeout(forAudioSeconds: 3600) == 36_000)     // 10x realtime
+    }
+
+    /// A timed-out engine must surface as an actionable transcription error, not a
+    /// raw subprocess failure.
+    @Test func mapsATimeoutToAnActionableError() throws {
+        let (_, session) = try makeSession()
+        final class TimingOutRunner: CommandRunning, @unchecked Sendable {
+            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, workingDirectory: URL?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
+                throw CommandTimedOut(executable: executable, timeout: 900)
+            }
+        }
+        #expect(throws: TranscriptionError.timedOut(minutes: 15)) {
+            try Transcriber(runner: TimingOutRunner(), tools: tools()).transcribe(session: session)
+        }
+    }
 }
