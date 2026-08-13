@@ -31,6 +31,9 @@ actor Recorder {
     private var session: Session?
     private var startedAt: Date?
     private(set) var isRecording = false
+    /// Whether the last finished recording clipped. Read by the app to warn once,
+    /// after stopping.
+    private(set) var didClip = false
 
     /// Live input level, updated from the realtime tap and read by the meter UI.
     /// A `let` of a `Sendable` type, so the main actor can read it without hops.
@@ -46,9 +49,30 @@ actor Recorder {
     }
 
     /// Begins capturing to `session.micCaptureURL` (CAF).
-    func start(session: Session) throws {
+    ///
+    /// `voiceProcessing` enables the OS echo-cancellation / noise-suppression /
+    /// AGC front end on the mic path. It matters when the meeting plays through
+    /// laptop speakers: the mic re-records the remote participants with a delay,
+    /// so the track contains their voices twice - a distortion no post-hoc
+    /// denoiser can undo. It is opt-in because it *is* itself an enhancement
+    /// chain (so it carries the same "may hurt ASR" risk as any denoiser), it
+    /// changes the input format, and it can fail on some devices.
+    func start(session: Session, voiceProcessing: Bool = false) throws {
         guard !isRecording else { return }
         let input = engine.inputNode
+        if voiceProcessing {
+            do {
+                try input.setVoiceProcessingEnabled(true)
+                AppLog.recording.info("voice processing (AEC) enabled")
+            } catch {
+                // Never fail the recording over this - carry on unprocessed.
+                AppLog.recording.warning("voice processing unavailable: \(AppLog.describe(error), privacy: .public)")
+            }
+        } else if input.isVoiceProcessingEnabled {
+            // A previous run may have left it on; the node outlives one recording.
+            try? input.setVoiceProcessingEnabled(false)
+        }
+        // Read the format *after* toggling: voice processing changes it.
         let format = input.outputFormat(forBus: 0)
         try FileManager.default.createDirectory(at: session.audioDirectory, withIntermediateDirectories: true)
 
@@ -91,8 +115,18 @@ actor Recorder {
         engine.stop()
         writer?.close()
         writer = nil
+        // Read the clipping verdict before resetting the meter. Clipping is baked
+        // into the samples and nothing downstream can undo it - attenuating a
+        // clipped file only makes the speech quieter - so the only useful moment
+        // to say so is here, while the user can still lower the input level.
+        let clipped = meter.isClipping
+        let clippedFraction = meter.clippedFraction
         meter.reset()
         isRecording = false
+        if clipped {
+            AppLog.recording.warning("input clipped on \(clippedFraction * 100, format: .fixed(precision: 2), privacy: .public)% of samples session=\(session.id, privacy: .public); input level is too high")
+        }
+        didClip = clipped
 
         let systemURL = session.systemAudioURL
         if mixSystemAudio, FileManager.default.fileExists(atPath: systemURL.path) {

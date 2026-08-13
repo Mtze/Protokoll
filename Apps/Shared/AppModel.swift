@@ -41,6 +41,9 @@ final class AppModel {
     /// Surfaced when system-audio capture (F2) was requested but failed or
     /// produced nothing - so it never fails silently to mic-only again.
     private(set) var systemAudioError: String?
+    /// Set after a recording whose input clipped; the library shows it as a
+    /// dismissible banner. Cleared when a new recording starts.
+    var inputClippedWarning: String?
 
     /// Shared reference so the `NSApplicationDelegate` can gate quit on active
     /// work (confirm-on-quit, ADR-4).
@@ -161,11 +164,14 @@ final class AppModel {
         }
         do {
             let session = try container.createSession(device: .mac)
-            try await recorder.start(session: session)
+            // Opt-in OS echo cancellation on the mic path (Settings > Recording).
+            let voiceProcessing = UserDefaults.standard.bool(forKey: SettingsKeys.voiceProcessing)
+            try await recorder.start(session: session, voiceProcessing: voiceProcessing)
             isRecording = true
             activeRecordingID = session.id
             startLevelMonitoring()
             systemAudioError = nil
+            inputClippedWarning = nil
             #if os(macOS)
             // Optionally capture system audio in parallel (F2). Surface failures
             // instead of silently recording mic-only.
@@ -203,6 +209,13 @@ final class AppModel {
             #endif
             session.metadata.pipeline.status = .recorded
             try container.store.save(session)
+            #if os(macOS)
+            // Clipping cannot be repaired after the fact, so say so now rather
+            // than let it silently cost transcription accuracy.
+            if await recorder.didClip {
+                inputClippedWarning = String(localized: "recording.warning.clipped")
+            }
+            #endif
         } catch {
             // Leave whatever was captured; recovery handles the CAF on relaunch.
         }

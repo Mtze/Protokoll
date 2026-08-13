@@ -21,6 +21,45 @@ final class PipelineSettingsStore {
     func save() { try? container.savePipelineConfig(config) }
 }
 
+/// Container-backed store for the user-editable summary body spec
+/// (`config/summary-prompt.md`).
+///
+/// The editor is prefilled with the built-in default so the user *edits* rather
+/// than authors from nothing, and ``isCustom`` distinguishes "same as default"
+/// from "customized" - saving text equal to the default deletes the file, so
+/// unchanged users keep receiving improvements to the default in future versions.
+@MainActor
+@Observable
+final class SummaryTemplateStore {
+    /// The text shown in the editor.
+    var text: String
+    /// Whether a custom template file exists on disk.
+    private(set) var isCustom: Bool
+    private let container: Container
+
+    init(container: Container) {
+        self.container = container
+        let stored = (try? container.loadSummaryTemplate()) ?? nil
+        self.isCustom = stored != nil
+        self.text = stored ?? SummaryTemplate.default
+    }
+
+    func save() {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        try? container.saveSummaryTemplate(
+            SummaryTemplate.isDefault(text) || trimmed.isEmpty ? nil : text
+        )
+        isCustom = container.hasCustomSummaryTemplate()
+    }
+
+    /// Discards the customization: deletes the file and restores the default text.
+    func resetToDefault() {
+        text = SummaryTemplate.default
+        try? container.saveSummaryTemplate(nil)
+        isCustom = false
+    }
+}
+
 /// Container-backed store for project/tag definitions (F7), mirroring
 /// ``PipelineSettingsStore``.
 @MainActor
@@ -47,11 +86,13 @@ struct SettingsView: View {
     private let container: Container
     @State private var store: PipelineSettingsStore
     @State private var projectsStore: ProjectsStore
+    @State private var templateStore: SummaryTemplateStore
 
     init(container: Container) {
         self.container = container
         _store = State(wrappedValue: PipelineSettingsStore(container: container))
         _projectsStore = State(wrappedValue: ProjectsStore(container: container))
+        _templateStore = State(wrappedValue: SummaryTemplateStore(container: container))
     }
 
     var body: some View {
@@ -60,7 +101,7 @@ struct SettingsView: View {
                 .tabItem { Label("settings.tab.general", systemImage: "gearshape") }
             TranscriptionTab(store: store)
                 .tabItem { Label("settings.tab.transcription", systemImage: "waveform") }
-            SummaryTab(store: store)
+            SummaryTab(store: store, templateStore: templateStore)
                 .tabItem { Label("settings.tab.summary", systemImage: "doc.text") }
             ProjectsTab(store: projectsStore)
                 .tabItem { Label("settings.tab.projects", systemImage: "tag") }
@@ -73,6 +114,7 @@ struct SettingsView: View {
         }
         .frame(width: 560, height: 480)
         .onChange(of: store.config) { store.save() }
+        .onChange(of: templateStore.text) { templateStore.save() }
         .onChange(of: projectsStore.projects) {
             projectsStore.save()
             model.reloadProjects()
@@ -143,6 +185,7 @@ private struct SwatchPicker: View {
 private struct GeneralTab: View {
     @AppStorage(SettingsKeys.consentReminder) private var consentReminder = true
     @AppStorage(SettingsKeys.captureSystemAudio) private var captureSystemAudio = false
+    @AppStorage(SettingsKeys.voiceProcessing) private var voiceProcessing = false
     @AppStorage(SettingsKeys.defaultPlaybackSpeed) private var playbackSpeed = 1.0
 
     var body: some View {
@@ -152,6 +195,8 @@ private struct GeneralTab: View {
                 Text("settings.consentReminder.help").font(.caption).foregroundStyle(.secondary)
                 Toggle("settings.systemAudio", isOn: $captureSystemAudio)
                 Text("settings.systemAudio.help").font(.caption).foregroundStyle(.secondary)
+                Toggle("settings.voiceProcessing", isOn: $voiceProcessing)
+                Text("settings.voiceProcessing.help").font(.caption).foregroundStyle(.secondary)
             }
             Section("settings.playback") {
                 Picker("settings.playback.speed", selection: $playbackSpeed) {
@@ -185,6 +230,13 @@ private struct TranscriptionTab: View {
                 }
                 Text("settings.transcription.model.help").font(.caption).foregroundStyle(.secondary)
             }
+            Section("settings.transcription.audio") {
+                Picker("settings.transcription.preprocessing", selection: $store.config.audioPreprocessing) {
+                    Text("settings.transcription.preprocessing.safe").tag("safe")
+                    Text("settings.transcription.preprocessing.off").tag("off")
+                }
+                Text("settings.transcription.preprocessing.help").font(.caption).foregroundStyle(.secondary)
+            }
             Section("settings.transcription.vocabulary") {
                 Text("settings.transcription.vocabulary.help").font(.caption).foregroundStyle(.secondary)
                 TextEditor(text: $store.config.vocabulary)
@@ -200,6 +252,7 @@ private struct TranscriptionTab: View {
 
 private struct SummaryTab: View {
     @Bindable var store: PipelineSettingsStore
+    @Bindable var templateStore: SummaryTemplateStore
 
     var body: some View {
         Form {
@@ -216,10 +269,25 @@ private struct SummaryTab: View {
                 }
                 Text("settings.summary.model.help").font(.caption).foregroundStyle(.secondary)
             }
+            Section("settings.summary.template") {
+                Text("settings.summary.template.help").font(.caption).foregroundStyle(.secondary)
+                TextEditor(text: $templateStore.text)
+                    .font(.body.monospaced()).frame(minHeight: 220)
+                HStack {
+                    if templateStore.isCustom {
+                        Label("settings.summary.template.customized", systemImage: "pencil")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Button("settings.summary.template.reset") { templateStore.resetToDefault() }
+                        .disabled(!templateStore.isCustom)
+                }
+                Text("settings.summary.template.recovery").font(.caption).foregroundStyle(.secondary)
+            }
             Section("settings.summary.instructions") {
                 Text("settings.summary.help").font(.caption).foregroundStyle(.secondary)
                 TextEditor(text: $store.config.summaryInstructions)
-                    .font(.body.monospaced()).frame(minHeight: 120)
+                    .font(.body.monospaced()).frame(minHeight: 100)
                 HStack {
                     Spacer()
                     Button("settings.summary.reset") { store.config.summaryInstructions = "" }
@@ -351,6 +419,7 @@ enum SettingsFormat {
 enum SettingsKeys {
     static let consentReminder = "consentReminderEnabled"
     static let captureSystemAudio = "captureSystemAudioEnabled"
+    static let voiceProcessing = "voiceProcessingEnabled"
     static let onboardingDone = "onboardingComplete"
     static let autoProcess = "autoProcessNewRecordings"
     static let notificationsEnabled = "notificationsEnabled"

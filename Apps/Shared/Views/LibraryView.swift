@@ -58,20 +58,27 @@ struct LibraryView: View {
             OnboardingView(dismiss: { showOnboarding = false })
         }
         .safeAreaInset(edge: .top) {
-            if let error = model.systemAudioError {
-                SystemAudioBanner(message: error)
-                    .padding(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.regularMaterial)
+            VStack(spacing: 0) {
+                if let error = model.systemAudioError {
+                    SystemAudioBanner(message: error)
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.regularMaterial)
+                }
+                if let warning = model.inputClippedWarning {
+                    InputClippedBanner(message: warning) { model.inputClippedWarning = nil }
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.regularMaterial)
+                }
             }
         }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
             if model.isRecording {
-                ToolbarItem(placement: .principal) {
-                    RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt, compact: true)
-                        .frame(width: 180, height: 22)
-                }
+                // Deliberately does NOT read `model.recordingLevels` here - see
+                // RecordingToolbarIndicator.
+                ToolbarItem(placement: .principal) { RecordingToolbarIndicator() }
             }
         }
         .modifier(SessionDialogs(model: model, selection: $selection,
@@ -341,6 +348,46 @@ private struct SessionRow: View {
         }
         .padding(.vertical, 2)
         .help(status.nameKey)
+    }
+}
+
+/// The live level meter in the library toolbar.
+///
+/// This exists purely to contain an observation. `AppModel.recordingLevels` is
+/// rewritten every 55 ms (~18 Hz) while recording; reading it directly in
+/// `LibraryView.body` made the *whole library* a dependent of it, and since
+/// `LibraryView` builds `SessionDetailView` with closure properties - which
+/// defeat SwiftUI's value comparison - the detail pane and its transcript list
+/// rebuilt at 18 Hz too. Reading the array here instead keeps the invalidation
+/// on this leaf, where redrawing 180x22 points is free.
+private struct RecordingToolbarIndicator: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        RecordingIndicator(levels: model.recordingLevels,
+                           startedAt: model.recordingStartedAt,
+                           compact: true)
+            .frame(width: 180, height: 22)
+    }
+}
+
+/// Shown after a recording whose input clipped. Dismissible, because it is
+/// advice for next time rather than a fault to fix now - the audio is already
+/// captured and the clipping cannot be undone.
+struct InputClippedBanner: View {
+    let message: String
+    var dismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "waveform.badge.exclamationmark")
+                .foregroundStyle(.orange)
+            Text(message).font(.callout)
+            Spacer()
+            Button("action.dismiss", action: dismiss)
+                .buttonStyle(.borderless)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 
