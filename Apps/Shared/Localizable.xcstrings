@@ -1,2533 +1,3477 @@
 {
-  "sourceLanguage" : "en",
-  "strings" : {
-    "action.rename" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Umbenennen…" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename…" } }
+  "sourceLanguage": "en",
+  "strings": {
+    "%@.": {},
+    "action.copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopiert"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        }
+      }
+    },
+    "action.copy": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "action.delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Löschen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "action.export": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exportieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Export"
+          }
+        }
+      }
+    },
+    "action.newRecording": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufnahme"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New recording"
+          }
+        }
+      }
+    },
+    "action.process": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verarbeiten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Process"
+          }
+        }
+      }
+    },
+    "action.regenerate": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokoll neu erzeugen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Regenerate protocol"
+          }
+        }
+      }
+    },
+    "action.rename": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Umbenennen…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename…"
+          }
+        }
       }
     },
-    "common.save" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sichern" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Save" } }
+    "action.retry": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut versuchen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Retry"
+          }
+        }
       }
     },
-    "rename.placeholder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Titel" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Title" } }
+    "action.reveal": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder zeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        }
       }
     },
-    "rename.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sitzung umbenennen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Rename session" } }
+    "app.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokoll"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokoll"
+          }
+        }
       }
     },
-    "commands.menu.session" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sitzung" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Session" } }
+    "color.blue": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blau"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Blue"
+          }
+        }
       }
     },
-    "commands.playPause" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wiedergabe / Pause" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Play / Pause" } }
+    "color.brown": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Braun"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Brown"
+          }
+        }
       }
     },
-    "color.blue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Blau" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Blue" } }
+    "color.custom": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farbe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color"
+          }
+        }
       }
     },
-    "color.green" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Grün" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Green" } }
+    "color.green": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grün"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Green"
+          }
+        }
       }
     },
-    "color.purple" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Lila" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Purple" } }
+    "color.orange": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orange"
+          }
+        }
       }
     },
-    "color.orange" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Orange" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Orange" } }
+    "color.pink": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pink"
+          }
+        }
       }
     },
-    "color.red" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Rot" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Red" } }
+    "color.purple": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lila"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Purple"
+          }
+        }
       }
     },
-    "color.teal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Türkis" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Teal" } }
+    "color.red": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rot"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Red"
+          }
+        }
       }
     },
-    "color.yellow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Gelb" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Yellow" } }
+    "color.teal": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Türkis"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Teal"
+          }
+        }
       }
     },
-    "color.pink" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Pink" } }
+    "color.yellow": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelb"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yellow"
+          }
+        }
       }
     },
-    "color.brown" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Braun" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Brown" } }
+    "commands.menu.session": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sitzung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Session"
+          }
+        }
       }
     },
-    "color.custom" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Farbe" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Color" } }
+    "commands.playPause": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabe / Pause"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play / Pause"
+          }
+        }
       }
     },
-    "settings.tab.projects" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekte" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Projects" } }
+    "common.cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abbrechen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
       }
     },
-    "project.new" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt hinzufügen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Add project" } }
+    "common.done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
       }
     },
-    "project.name" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Name" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Name" } }
+    "common.save": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sichern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
       }
     },
-    "project.color" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Farbe" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Color" } }
+    "consent.confirm": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle stimmen zu - aufnehmen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everyone agreed - record"
+          }
+        }
       }
     },
-    "project.delete" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekt löschen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Delete project" } }
+    "consent.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Aufnehmen des gesprochenen Wortes ohne Einwilligung kann strafbar sein (§ 201 StGB). Stelle sicher, dass alle Anwesenden der Aufnahme zustimmen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording spoken words without consent can be a criminal offense (§ 201 StGB). Make sure everyone present agrees to be recorded."
+          }
+        }
       }
     },
-    "project.assign" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Projekte zuordnen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Assign projects" } }
+    "consent.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einwilligung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Consent reminder"
+          }
+        }
       }
     },
-    "library.filter" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Filtern" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Filter" } }
+    "delete.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme, Transkript und Protokoll dieser Sitzung werden gelöscht. Auf dem Mac wandert der Ordner in den Papierkorb."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording, transcript, and protocol for this session will be deleted. On the Mac the folder moves to the Trash."
+          }
+        }
       }
     },
-    "library.filter.all" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alle Projekte" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "All projects" } }
+    "delete.confirm.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Sitzung löschen?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this session?"
+          }
+        }
       }
     },
-    "settings.tab.diagnostics" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Diagnose" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Diagnostics" } }
+    "detail.noProtocol": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch kein Protokoll. Verarbeite die Sitzung, um eines zu erzeugen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No protocol yet. Process this session to generate one."
+          }
+        }
       }
     },
-    "permissions.section" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Berechtigungen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Permissions" } }
+    "detail.noTranscript": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch kein Transkript."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No transcript yet."
+          }
+        }
       }
     },
-    "settings.tab.general" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Allgemein" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "General" } }
+    "detail.pane": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ansicht"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        }
       }
     },
-    "settings.tab.transcription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkription" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Transcription" } }
+    "detail.pane.protocol": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protokoll"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Protocol"
+          }
+        }
       }
     },
-    "settings.tab.summary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammenfassung" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Summary" } }
+    "detail.pane.transcript": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkript"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcript"
+          }
+        }
       }
     },
-    "settings.tab.processing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verarbeitung" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing" } }
+    "detail.processing.queued": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Warteschlange …"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Queued …"
+          }
+        }
       }
     },
-    "settings.tab.advanced" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erweitert" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Advanced" } }
+    "diag.bootstrap.brew": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homebrew wird zur Installation benötigt. Die Installation von Homebrew ist ein größerer Schritt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homebrew is required to install this. Installing Homebrew is a larger step."
+          }
+        }
       }
     },
-    "settings.playback" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wiedergabe" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Playback" } }
+    "diag.bootstrap.python": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Python 3 wird zur Installation benötigt. Die Installation von Python ist ein größerer Schritt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Python 3 is required to install this. Installing Python is a larger step."
+          }
+        }
       }
     },
-    "settings.playback.speed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Standardgeschwindigkeit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Default speed" } }
+    "diag.bootstrap.required %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dafür muss zuerst %@ installiert werden - ein größerer, separater Schritt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This needs %@ installed first - a larger, separate step."
+          }
+        }
       }
     },
-    "settings.transcription" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Transkription" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Transcription" } }
+    "diag.claude.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erzeugt das Protokoll über deine bestehende Anmeldung - kein API-Schlüssel."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Used to write the protocol via your existing login - no API key."
+          }
+        }
       }
     },
-    "settings.transcription.language" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprache" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } }
+    "diag.claude.fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anmelden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log in"
+          }
+        }
       }
     },
-    "settings.transcription.model" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Model" } }
+    "diag.claude.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude CLI"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude CLI"
+          }
+        }
       }
     },
-    "settings.transcription.model.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "large-v3 liefert die beste Qualität; large-v3-turbo ist 2-3× schneller bei etwas geringerer Genauigkeit." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "large-v3 is highest quality; large-v3-turbo is 2-3× faster with slightly lower accuracy." } }
+    "diag.container.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Ordner für die Sitzungen muss beschreibbar sein."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The folder where sessions are stored must be writable."
+          }
+        }
       }
     },
-    "settings.transcription.vocabulary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fachvokabular" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Domain vocabulary" } }
+    "diag.container.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Container beschreibbar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Container writable"
+          }
+        }
       }
     },
-    "settings.transcription.vocabulary.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Produktnamen, Abkürzungen, Hostnamen (kommagetrennt). Verbessert die Erkennung von Fachbegriffen deutlich." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Product names, acronyms, hostnames (comma-separated). Greatly improves recognition of technical terms." } }
+    "diag.details.hide": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details verbergen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide details"
+          }
+        }
       }
     },
-    "settings.summary.language" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Sprache" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Language" } }
+    "diag.details.show": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Details anzeigen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show details"
+          }
+        }
       }
     },
-    "settings.summary.model" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Modell" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Model" } }
+    "diag.ffmpeg.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bereitet Audio (16 kHz mono) vor der Transkription auf."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prepares audio (16 kHz mono) before transcription."
+          }
+        }
       }
     },
-    "settings.summary.model.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Opus liefert die höchste Qualität; Sonnet ist schneller; Haiku am schnellsten." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Opus is highest quality; Sonnet is faster; Haiku is fastest." } }
+    "diag.ffmpeg.fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ffmpeg installieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install ffmpeg"
+          }
+        }
       }
     },
-    "settings.summary.instructions" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Eigene Anweisungen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Custom instructions" } }
+    "diag.ffmpeg.manual": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausführen: brew install ffmpeg."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run: brew install ffmpeg."
+          }
+        }
       }
     },
-    "settings.processing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Verarbeitung" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Processing" } }
+    "diag.ffmpeg.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ffmpeg"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ffmpeg"
+          }
+        }
       }
     },
-    "settings.autoProcess" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Neue Aufnahmen automatisch verarbeiten" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Process new recordings automatically" } }
+    "diag.fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beheben"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fix"
+          }
+        }
       }
     },
-    "settings.autoProcess.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Wenn aktiv, wird eine neue oder synchronisierte Aufnahme ohne Nachfrage zur Verarbeitung eingereiht." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "When on, a newly recorded or synced session is queued for processing without asking." } }
+    "diag.microphone.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erforderlich, um Meeting-Audio aufzunehmen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required to record meeting audio."
+          }
+        }
       }
     },
-    "settings.notifications" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Über neue Aufnahmen benachrichtigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notify about new recordings" } }
+    "diag.microphone.fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        }
       }
     },
-    "settings.notifications.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zeigt eine Mitteilung (mit Aktion „Verarbeiten“), wenn eine neue Aufnahme erscheint - z. B. vom iPhone synchronisiert." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Show a notification (with a Process action) when a new recording appears - e.g. synced from your iPhone." } }
+    "diag.microphone.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofonzugriff"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone access"
+          }
+        }
       }
     },
-    "settings.container" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Container" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Container" } }
+    "diag.model.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das hochwertige Modell für genaue Transkription (Qualität vor Geschwindigkeit)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The high-quality model for accurate transcription (quality over speed)."
+          }
+        }
       }
     },
-    "settings.container.reveal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Im Finder zeigen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reveal in Finder" } }
+    "diag.model.fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell laden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Download model"
+          }
+        }
       }
     },
-    "settings.tools" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Werkzeug-Pfade" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Tool paths" } }
+    "diag.model.manual": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausführen: scripts/setup.sh --model large-v3."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run: scripts/setup.sh --model large-v3."
+          }
+        }
       }
     },
-    "settings.tools.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optionale Überschreibungen. Leer lassen, um die per PATH gefundenen bzw. mitgelieferten Versionen zu verwenden." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional overrides. Leave empty to use the versions found on your PATH / bundled with the app." } }
+    "diag.model.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "large-v3-Modell"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "large-v3 model"
+          }
+        }
       }
     },
-    "settings.tools.claude" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "claude-Programm" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "claude binary" } }
+    "diag.path.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das bin-Verzeichnis von Homebrew muss sichtbar sein, damit die App installierte Tools findet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Homebrew's bin directory must be visible so the app can find installed tools."
+          }
+        }
       }
     },
-    "settings.tools.transcribe" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "transcribe.sh" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "transcribe.sh" } }
+    "diag.path.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommandozeilen-Tools im PATH"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command-line tools on PATH"
+          }
+        }
       }
     },
-    "settings.lang.auto" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Automatisch" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Automatic" } }
+    "diag.recheck": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut prüfen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Re-check"
+          }
+        }
       }
     },
-    "settings.summary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammenfassung" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Summary" } }
+    "diag.running": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prüfungen laufen…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Running checks…"
+          }
+        }
       }
     },
-    "settings.summary.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusätzliche Anweisungen, die an den Standard-Prompt für die Zusammenfassung angehängt werden (z. B. Sprache, Tonfall, Länge, eigene Abschnitte). Struktur und Titel/Sprache-Kopf bleiben immer erhalten. Leer = Standard." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Extra instructions appended to the default summary prompt (e.g. language, tone, length, extra sections). The report structure and the title/language header are always kept. Empty = default." } }
+    "diag.screen.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur nötig, um System-Ton für Calls aufzunehmen (F2)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Needed only to capture system audio for calls (F2)."
+          }
+        }
       }
     },
-    "settings.summary.reset" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Auf Standard zurücksetzen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Reset to default" } }
+    "diag.screen.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirmaufnahme-Zugriff"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording access"
+          }
+        }
       }
     },
-    "onboarding.welcome.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Willkommen bei Protokoll" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Welcome to Protokoll" } }
+    "diag.systemtest.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schickt einen kurzen mitgelieferten Clip durch Transkription und Zusammenfassung, um die gesamte Kette zu prüfen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Push a short bundled clip through transcribe and summarize to prove the whole chain."
+          }
+        }
       }
     },
-    "onboarding.welcome.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles bleibt lokal auf diesem Mac. Wir richten kurz die nötigen Berechtigungen ein - nur Mikrofon ist erforderlich. Protokoll braucht keinen Zugriff auf Fotos oder deine Ordner." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Everything stays local on this Mac. Let's set up the few permissions Protokoll needs - only the microphone is required. Protokoll never needs access to Photos or your folders." } }
+    "diag.systemtest.noassets": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "process-session-Binary oder Beispielclip nicht gefunden."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not locate the process-session binary or the sample clip."
+          }
+        }
       }
     },
-    "onboarding.mic.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mikrofon" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Microphone" } }
+    "diag.systemtest.passed %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bestanden - erzeugter Titel: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Passed - generated title: %@"
+          }
+        }
       }
     },
-    "onboarding.mic.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erforderlich, um Meetings aufzunehmen. Die Aufnahme bleibt auf diesem Gerät." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Required to record meetings. Recordings stay on this device." } }
+    "diag.systemtest.run": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selbsttest starten"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run System-Test"
+          }
+        }
       }
     },
-    "onboarding.screen.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Bildschirmaufnahme" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Screen Recording" } }
+    "diag.systemtest.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selbsttest"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System-Test"
+          }
+        }
       }
     },
-    "onboarding.screen.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nur nötig, um den Systemton mitzuschneiden (z. B. die Gegenseite eines Anrufs). Kannst du überspringen und später aktivieren. Nach dem Erlauben ggf. App neu starten." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Only needed to capture system audio (e.g. the other side of a call). You can skip this and enable it later. You may need to restart the app after granting." } }
+    "diag.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnose"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
+          }
+        }
       }
     },
-    "onboarding.notify.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Mitteilungen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Notifications" } }
+    "diag.whisper.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine lokale Whisper-Engine (bevorzugt mlx-whisper) transkribiert Audio auf diesem Mac."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A local Whisper engine (mlx-whisper preferred) transcribes audio on this Mac."
+          }
+        }
       }
     },
-    "onboarding.notify.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optional: Protokoll meldet neue Aufnahmen (z. B. vom iPhone), die verarbeitet werden können." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional: Protokoll can tell you about new recordings (e.g. from your iPhone) that are ready to process." } }
+    "diag.whisper.fix": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mlx-whisper installieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install mlx-whisper"
+          }
+        }
       }
     },
-    "onboarding.done.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Alles bereit" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "You're all set" } }
+    "diag.whisper.manual": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausführen: pip install mlx-whisper (Apple Silicon) oder brew install whisper-cpp."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Run: pip install mlx-whisper (Apple Silicon) or brew install whisper-cpp."
+          }
+        }
       }
     },
-    "onboarding.done.body" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Du kannst Berechtigungen jederzeit unter Diagnose anpassen." } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "You can review permissions any time under Diagnostics." } }
+    "diag.whisper.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkriptions-Engine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription engine"
+          }
+        }
       }
     },
-    "onboarding.optional" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Optional" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Optional" } }
+    "health.green": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Systeme bereit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All systems ready"
+          }
+        }
       }
     },
-    "onboarding.granted" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erteilt" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Granted" } }
+    "health.red": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktion erforderlich"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Action required"
+          }
+        }
       }
     },
-    "onboarding.denied" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Nicht erteilt - in den Einstellungen aktivieren" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Not granted - enable it in Settings" } }
+    "health.yellow": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einige Warnungen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some warnings"
+          }
+        }
       }
     },
-    "onboarding.allow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Erlauben" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Allow" } }
+    "ios.record.geotag": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standort hinzufügen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add location"
+          }
+        }
       }
     },
-    "onboarding.openSettings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Einstellungen öffnen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Open Settings" } }
+    "ios.record.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel (optional)"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title (optional)"
+          }
+        }
       }
     },
-    "onboarding.skip" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Überspringen" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Skip" } }
+    "ios.tab.library": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothek"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
+          }
+        }
       }
     },
-    "onboarding.back" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Zurück" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Back" } }
+    "ios.tab.record": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
+          }
+        }
       }
     },
-    "onboarding.getStarted" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Los geht's" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Get started" } }
+    "library.empty.subtitle": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nimm ein Meeting über die Menüleiste auf, um zu starten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record a meeting from the menu bar to get started."
+          }
+        }
       }
     },
-    "onboarding.continue" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Weiter" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Continue" } }
+    "library.empty.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noch keine Aufnahmen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recordings yet"
+          }
+        }
       }
     },
-    "onboarding.finish" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : { "stringUnit" : { "state" : "translated", "value" : "Fertig" } },
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Done" } }
+    "library.filter": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtern"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filter"
+          }
+        }
       }
     },
-    "·" : {
-
+    "library.filter.all": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alle Projekte"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "All projects"
+          }
+        }
+      }
     },
-    "%@." : {
-
+    "library.refresh": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktualisieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Refresh"
+          }
+        }
+      }
     },
-    "•" : {
-
+    "library.search.prompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkripte und Protokolle durchsuchen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Search transcripts and protocols"
+          }
+        }
+      }
     },
-    "action.copied" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopiert"
+    "library.selectPrompt": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sitzung auswählen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copied"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select a session"
           }
         }
       }
     },
-    "action.copy" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kopieren"
+    "library.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothek"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Copy"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
           }
         }
       }
     },
-    "action.delete" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Löschen"
+    "menu.diagnostics": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnose"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
           }
         }
       }
     },
-    "action.export" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Exportieren"
+    "menu.library": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bibliothek"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Export"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Library"
           }
         }
       }
     },
-    "action.newRecording" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue Aufnahme"
+    "menu.newRecordings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufnahmen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New recording"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New recordings"
           }
         }
       }
     },
-    "action.process" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verarbeiten"
+    "menu.processing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verarbeitung"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Process"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing"
           }
         }
       }
     },
-    "action.regenerate" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protokoll neu erzeugen"
+    "menu.quit": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beenden"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Regenerate protocol"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit"
           }
         }
       }
     },
-    "action.retry" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erneut versuchen"
+    "menu.record": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnehmen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Retry"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Record"
           }
         }
       }
     },
-    "action.reveal" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Im Finder zeigen"
+    "menu.stop": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme stoppen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show in Finder"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop recording"
           }
         }
       }
     },
-    "app.name" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protokoll"
+    "notify.new.body %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kann verarbeitet werden."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protokoll"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is ready to process."
           }
         }
       }
     },
-    "common.cancel" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Abbrechen"
+    "notify.new.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufnahme"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Cancel"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New recording"
           }
         }
       }
     },
-    "common.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fertig"
+    "onboarding.allow": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlauben"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow"
           }
         }
       }
     },
-    "consent.confirm" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle stimmen zu - aufnehmen"
+    "onboarding.back": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zurück"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Everyone agreed - record"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Back"
           }
         }
       }
     },
-    "consent.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das Aufnehmen des gesprochenen Wortes ohne Einwilligung kann strafbar sein (§ 201 StGB). Stelle sicher, dass alle Anwesenden der Aufnahme zustimmen."
+    "onboarding.continue": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Weiter"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording spoken words without consent can be a criminal offense (§ 201 StGB). Make sure everyone present agrees to be recorded."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
           }
         }
       }
     },
-    "consent.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einwilligung"
+    "onboarding.denied": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nicht erteilt - in den Einstellungen aktivieren"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Consent reminder"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not granted - enable it in Settings"
           }
         }
       }
     },
-    "delete.confirm.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme, Transkript und Protokoll dieser Sitzung werden gelöscht. Auf dem Mac wandert der Ordner in den Papierkorb."
+    "onboarding.done.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Du kannst Berechtigungen jederzeit unter Diagnose anpassen."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The recording, transcript, and protocol for this session will be deleted. On the Mac the folder moves to the Trash."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You can review permissions any time under Diagnostics."
           }
         }
       }
     },
-    "delete.confirm.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diese Sitzung löschen?"
+    "onboarding.done.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles bereit"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete this session?"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You're all set"
           }
         }
       }
     },
-    "detail.noProtocol" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch kein Protokoll. Verarbeite die Sitzung, um eines zu erzeugen."
+    "onboarding.finish": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No protocol yet. Process this session to generate one."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         }
       }
     },
-    "detail.noTranscript" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch kein Transkript."
+    "onboarding.getStarted": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los geht's"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No transcript yet."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get started"
           }
         }
       }
     },
-    "detail.pane" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ansicht"
+    "onboarding.granted": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erteilt"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "View"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Granted"
           }
         }
       }
     },
-    "detail.pane.protocol" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protokoll"
+    "onboarding.mic.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erforderlich, um Meetings aufzunehmen. Die Aufnahme bleibt auf diesem Gerät."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Protocol"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Required to record meetings. Recordings stay on this device."
           }
         }
       }
     },
-    "detail.pane.transcript" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transkript"
+    "onboarding.mic.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transcript"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone"
           }
         }
       }
     },
-    "detail.processing.queued" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In Warteschlange …"
+    "onboarding.notify.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional: Protokoll meldet neue Aufnahmen (z. B. vom iPhone), die verarbeitet werden können."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Queued …"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional: Protokoll can tell you about new recordings (e.g. from your iPhone) that are ready to process."
           }
         }
       }
     },
-    "diag.bootstrap.brew" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew wird zur Installation benötigt. Die Installation von Homebrew ist ein größerer Schritt."
+    "onboarding.notify.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mitteilungen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew is required to install this. Installing Homebrew is a larger step."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications"
           }
         }
       }
     },
-    "diag.bootstrap.python" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Python 3 wird zur Installation benötigt. Die Installation von Python ist ein größerer Schritt."
+    "onboarding.openSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Einstellungen öffnen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Python 3 is required to install this. Installing Python is a larger step."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
           }
         }
       }
     },
-    "diag.bootstrap.required %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dafür muss zuerst %@ installiert werden - ein größerer, separater Schritt."
+    "onboarding.optional": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "This needs %@ installed first - a larger, separate step."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional"
           }
         }
       }
     },
-    "diag.claude.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erzeugt das Protokoll über deine bestehende Anmeldung - kein API-Schlüssel."
+    "onboarding.screen.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nur nötig, um den Systemton mitzuschneiden (z. B. die Gegenseite eines Anrufs). Kannst du überspringen und später aktivieren. Nach dem Erlauben ggf. App neu starten."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Used to write the protocol via your existing login - no API key."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only needed to capture system audio (e.g. the other side of a call). You can skip this and enable it later. You may need to restart the app after granting."
           }
         }
       }
     },
-    "diag.claude.fix" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Anmelden"
+    "onboarding.screen.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirmaufnahme"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Log in"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Screen Recording"
           }
         }
       }
     },
-    "diag.claude.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude CLI"
+    "onboarding.skip": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Überspringen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Claude CLI"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skip"
           }
         }
       }
     },
-    "diag.container.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der Ordner für die Sitzungen muss beschreibbar sein."
+    "onboarding.welcome.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alles bleibt lokal auf diesem Mac. Wir richten kurz die nötigen Berechtigungen ein - nur Mikrofon ist erforderlich. Protokoll braucht keinen Zugriff auf Fotos oder deine Ordner."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The folder where sessions are stored must be writable."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Everything stays local on this Mac. Let's set up the few permissions Protokoll needs - only the microphone is required. Protokoll never needs access to Photos or your folders."
           }
         }
       }
     },
-    "diag.container.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Container beschreibbar"
+    "onboarding.welcome.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Willkommen bei Protokoll"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Container writable"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to Protokoll"
           }
         }
       }
     },
-    "diag.details.hide" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Details verbergen"
+    "permissions.section": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Berechtigungen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hide details"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permissions"
           }
         }
       }
     },
-    "diag.details.show" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Details anzeigen"
+    "player.mic": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofon"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show details"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone"
           }
         }
       }
     },
-    "diag.ffmpeg.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bereitet Audio (16 kHz mono) vor der Transkription auf."
+    "player.pause": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prepares audio (16 kHz mono) before transcription."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pause"
           }
         }
       }
     },
-    "diag.ffmpeg.fix" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ffmpeg installieren"
+    "player.play": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabe"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install ffmpeg"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Play"
           }
         }
       }
     },
-    "diag.ffmpeg.manual" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ausführen: brew install ffmpeg."
+    "player.recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Run: brew install ffmpeg."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording"
           }
         }
       }
     },
-    "diag.ffmpeg.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ffmpeg"
+    "player.speed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabegeschwindigkeit"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "ffmpeg"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback speed"
           }
         }
       }
     },
-    "diag.fix" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beheben"
+    "player.system": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Systemton"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fix"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System audio"
           }
         }
       }
     },
-    "diag.microphone.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erforderlich, um Meeting-Audio aufzunehmen."
+    "project.assign": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projekte zuordnen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Required to record meeting audio."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign projects"
           }
         }
       }
     },
-    "diag.microphone.fix" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einstellungen öffnen"
+    "project.color": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farbe"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Settings"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Color"
           }
         }
       }
     },
-    "diag.microphone.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mikrofonzugriff"
+    "project.delete": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projekt löschen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microphone access"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete project"
           }
         }
       }
     },
-    "diag.model.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das hochwertige Modell für genaue Transkription (Qualität vor Geschwindigkeit)."
+    "project.name": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The high-quality model for accurate transcription (quality over speed)."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
           }
         }
       }
     },
-    "diag.model.fix" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Modell laden"
+    "project.new": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projekt hinzufügen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Download model"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add project"
           }
         }
       }
     },
-    "diag.model.manual" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ausführen: scripts/setup.sh --model large-v3."
+    "quit.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine Aufnahme wird noch verarbeitet. Beenden stoppt sie - du kannst den Schritt später erneut ausführen."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Run: scripts/setup.sh --model large-v3."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A recording is still being processed. Quitting now stops it - you can re-run the step later."
           }
         }
       }
     },
-    "diag.model.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "large-v3-Modell"
+    "quit.confirm.quit": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trotzdem beenden"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "large-v3 model"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit anyway"
           }
         }
       }
     },
-    "diag.path.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Das bin-Verzeichnis von Homebrew muss sichtbar sein, damit die App installierte Tools findet."
+    "quit.confirm.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verarbeitung läuft"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Homebrew's bin directory must be visible so the app can find installed tools."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing in progress"
           }
         }
       }
     },
-    "diag.path.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kommandozeilen-Tools im PATH"
+    "recorder.error.conversion": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Aufnahme konnte nicht in m4a umgewandelt werden."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Command-line tools on PATH"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Could not convert the recording to m4a."
           }
         }
       }
     },
-    "diag.recheck" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erneut prüfen"
+    "recorder.error.notRecording": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es läuft keine Aufnahme."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Re-check"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No recording is in progress."
           }
         }
       }
     },
-    "diag.running" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prüfungen laufen…"
+    "recorder.error.permission": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mikrofonzugriff wurde verweigert. Aktiviere ihn in Systemeinstellungen › Datenschutz."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Running checks…"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Microphone access was denied. Enable it in System Settings › Privacy."
           }
         }
       }
     },
-    "diag.screen.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nur nötig, um System-Ton für Calls aufzunehmen (F2)."
+    "recording.active": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme läuft…"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Needed only to capture system audio for calls (F2)."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording…"
           }
         }
       }
     },
-    "diag.screen.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirmaufnahme-Zugriff"
+    "rename.placeholder": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Titel"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Screen Recording access"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Title"
           }
         }
       }
     },
-    "diag.systemtest.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Schickt einen kurzen mitgelieferten Clip durch Transkription und Zusammenfassung, um die gesamte Kette zu prüfen."
+    "rename.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sitzung umbenennen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Push a short bundled clip through transcribe and summarize to prove the whole chain."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename session"
           }
         }
       }
     },
-    "diag.systemtest.noassets" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "process-session-Binary oder Beispielclip nicht gefunden."
+    "scheduler.error.noBinary": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der process-session-Helfer wurde nicht gefunden."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not locate the process-session binary or the sample clip."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The process-session helper was not found."
           }
         }
       }
     },
-    "diag.systemtest.passed %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bestanden - erzeugter Titel: %@"
+    "settings.autoProcess": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neue Aufnahmen automatisch verarbeiten"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Passed - generated title: %@"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Process new recordings automatically"
           }
         }
       }
     },
-    "diag.systemtest.run" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selbsttest starten"
+    "settings.autoProcess.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wenn aktiv, wird eine neue oder synchronisierte Aufnahme ohne Nachfrage zur Verarbeitung eingereiht."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Run System-Test"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When on, a newly recorded or synced session is queued for processing without asking."
           }
         }
       }
     },
-    "diag.systemtest.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Selbsttest"
+    "settings.consentReminder": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vor der Aufnahme an Einwilligung erinnern"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System-Test"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remind me to get consent before recording"
           }
         }
       }
     },
-    "diag.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnose"
+    "settings.consentReminder.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt vor jeder Aufnahme einen § 201 StGB-Hinweis (N4)."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnostics"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shows a § 201 StGB reminder before each recording starts (N4)."
           }
         }
       }
     },
-    "diag.whisper.explanation" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eine lokale Whisper-Engine (bevorzugt mlx-whisper) transkribiert Audio auf diesem Mac."
+    "settings.container": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Container"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A local Whisper engine (mlx-whisper preferred) transcribes audio on this Mac."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Container"
           }
         }
       }
     },
-    "diag.whisper.fix" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "mlx-whisper installieren"
+    "settings.container.reveal": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Finder zeigen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install mlx-whisper"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reveal in Finder"
           }
         }
       }
     },
-    "diag.whisper.manual" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ausführen: pip install mlx-whisper (Apple Silicon) oder brew install whisper-cpp."
+    "settings.lang.auto": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatisch"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Run: pip install mlx-whisper (Apple Silicon) or brew install whisper-cpp."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
           }
         }
       }
     },
-    "diag.whisper.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transkriptions-Engine"
+    "settings.notifications": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Über neue Aufnahmen benachrichtigen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transcription engine"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notify about new recordings"
           }
         }
       }
     },
-    "health.green" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Alle Systeme bereit"
+    "settings.notifications.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zeigt eine Mitteilung (mit Aktion „Verarbeiten“), wenn eine neue Aufnahme erscheint - z. B. vom iPhone synchronisiert."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "All systems ready"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show a notification (with a Process action) when a new recording appears - e.g. synced from your iPhone."
           }
         }
       }
     },
-    "health.red" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktion erforderlich"
+    "settings.playback": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiedergabe"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Action required"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Playback"
           }
         }
       }
     },
-    "health.yellow" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Einige Warnungen"
+    "settings.playback.speed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Standardgeschwindigkeit"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Some warnings"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default speed"
           }
         }
       }
     },
-    "ios.record.geotag" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Standort hinzufügen"
+    "settings.processing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verarbeitung"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add location"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing"
           }
         }
       }
     },
-    "ios.record.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Titel (optional)"
+    "settings.recording": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufnahme"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Title (optional)"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recording"
           }
         }
       }
     },
-    "ios.tab.library" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bibliothek"
+    "settings.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammenfassung"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Library"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
           }
         }
       }
     },
-    "ios.tab.record" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme"
+    "settings.summary.api": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Zugang"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API access"
           }
         }
       }
     },
-    "library.empty.subtitle" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nimm ein Meeting über die Menüleiste auf, um zu starten."
+    "settings.summary.api.baseurl": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Basis-URL"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record a meeting from the menu bar to get started."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Base URL"
           }
         }
       }
     },
-    "library.empty.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Noch keine Aufnahmen"
+    "settings.summary.api.baseurl.invalid": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Basis-URL muss mit https:// beginnen."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No recordings yet"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The base URL must start with https://"
           }
         }
       }
     },
-    "library.refresh" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aktualisieren"
+    "settings.summary.api.key": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API-Schlüssel"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Refresh"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "API key"
           }
         }
       }
     },
-    "library.search.prompt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transkripte und Protokolle durchsuchen"
+    "settings.summary.api.model": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search transcripts and protocols"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
           }
         }
       }
     },
-    "library.selectPrompt" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sitzung auswählen"
+    "settings.summary.api.privacy": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das vollständige Transkript wird an diesen Anbieter gesendet. Lokales Claude verarbeitet alles auf deinem Mac."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a session"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The full transcript is sent to this provider. Local Claude keeps everything on your Mac."
           }
         }
       }
     },
-    "library.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bibliothek"
+    "settings.summary.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusätzliche Anweisungen, die an den Standard-Prompt für die Zusammenfassung angehängt werden (z. B. Sprache, Tonfall, Länge, eigene Abschnitte). Struktur und Titel/Sprache-Kopf bleiben immer erhalten. Leer = Standard."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Library"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extra instructions appended to the default summary prompt (e.g. language, tone, length, extra sections). The report structure and the title/language header are always kept. Empty = default."
           }
         }
       }
     },
-    "menu.diagnostics" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnose"
+    "settings.summary.instructions": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eigene Anweisungen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Diagnostics"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom instructions"
           }
         }
       }
     },
-    "menu.library" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bibliothek"
+    "settings.summary.language": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Library"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
           }
         }
       }
     },
-    "menu.newRecordings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue Aufnahmen"
+    "settings.summary.model": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New recordings"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
           }
         }
       }
     },
-    "menu.processing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verarbeitung"
+    "settings.summary.model.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opus liefert die höchste Qualität; Sonnet ist schneller; Haiku am schnellsten."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Processing"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opus is highest quality; Sonnet is faster; Haiku is fastest."
           }
         }
       }
     },
-    "menu.quit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Beenden"
+    "settings.summary.provider": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anbieter"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quit"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Provider"
           }
         }
       }
     },
-    "menu.record" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnehmen"
+    "settings.summary.provider.anthropic": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anthropic-API"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Record"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anthropic API"
           }
         }
       }
     },
-    "menu.stop" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme stoppen"
+    "settings.summary.provider.cli": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lokales Claude (CLI)"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Stop recording"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Local Claude (CLI)"
           }
         }
       }
     },
-    "notify.new.body %@" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ kann verarbeitet werden."
+    "settings.summary.provider.openai": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI-kompatible API"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ is ready to process."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OpenAI-compatible API"
           }
         }
       }
     },
-    "notify.new.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Neue Aufnahme"
+    "settings.summary.reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standard zurücksetzen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "New recording"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset to default"
           }
         }
       }
     },
-    "player.mic" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mikrofon"
+    "settings.systemAudio": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "System-Ton mit aufnehmen (für Calls)"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microphone"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Also capture system audio (for calls)"
           }
         }
       }
     },
-    "player.pause" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause"
+    "settings.systemAudio.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nimmt über ScreenCaptureKit eine separate System-Ton-Spur auf. Erfordert die Bildschirmaufnahme-Berechtigung."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pause"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Records a separate system-audio track via ScreenCaptureKit. Requires Screen Recording permission."
           }
         }
       }
     },
-    "player.play" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wiedergabe"
+    "settings.tab.advanced": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erweitert"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Play"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
           }
         }
       }
     },
-    "player.recording" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme"
+    "settings.tab.diagnostics": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnose"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diagnostics"
           }
         }
       }
     },
-    "player.speed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wiedergabegeschwindigkeit"
+    "settings.tab.general": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allgemein"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Playback speed"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
           }
         }
       }
     },
-    "player.system" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Systemton"
+    "settings.tab.processing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verarbeitung"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System audio"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing"
           }
         }
       }
     },
-    "quit.confirm.message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Eine Aufnahme wird noch verarbeitet. Beenden stoppt sie - du kannst den Schritt später erneut ausführen."
+    "settings.tab.projects": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projekte"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A recording is still being processed. Quitting now stops it - you can re-run the step later."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projects"
           }
         }
       }
     },
-    "quit.confirm.quit" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Trotzdem beenden"
+    "settings.tab.summary": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammenfassung"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Quit anyway"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary"
           }
         }
       }
     },
-    "quit.confirm.title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verarbeitung läuft"
+    "settings.tab.transcription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkription"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Processing in progress"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription"
           }
         }
       }
     },
-    "recorder.error.conversion" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Die Aufnahme konnte nicht in m4a umgewandelt werden."
+    "settings.tools": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Werkzeug-Pfade"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Could not convert the recording to m4a."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tool paths"
           }
         }
       }
     },
-    "recorder.error.notRecording" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Es läuft keine Aufnahme."
+    "settings.tools.claude": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "claude-Programm"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No recording is in progress."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "claude binary"
           }
         }
       }
     },
-    "recorder.error.permission" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mikrofonzugriff wurde verweigert. Aktiviere ihn in Systemeinstellungen › Datenschutz."
+    "settings.tools.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optionale Überschreibungen. Leer lassen, um die per PATH gefundenen bzw. mitgelieferten Versionen zu verwenden."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Microphone access was denied. Enable it in System Settings › Privacy."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Optional overrides. Leave empty to use the versions found on your PATH / bundled with the app."
           }
         }
       }
     },
-    "recording.active" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme läuft…"
+    "settings.tools.transcribe": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "transcribe.sh"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording…"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "transcribe.sh"
           }
         }
       }
     },
-    "scheduler.error.noBinary" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Der process-session-Helfer wurde nicht gefunden."
+    "settings.transcription": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkription"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The process-session helper was not found."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription"
           }
         }
       }
     },
-    "settings.consentReminder" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Vor der Aufnahme an Einwilligung erinnern"
+    "settings.transcription.language": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sprache"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Remind me to get consent before recording"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Language"
           }
         }
       }
     },
-    "settings.consentReminder.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zeigt vor jeder Aufnahme einen § 201 StGB-Hinweis (N4)."
+    "settings.transcription.model": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modell"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Shows a § 201 StGB reminder before each recording starts (N4)."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
           }
         }
       }
     },
-    "settings.recording" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufnahme"
+    "settings.transcription.model.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "large-v3 liefert die beste Qualität; large-v3-turbo ist 2-3× schneller bei etwas geringerer Genauigkeit."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recording"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "large-v3 is highest quality; large-v3-turbo is 2-3× faster with slightly lower accuracy."
           }
         }
       }
     },
-    "settings.systemAudio" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "System-Ton mit aufnehmen (für Calls)"
+    "settings.transcription.vocabulary": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fachvokabular"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Also capture system audio (for calls)"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Domain vocabulary"
           }
         }
       }
     },
-    "settings.systemAudio.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Nimmt über ScreenCaptureKit eine separate System-Ton-Spur auf. Erfordert die Bildschirmaufnahme-Berechtigung."
+    "settings.transcription.vocabulary.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Produktnamen, Abkürzungen, Hostnamen (kommagetrennt). Verbessert die Erkennung von Fachbegriffen deutlich."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Records a separate system-audio track via ScreenCaptureKit. Requires Screen Recording permission."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Product names, acronyms, hostnames (comma-separated). Greatly improves recognition of technical terms."
           }
         }
       }
     },
-    "status.done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fertig"
+    "status.done": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fertig"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
           }
         }
       }
     },
-    "status.failed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fehlgeschlagen"
+    "status.failed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fehlgeschlagen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Failed"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Failed"
           }
         }
       }
     },
-    "status.recorded" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Aufgenommen"
+    "status.recorded": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aufgenommen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Recorded"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Recorded"
           }
         }
       }
     },
-    "status.summarizing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fasse zusammen"
+    "status.summarizing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fasse zusammen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Summarizing"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarizing"
           }
         }
       }
     },
-    "status.transcribed" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transkribiert"
+    "status.transcribed": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribiert"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transcribed"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribed"
           }
         }
       }
     },
-    "status.transcribing" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transkribiere"
+    "status.transcribing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribiere"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transcribing"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribing"
           }
         }
       }
     },
-    "step.summarize" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zusammenfassen"
+    "step.summarize": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zusammenfassen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Summarize"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summarize"
           }
         }
       }
     },
-    "step.transcribe" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transkribieren"
+    "step.transcribe": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkribieren"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Transcribe"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe"
           }
         }
       }
     },
-    "systemaudio.error.empty" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Es wurde kein Systemton aufgenommen. Läuft gerade Audio, und ist die Bildschirmaufnahme erlaubt?"
+    "systemaudio.error.empty": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es wurde kein Systemton aufgenommen. Läuft gerade Audio, und ist die Bildschirmaufnahme erlaubt?"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No system audio was captured. Is anything playing, and is Screen Recording allowed?"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No system audio was captured. Is anything playing, and is Screen Recording allowed?"
           }
         }
       }
     },
-    "systemaudio.error.noDisplay" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kein Bildschirm für die Systemton-Aufnahme verfügbar."
+    "systemaudio.error.noDisplay": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein Bildschirm für die Systemton-Aufnahme verfügbar."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No display available for system-audio capture."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No display available for system-audio capture."
           }
         }
       }
     },
-    "systemaudio.error.permission" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Erlaube die Bildschirmaufnahme, um den Systemton (z. B. Discord, Anrufe) aufzunehmen: Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme, danach App neu starten."
+    "systemaudio.error.permission": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erlaube die Bildschirmaufnahme, um den Systemton (z. B. Discord, Anrufe) aufzunehmen: Systemeinstellungen › Datenschutz & Sicherheit › Bildschirmaufnahme, danach App neu starten."
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Allow Screen Recording to capture system audio (e.g. Discord, calls): System Settings › Privacy & Security › Screen Recording, then restart the app."
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow Screen Recording to capture system audio (e.g. Discord, calls): System Settings › Privacy & Security › Screen Recording, then restart the app."
           }
         }
       }
     },
-    "systemaudio.openSettings" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bildschirmaufnahme-Einstellungen öffnen"
+    "systemaudio.openSettings": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildschirmaufnahme-Einstellungen öffnen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Screen Recording settings"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Screen Recording settings"
           }
         }
       }
     },
-    "transcript.seek.help" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Zu dieser Stelle springen"
+    "transcript.seek.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu dieser Stelle springen"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Jump to this point"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jump to this point"
           }
         }
       }
     },
-    "watch.sent" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "An iPhone gesendet"
+    "watch.sent": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An iPhone gesendet"
           }
         },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sent to iPhone"
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent to iPhone"
           }
         }
       }
-    }
+    },
+    "·": {},
+    "•": {}
   },
-  "version" : "1.0"
+  "version": "1.0"
 }

@@ -198,7 +198,9 @@ Environment overrides for dev / standalone runs:
 |----------|---------|
 | `PROCESS_SESSION_BIN` | Path to the `process-session` binary the app runs. |
 | `TRANSCRIBE_SH` | Path to the vendored `scripts/transcribe.sh`. |
-| `CLAUDE_BIN` | Path to the `claude` CLI. |
+| `CLAUDE_BIN` | Path to the `claude` CLI (summary provider `cli`). |
+| `SUMMARY_API_KEY_FILE` | Path to a file holding the summary-provider API key (the app injects this; the raw key never sits in the env). |
+| `SUMMARY_API_KEY` | Summary-provider API key for standalone runs (fallback: `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`). |
 | `MN_CONTAINER_ROOT` | Override the container folder (dev/tests). |
 | `MN_REPO_ROOT` | Repo root for the app's dev helper/asset fallbacks. |
 

@@ -16,15 +16,21 @@ public struct DiagnosticsRunner: Sendable {
     }
 
     /// The standard shell-resolvable checks, in display order.
-    public static func standardChecks(containerRoot: URL?, model: String = "large-v3") -> [any DiagnosticCheck] {
-        [
-            ClaudeCheck(),
-            WhisperEngineCheck(),
-            WhisperModelCheck(model: model),
-            FFmpegCheck(),
-            PathCheck(),
-            ContainerWritableCheck(containerRoot: containerRoot),
-        ]
+    /// `summaryProvider` gates the `claude` CLI check: an API provider (ADR-9)
+    /// summarizes over the network and needs no local `claude` login.
+    public static func standardChecks(
+        containerRoot: URL?,
+        model: String = "large-v3",
+        summaryProvider: String = "cli"
+    ) -> [any DiagnosticCheck] {
+        var checks: [any DiagnosticCheck] = []
+        if summaryProvider == "cli" { checks.append(ClaudeCheck()) }
+        checks.append(WhisperEngineCheck())
+        checks.append(WhisperModelCheck(model: model))
+        checks.append(FFmpegCheck())
+        checks.append(PathCheck())
+        checks.append(ContainerWritableCheck(containerRoot: containerRoot))
+        return checks
     }
 
     /// Runs every check and returns results in check order.

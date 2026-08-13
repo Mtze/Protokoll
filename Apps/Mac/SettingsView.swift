@@ -200,21 +200,54 @@ private struct TranscriptionTab: View {
 
 private struct SummaryTab: View {
     @Bindable var store: PipelineSettingsStore
+    @State private var apiKey: String = ""
+
+    /// The Keychain account for the currently selected API provider.
+    private var keyProvider: String { store.config.summaryProvider == "openai" ? "openai" : "anthropic" }
+    private var isAPI: Bool { store.config.summaryProvider != "cli" }
+    private var baseURLInvalid: Bool {
+        let value = store.config.summaryApiBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !value.isEmpty && !value.lowercased().hasPrefix("https://")
+    }
 
     var body: some View {
         Form {
             Section("settings.summary") {
+                Picker("settings.summary.provider", selection: $store.config.summaryProvider) {
+                    Text("settings.summary.provider.cli").tag("cli")
+                    Text("settings.summary.provider.anthropic").tag("anthropic")
+                    Text("settings.summary.provider.openai").tag("openai")
+                }
                 Picker("settings.summary.language", selection: $store.config.summaryLanguage) {
                     ForEach(SettingsFormat.summaryLanguages, id: \.self) { code in
                         Text(SettingsFormat.language(code)).tag(code)
                     }
                 }
-                Picker("settings.summary.model", selection: $store.config.summaryModel) {
-                    Text(verbatim: "Opus").tag("opus")
-                    Text(verbatim: "Sonnet").tag("sonnet")
-                    Text(verbatim: "Haiku").tag("haiku")
+                if store.config.summaryProvider == "cli" {
+                    Picker("settings.summary.model", selection: $store.config.summaryModel) {
+                        Text(verbatim: "Opus").tag("opus")
+                        Text(verbatim: "Sonnet").tag("sonnet")
+                        Text(verbatim: "Haiku").tag("haiku")
+                    }
+                    Text("settings.summary.model.help").font(.caption).foregroundStyle(.secondary)
                 }
-                Text("settings.summary.model.help").font(.caption).foregroundStyle(.secondary)
+            }
+            if isAPI {
+                Section("settings.summary.api") {
+                    SecureField("settings.summary.api.key", text: $apiKey)
+                    TextField("settings.summary.api.model", text: $store.config.summaryApiModel,
+                              prompt: Text(verbatim: store.config.summaryProvider == "anthropic"
+                                           ? "claude-sonnet-4-5" : "gpt-4o"))
+                    TextField("settings.summary.api.baseurl", text: $store.config.summaryApiBaseURL,
+                              prompt: Text(verbatim: store.config.summaryProvider == "anthropic"
+                                           ? "https://api.anthropic.com" : "https://api.openai.com/v1"))
+                    if baseURLInvalid {
+                        Label("settings.summary.api.baseurl.invalid", systemImage: "exclamationmark.triangle")
+                            .font(.caption).foregroundStyle(.red)
+                    }
+                    Label("settings.summary.api.privacy", systemImage: "exclamationmark.shield")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
             Section("settings.summary.instructions") {
                 Text("settings.summary.help").font(.caption).foregroundStyle(.secondary)
@@ -229,6 +262,9 @@ private struct SummaryTab: View {
         }
         .formStyle(.grouped)
         .settingsPane()
+        .onAppear { apiKey = SummaryKeychain.key(for: keyProvider) ?? "" }
+        .onChange(of: store.config.summaryProvider) { apiKey = SummaryKeychain.key(for: keyProvider) ?? "" }
+        .onChange(of: apiKey) { if isAPI { SummaryKeychain.setKey(apiKey, for: keyProvider) } }
     }
 }
 
