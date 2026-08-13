@@ -8,6 +8,7 @@ enum CheckPresentation {
         switch id {
         case .claude: return "diag.claude.title"
         case .whisperEngine: return "diag.whisper.title"
+        case .whisperEnginePerformance: return "diag.enginePerf.title"
         case .whisperModel: return "diag.model.title"
         case .ffmpeg: return "diag.ffmpeg.title"
         case .path: return "diag.path.title"
@@ -21,6 +22,7 @@ enum CheckPresentation {
         switch id {
         case .claude: return "diag.claude.explanation"
         case .whisperEngine: return "diag.whisper.explanation"
+        case .whisperEnginePerformance: return "diag.enginePerf.explanation"
         case .whisperModel: return "diag.model.explanation"
         case .ffmpeg: return "diag.ffmpeg.explanation"
         case .path: return "diag.path.explanation"

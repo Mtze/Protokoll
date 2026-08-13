@@ -20,6 +20,7 @@ public struct DiagnosticsRunner: Sendable {
         [
             ClaudeCheck(),
             WhisperEngineCheck(),
+            WhisperEnginePerformanceCheck(),
             WhisperModelCheck(model: model),
             FFmpegCheck(),
             PathCheck(),
