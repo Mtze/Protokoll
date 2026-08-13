@@ -33,6 +33,9 @@ public struct Summarizer: Sendable {
     let summaryLanguage: String
     /// Overrides ``ToolLocator/claudeModel`` when non-empty.
     let summaryModel: String
+    /// The user's body-spec template from `config/summary-prompt.md`. Empty means
+    /// use ``SummarizePrompt/defaultBodyTemplate``.
+    let template: String
 
     public init(
         runner: CommandRunning,
@@ -41,7 +44,8 @@ public struct Summarizer: Sendable {
         chunker: TranscriptChunker = TranscriptChunker(),
         customInstructions: String = "",
         summaryLanguage: String = "auto",
-        summaryModel: String = ""
+        summaryModel: String = "",
+        template: String = ""
     ) {
         self.runner = runner
         self.tools = tools
@@ -50,20 +54,17 @@ public struct Summarizer: Sendable {
         self.customInstructions = customInstructions
         self.summaryLanguage = summaryLanguage
         self.summaryModel = summaryModel
-    }
-
-    /// The custom instructions, prefixed with a language directive when the user
-    /// forced a summary language (overrides N8). Fed to the prompt's `extra`.
-    var effectiveInstructions: String {
-        guard summaryLanguage != "auto", !summaryLanguage.trimmingCharacters(in: .whitespaces).isEmpty else {
-            return customInstructions
-        }
-        let name = Locale(identifier: "en").localizedString(forLanguageCode: summaryLanguage) ?? summaryLanguage
-        let directive = "Write the ENTIRE protocol in \(name), regardless of the meeting's language."
-        return customInstructions.isEmpty ? directive : "\(directive)\n\n\(customInstructions)"
+        self.template = template
     }
 
     private var effectiveModel: String { summaryModel.isEmpty ? tools.claudeModel : summaryModel }
+
+    /// The body spec: the user's `config/summary-prompt.md` if present and
+    /// non-empty, otherwise the built-in default.
+    var bodyTemplate: String {
+        let custom = template.trimmingCharacters(in: .whitespacesAndNewlines)
+        return custom.isEmpty ? SummarizePrompt.defaultBodyTemplate : custom
+    }
 
     public func summarize(
         session: Session,
@@ -78,47 +79,91 @@ public struct Summarizer: Sendable {
         // Feed the model just the transcript body, not our frontmatter.
         let (_, body) = Frontmatter.split(transcriptDoc)
         let currentTitle = session.hasExplicitTitle ? session.metadata.title : nil
+        let context = Self.meetingContext(for: session, transcriptBody: body)
 
         // Long transcripts (N9) go through map-reduce; short ones stay single-shot.
         let chunks = chunker.chunk(body)
         let output: String
         if chunks.count <= 1 {
             output = try runClaude(
-                prompt: SummarizePrompt.build(currentTitle: currentTitle, extra: effectiveInstructions),
-                stdin: body, onProgress: onProgress
+                system: SummarizePrompt.systemPrompt(currentTitle: currentTitle, summaryLanguage: summaryLanguage),
+                stdin: SummarizePrompt.userMessage(
+                    transcript: body, context: context,
+                    bodyTemplate: bodyTemplate, extra: customInstructions
+                ),
+                onProgress: onProgress
             )
         } else {
-            output = try mapReduce(chunks: chunks, currentTitle: currentTitle, onProgress: onProgress)
+            output = try mapReduce(
+                chunks: chunks, currentTitle: currentTitle, context: context, onProgress: onProgress
+            )
         }
 
-        let (frontmatter, protocolBody) = Frontmatter.split(output)
-
-        // The pipeline owns the write + rotation.
-        try store.writeProtocol(output, for: session)
+        // Repair before writing. `Frontmatter.split` yields an empty frontmatter
+        // whenever line 1 is not `---`, so a single word of preamble or a
+        // ```markdown fence used to be written verbatim into protocol.md while the
+        // F9 auto-title and the language silently did not happen, with nothing
+        // thrown and nothing logged.
+        let repaired = Self.repairFrontmatter(output, session: session, context: context)
+        try store.writeProtocol(repaired.document, for: session)
 
         var updated = session
         // Adopt the generated title only when the user hasn't set one (F9).
-        if !session.hasExplicitTitle, let title = frontmatter["title"], !title.isEmpty {
+        if !session.hasExplicitTitle, let title = repaired.title, !title.isEmpty {
             updated.metadata.title = title
         }
-        if let language = frontmatter["language"], !language.isEmpty {
+        if let language = repaired.language, !language.isEmpty {
             updated.metadata.language = language
         }
         updated.metadata.pipeline.summarizedAt = Date()
-        _ = protocolBody // body already persisted via writeProtocol(output)
         return updated
     }
 
-    /// One `claude -p` call (print mode, no tools).
+    /// Facts the pipeline knows, so the model never infers them.
+    static func meetingContext(for session: Session, transcriptBody: String) -> MeetingContext {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = "HH:mm"
+
+        let started = session.metadata.startedAt
+        return MeetingContext(
+            date: dateFormatter.string(from: started),
+            startTime: timeFormatter.string(from: started),
+            durationMinutes: session.metadata.duration.map { Int(($0 / 60).rounded()) },
+            projects: [],
+            lastTimestamp: lastTimestamp(in: transcriptBody)
+        )
+    }
+
+    /// The last `[HH:MM:SS]` marker in a transcript body, if any.
+    static func lastTimestamp(in body: String) -> String? {
+        for line in body.components(separatedBy: "\n").reversed() {
+            if let (start, _) = TranscriptParser.leadingTimestamp(in: line) {
+                let total = Int(start.rounded())
+                return String(format: "%02d:%02d:%02d", total / 3600, (total % 3600) / 60, total % 60)
+            }
+        }
+        return nil
+    }
+
+    /// One `claude -p` call: print mode, no tools, contract in the system prompt.
     private func runClaude(
-        prompt: String,
+        system: String,
         stdin: String,
         onProgress: (@Sendable (String) -> Void)?
     ) throws -> String {
         AppLog.pipeline.debug("running claude model=\(effectiveModel, privacy: .public)")
         let result = try runner.run(
             executable: tools.claudeBinary,
-            arguments: ["-p", prompt, "--model", effectiveModel],
+            arguments: [
+                "-p", SummarizePrompt.pointerPrompt,
+                "--model", effectiveModel,
+                "--append-system-prompt", system,
+                // "no tools (decision #5)" was only ever a comment; make it true.
+                "--permission-mode", "plan",
+                "--disallowed-tools", "Bash,Edit,Write,Read,WebFetch,WebSearch",
+            ],
             stdin: stdin,
             environment: nil,
             onStderrLine: onProgress
@@ -133,27 +178,44 @@ public struct Summarizer: Sendable {
         return output
     }
 
-    /// Map-reduce for long transcripts (N9): summarize each chunk, then a final
-    /// synthesis pass. Chunk boundaries are also the NH3 checkpoints.
+    /// Map-reduce for long transcripts (N9): compress each chunk neutrally, then
+    /// one synthesis pass driven by the same body spec as the single-shot path.
+    /// Chunk boundaries are also the NH3 checkpoints.
     private func mapReduce(
         chunks: [TranscriptChunk],
         currentTitle: String?,
+        context: MeetingContext,
         onProgress: (@Sendable (String) -> Void)?
     ) throws -> String {
         var partials: [String] = []
         for chunk in chunks {
             onProgress?("summarizing part \(chunk.index + 1)/\(chunks.count)")
             let partial = try runClaude(
-                prompt: SummarizePrompt.map(chunkIndex: chunk.index, chunkCount: chunks.count),
-                stdin: chunk.text,
+                // The map step is intentionally *not* driven by the user template:
+                // a shape-neutral intermediate keeps every output spec reachable.
+                system: SummarizePrompt.map(
+                    chunkIndex: chunk.index, chunkCount: chunks.count, timeRange: chunk.timeRange
+                ),
+                stdin: "<transcript_part>\n\(chunk.text)\n</transcript_part>",
                 onProgress: onProgress
             )
-            partials.append("## Part \(chunk.index + 1)\n\n\(partial)")
+            // Label with the real time range so the reducer has absolute time.
+            let label = chunk.timeRange.map { "## Part \(chunk.index + 1) (\($0))" }
+                ?? "## Part \(chunk.index + 1)"
+            partials.append("\(label)\n\n\(partial)")
         }
         onProgress?("synthesizing final protocol")
         return try runClaude(
-            prompt: SummarizePrompt.reduce(currentTitle: currentTitle, extra: effectiveInstructions),
-            stdin: partials.joined(separator: "\n\n"),
+            system: SummarizePrompt.reduceSystemPrompt(
+                currentTitle: currentTitle, summaryLanguage: summaryLanguage
+            ),
+            stdin: SummarizePrompt.userMessage(
+                transcript: partials.joined(separator: "\n\n"),
+                context: context,
+                bodyTemplate: bodyTemplate,
+                extra: customInstructions,
+                transcriptTag: "notes"
+            ),
             onProgress: onProgress
         )
     }

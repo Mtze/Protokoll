@@ -144,4 +144,43 @@ public struct Container: Sendable {
         let data = try SessionStore.encoder.encode(config)
         try store.atomicWrite(data, to: url)
     }
+
+    // MARK: Summary template
+
+    /// The user's summary body spec. A *file* rather than a `PipelineConfig`
+    /// field: multi-line prose as an escaped JSON string is unreadable and
+    /// undiffable, and it belongs in the container as content (ADR-2/N3, the
+    /// files are the source of truth). Editable in any editor, and it syncs like
+    /// everything else.
+    public func summaryTemplateURL() throws -> URL {
+        try configDirectory().appendingPathComponent("summary-prompt.md")
+    }
+
+    /// The user's template, or `nil` when they have not customized it.
+    ///
+    /// Absent file means "use the built-in default", which is what makes this
+    /// need no migration at all. A present-but-blank file also reads as `nil`, so
+    /// clearing the editor cannot send an empty spec to the model.
+    public func loadSummaryTemplate() throws -> String? {
+        let url = try summaryTemplateURL()
+        guard let data = try? Data(contentsOf: url),
+              let text = String(data: data, encoding: .utf8) else { return nil }
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : text
+    }
+
+    /// Persists the template, or deletes it (reset to default) when `nil`/blank.
+    public func saveSummaryTemplate(_ template: String?) throws {
+        let url = try summaryTemplateURL()
+        guard let template, !template.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            try? FileManager.default.removeItem(at: url)
+            return
+        }
+        try store.atomicWrite(Data(template.utf8), to: url)
+    }
+
+    /// Whether the user has a custom template (drives "Reset to default").
+    public func hasCustomSummaryTemplate() -> Bool {
+        (try? loadSummaryTemplate()) != nil
+    }
 }
