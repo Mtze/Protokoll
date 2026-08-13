@@ -13,6 +13,9 @@ OUT = os.environ["FW_OUT"]
 MODEL = os.environ.get("FW_MODEL", "large-v3")
 LANG = os.environ.get("FW_LANG", "auto")
 PROMPT = os.environ.get("FW_PROMPT") or None
+# "off" past the duration threshold: carrying decoded text between windows is how
+# one hallucinated window poisons every window after it on long recordings.
+CONDITION = os.environ.get("FW_CONDITION", "on") != "off"
 
 # int8 on CPU keeps a large model usable on a laptop; float16 is picked up
 # automatically when a CUDA device is present.
@@ -25,6 +28,7 @@ segments, info = model.transcribe(
     initial_prompt=PROMPT,
     vad_filter=True,  # drops long silences, which otherwise invite hallucinated text
     beam_size=5,
+    condition_on_previous_text=CONDITION,
 )
 
 print(f"detected language: {info.language} (p={info.language_probability:.2f})",

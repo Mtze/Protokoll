@@ -26,3 +26,6 @@ jobs:
 
       - name: swift test
         run: swift test
+
+      - name: transcribe.sh self-test (gain policy)
+        run: ./scripts/transcribe.sh --self-test
