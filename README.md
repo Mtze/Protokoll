@@ -146,6 +146,45 @@ xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Mac \
 The Mac target's build phase compiles `process-session` and bundles it (plus
 `transcribe.sh`) into the app, so the running app can drive the pipeline itself.
 
+### Install the Mac app locally (for real-world testing)
+
+A locally-built app is **not** Gatekeeper-quarantined, so there's no
+"unidentified developer" block. Build a Release app, ad-hoc sign it (so it
+launches cleanly and macOS remembers its permissions), and drop it in
+`/Applications`:
+
+```bash
+xcodegen generate
+xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Mac \
+  -configuration Release -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+
+APP=$(find ~/Library/Developer/Xcode/DerivedData/Protokoll-*/Build/Products/Release \
+  -maxdepth 1 -name Protokoll.app | head -1)
+codesign --force --deep --sign - "$APP"          # ad-hoc sign (incl. the bundled helper)
+osascript -e 'quit app "Protokoll"' 2>/dev/null   # close a previous copy
+rm -rf /Applications/Protokoll.app
+ditto "$APP" /Applications/Protokoll.app
+open /Applications/Protokoll.app
+```
+
+Re-run this after code changes to reinstall. First launch: onboarding requests
+the microphone (Screen Recording and Notifications are optional); then open
+**Settings → Diagnostics** and use the Fix buttons to install `ffmpeg` / a
+Whisper engine / the model, confirm `claude` is logged in, and run the
+System-Test. Recordings live under
+`~/Library/Application Support/Protokoll/Container`.
+
+Notes:
+- **Menu-bar app:** prefer this install over "Run" in Xcode (which kills the app
+  when you stop the run).
+- **Icon not updating?** macOS caches app icons; re-register with
+  `lsregister -f /Applications/Protokoll.app` (under
+  `…/CoreServices/…/LaunchServices.framework/…/Support/`) and `killall Dock`.
+- **Permissions reset after reinstall?** Ad-hoc signatures can change between
+  builds, which resets TCC grants - re-grant from Settings → Diagnostics.
+- For a signed, one-command install on any Mac, see *Releases* below /
+  *Install via Homebrew* above.
+
 ### Configuration
 
 Transcription and summary tuning (language, vocabulary, models, custom
