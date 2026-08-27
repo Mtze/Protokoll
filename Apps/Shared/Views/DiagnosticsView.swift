@@ -181,7 +181,7 @@ struct DiagnosticsView: View {
             runningSystemTest = false
             return
         }
-        var env = HelperLocator.pipelineEnvironment()
+        var env = HelperLocator.pipelineEnvironment(config: try? model.container.loadPipelineConfig())
         // Keep the automated dry-run fast; production default stays large-v3.
         env["TRANSCRIBE_MODEL"] = ProcessInfo.processInfo.environment["TRANSCRIBE_MODEL"] ?? "tiny"
         Task.detached {

@@ -46,13 +46,13 @@ public struct SessionStore: Sendable {
         AppLog.container.debug("session saved id=\(session.id, privacy: .public) status=\(session.metadata.pipeline.status.name, privacy: .public)")
     }
 
-    // MARK: Document rotation (N10, ADR-10)
+    // MARK: Document rotation (N10, ADR-11)
 
     /// Writes `transcript.md`, rotating any existing one to `transcript.vN.md`.
     ///
     /// In normal operation the transcript is written exactly once and then
     /// treated as immutable (N10). A user-invoked re-transcription is the sole
-    /// exception (ADR-10), and it rotates rather than overwrites so the earlier
+    /// exception (ADR-11), and it rotates rather than overwrites so the earlier
     /// transcript - and whatever a protocol was derived from - is never lost.
     /// Returns the rotated URL, or `nil` when there was nothing to rotate.
     @discardableResult

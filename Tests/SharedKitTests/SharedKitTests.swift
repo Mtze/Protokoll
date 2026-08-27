@@ -105,7 +105,7 @@ private func makeTempContainer() throws -> Container {
     }
 }
 
-/// Re-transcription (ADR-10) is the one thing that replaces `transcript.md`,
+/// Re-transcription (ADR-11) is the one thing that replaces `transcript.md`,
 /// which is otherwise immutable (N10). It must rotate, never destroy - a user
 /// re-transcribing an old recording is often comparing against what they had.
 @Suite struct TranscriptRotationTests {

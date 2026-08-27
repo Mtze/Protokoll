@@ -37,7 +37,7 @@ the pipeline owns the write + title lift F9). `Pipeline` manages status + claim.
 labels each partial with the wall-clock span it covers so the reduce step has
 absolute time to order by.
 
-`SummarizePrompt` splits the prompt three ways (ADR-9): the **enforced contract**
+`SummarizePrompt` splits the prompt three ways (ADR-10): the **enforced contract**
 in `systemPrompt` (frontmatter, title/language, grounding rules - passed via
 `--append-system-prompt`), the **body spec** from `SummaryTemplate.default` /
 `config/summary-prompt.md` (user-editable, chronological by default), and a
@@ -87,7 +87,7 @@ headings/lists/quotes/code with `AttributedString` inline spans) and
 macOS / `ShareLink` on iOS).
 
 `DocumentTextView` renders both panes. Protocol and transcript go into **one**
-read-only `NSTextView`/`UITextView` (ADR-11) so a selection can span bullets and
+read-only `NSTextView`/`UITextView` (ADR-12) so a selection can span bullets and
 segments - a stack of SwiftUI `Text` views never can, and the old transcript rows
 were `Button`s, which swallow the drag entirely. `DocumentAttributedText` turns
 blocks into fonts + `NSParagraphStyle`s; `TranscriptTextLayout` (SharedKit,

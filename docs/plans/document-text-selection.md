@@ -25,7 +25,7 @@ causes:
 
 Neither is fixable by tuning the SwiftUI tree: (2) is a framework limitation.
 
-## Decision (ADR-11)
+## Decision (ADR-12)
 
 Render each document into **one** read-only text view - `NSTextView` on macOS,
 `UITextView` on iOS - from an `NSAttributedString`. Retire `MarkdownText` and
@@ -82,7 +82,7 @@ wrong range is not.
 - Both detail views (`Apps/Shared/Views/SessionDetailView.swift`,
   `Apps/iOS/LibraryListView.swift`) drop their `ScrollView` - the pane scrolls
   itself.
-- Docs: ADR-11, `CLAUDE.md` performance + module notes, `docs/MODULES.md`,
+- Docs: ADR-12, `CLAUDE.md` performance + module notes, `docs/MODULES.md`,
   `README.md`.
 
 Verified: `swift test` 183 tests / 31 suites pass; Mac, iOS and watchOS targets

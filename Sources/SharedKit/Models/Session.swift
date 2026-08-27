@@ -32,7 +32,7 @@ public struct Session: Sendable, Equatable, Identifiable {
         folder.appendingPathComponent("protocol.v\(version).md")
     }
 
-    /// Path for the Nth rotated transcript (`transcript.v1.md`, …), ADR-10.
+    /// Path for the Nth rotated transcript (`transcript.v1.md`, …), ADR-11.
     ///
     /// `transcript.md` stays immutable in normal operation (N10); only an
     /// explicit user-invoked re-transcription replaces it, and then the previous

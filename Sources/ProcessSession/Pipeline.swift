@@ -63,7 +63,11 @@ public struct Pipeline: Sendable {
                                      customInstructions: config.summaryInstructions,
                                      summaryLanguage: config.summaryLanguage,
                                      summaryModel: config.summaryModel,
-                                     template: template ?? "")
+                                     template: template ?? "",
+                                     summaryProvider: config.summaryProvider,
+                                     summaryApiModel: config.summaryApiModel,
+                                     summaryApiBaseURL: config.summaryApiBaseURL,
+                                     summaryMaxTokens: config.summaryMaxTokens)
         self.waiter = ICloudDownloadWaiter()
         self.deviceId = deviceId
     }

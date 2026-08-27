@@ -1,4 +1,5 @@
 import Foundation
+import SharedKit
 
 /// Resolves the bundled helpers the app drives: the `process-session` binary
 /// and `transcribe.sh`. In a packaged app these live in `Contents/Helpers/` and
@@ -49,7 +50,10 @@ enum HelperLocator {
     }
 
     /// Environment passed to the pipeline subprocess so it can find its helpers.
-    static func pipelineEnvironment() -> [String: String] {
+    /// When `config` selects an API summary provider (ADR-9), the stored API key
+    /// is materialized to a 0600 file and its path injected as
+    /// `SUMMARY_API_KEY_FILE` - the raw secret never enters the child env.
+    static func pipelineEnvironment(config: PipelineConfig? = nil) -> [String: String] {
         var env: [String: String] = [:]
         let defaults = UserDefaults.standard
         // transcribe.sh: user override wins over the bundled/dev copy.
@@ -63,6 +67,12 @@ enum HelperLocator {
         if let claude = defaults.string(forKey: SettingsKeys.claudeBinOverride),
            !claude.trimmingCharacters(in: .whitespaces).isEmpty {
             env["CLAUDE_BIN"] = claude
+        }
+        // API summary provider: hand the pipeline a path to the key, not the key.
+        let provider = config?.summaryProvider ?? "cli"
+        if provider == "anthropic" || provider == "openai",
+           let path = SummaryKeychain.materializeKeyFile(for: provider) {
+            env["SUMMARY_API_KEY_FILE"] = path
         }
         return env
     }

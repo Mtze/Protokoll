@@ -204,7 +204,7 @@ The **structure of the summary** is a separate, editable file:
 `<container>/config/summary-prompt.md`. When it is absent you get the built-in
 default, a chronological account of the meeting. Settings > Summary edits it, and
 "Reset to default" deletes it. The meeting title and language are always extracted
-regardless of what the file says (ADR-9), and previous protocols are kept as
+regardless of what the file says (ADR-10), and previous protocols are kept as
 `protocol.vN.md`, so an edit that turns out badly is always recoverable.
 
 Environment overrides for dev / standalone runs:
@@ -213,7 +213,9 @@ Environment overrides for dev / standalone runs:
 |----------|---------|
 | `PROCESS_SESSION_BIN` | Path to the `process-session` binary the app runs. |
 | `TRANSCRIBE_SH` | Path to the vendored `scripts/transcribe.sh`. |
-| `CLAUDE_BIN` | Path to the `claude` CLI. |
+| `CLAUDE_BIN` | Path to the `claude` CLI (summary provider `cli`). |
+| `SUMMARY_API_KEY_FILE` | Path to a file holding the summary-provider API key (the app injects this; the raw key never sits in the env). |
+| `SUMMARY_API_KEY` | Summary-provider API key for standalone runs (fallback: `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`). |
 | `MN_CONTAINER_ROOT` | Override the container folder (dev/tests). |
 | `MN_REPO_ROOT` | Repo root for the app's dev helper/asset fallbacks. |
 

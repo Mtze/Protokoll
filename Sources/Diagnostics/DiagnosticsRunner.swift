@@ -16,16 +16,23 @@ public struct DiagnosticsRunner: Sendable {
     }
 
     /// The standard shell-resolvable checks, in display order.
-    public static func standardChecks(containerRoot: URL?, model: String = "large-v3") -> [any DiagnosticCheck] {
-        [
-            ClaudeCheck(),
-            WhisperEngineCheck(),
-            WhisperEnginePerformanceCheck(),
-            WhisperModelCheck(model: model),
-            FFmpegCheck(),
-            PathCheck(),
-            ContainerWritableCheck(containerRoot: containerRoot),
-        ]
+    /// `summaryProvider` gates the `claude` CLI check: an API provider (ADR-9)
+    /// summarizes over the network and needs no local `claude` login.
+    public static func standardChecks(
+        containerRoot: URL?,
+        model: String = "large-v3",
+        summaryProvider: String = "cli"
+    ) -> [any DiagnosticCheck] {
+        var checks: [any DiagnosticCheck] = []
+        if summaryProvider == "cli" { checks.append(ClaudeCheck()) }
+        checks.append(WhisperEngineCheck())
+        // Warns when the CPU-only fallback engine is what would actually run.
+        checks.append(WhisperEnginePerformanceCheck())
+        checks.append(WhisperModelCheck(model: model))
+        checks.append(FFmpegCheck())
+        checks.append(PathCheck())
+        checks.append(ContainerWritableCheck(containerRoot: containerRoot))
+        return checks
     }
 
     /// Runs every check and returns results in check order.

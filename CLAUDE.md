@@ -15,8 +15,11 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   access. `SessionStore` is the *sole* reader/writer of `session.json`. Value
   types are `Sendable`. No AppKit/UIKit/SwiftUI here - Mac/iOS/watch reuse it.
 - `Sources/ProcessSession/` - the `process-session` pipeline CLI: transcribe
-  (shells out to `scripts/transcribe.sh`) → summarize (`claude -p`, print mode).
-  The **pipeline owns all file writes** (rotation N10, title lift F9).
+  (shells out to `scripts/transcribe.sh`) → summarize via a pluggable
+  `SummaryEngine` (ADR-9): local `claude -p` (default), the Anthropic Messages
+  API, or an OpenAI-compatible endpoint. API calls go through the injectable
+  `HTTPPosting` seam (fake it in tests, like `CommandRunning`). The **pipeline
+  owns all file writes** (rotation N10, title lift F9).
 - `Sources/Diagnostics/` - preflight checks, tiered remediation, System-Test.
   UI-free and testable.
 - `Sources/SearchIndex/` - local FTS5 index over the **system `sqlite3`** (ADR-5,
@@ -38,7 +41,7 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
 - `Apps/Common/` - **cross-platform** SwiftUI/AVFoundation shared by all three
   apps: the audio player (scrubber/speed/tap-to-seek), live waveform,
   `ProjectChip`, and the document views - `DocumentTextView` renders protocol and
-  transcript into one selectable text view (ADR-11), `DocumentViews` keeps the
+  transcript into one selectable text view (ADR-12), `DocumentViews` keeps the
   Markdown block parser and the copy/export actions.
 - `Sources/SharedKit/AppLog.swift` - the one logging facility (`os.Logger`,
   subsystem `com.protokoll`, a category per flow). Every module + app uses it.
@@ -55,16 +58,22 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
 - **`session.json` is canonical.** Only `SessionStore` reads/writes it.
 - **`transcript.md` is immutable** once written (N10); regen rotates
   `protocol.md` → `protocol.vN.md`. The **one** exception is the user-invoked
-  "Transcribe Again" action (ADR-10), which rotates `transcript.md` →
+  "Transcribe Again" action (ADR-11), which rotates `transcript.md` →
   `transcript.vN.md` and forces the summarize too, so the protocol never
   silently describes the previous transcript. All transcript writes go through
   `SessionStore.writeTranscript` so the rotation cannot be bypassed.
 - **Pipeline tuning lives in the container**, not env. `PipelineConfig` at
   `<container>/config/pipeline.json` (transcription language/vocabulary/model/
-  audio preprocessing, summary language/model, custom instructions) is written by
-  Settings and read by `process-session`, so standalone runs honor it. The summary
-  body spec is a sibling *file*, `config/summary-prompt.md` (absent = default).
-  App-behavior toggles use `@AppStorage`/`SettingsKeys` (Mac).
+  audio preprocessing, summary language/model, custom instructions, plus the
+  summary provider: `summaryProvider`/`summaryApiModel`/`summaryApiBaseURL`/
+  `summaryMaxTokens`) is written by Settings and read by `process-session`, so
+  standalone runs honor it. The summary body spec is a sibling *file*,
+  `config/summary-prompt.md` (absent = default). App-behavior toggles use
+  `@AppStorage`/`SettingsKeys` (Mac). **The API key is a secret and never goes in
+  the container** (ADR-9): it lives in the macOS Keychain (`SummaryKeychain`,
+  Mac) and reaches the pipeline as a 0600 key-file path (`SUMMARY_API_KEY_FILE`),
+  never as a raw env var; standalone runs read
+  `SUMMARY_API_KEY`/`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`.
 - **Audio is never denoised.** Spectral denoising measurably *raises* WER for
   large Whisper models (ICAART 2024: helps base/small, hurts medium/large).
   `transcribe.sh --preprocess safe` does only `highpass=f=80` plus one **static**
@@ -79,7 +88,7 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   this wrong once silently dropped 3.5 minutes of speech from a real meeting
   (741 words -> 528 on the same 5 minutes). `transcribe.sh --self-test` covers
   the policy and runs in CI; add a case there before changing it.
-- **Preserve the summarize frontmatter contract** (ADR-9). Three parts, and the
+- **Preserve the summarize frontmatter contract** (ADR-10). Three parts, and the
   split is the design: the **enforced contract** (`SummarizePrompt.systemPrompt`,
   passed via `--append-system-prompt`) owns `title:` + `language:`, the title/
   language rules and the grounding rules; the **body spec**
@@ -165,7 +174,7 @@ before pushing**, never force-push; `.worktrees/` is gitignored.
 - **The System-Test cannot catch throughput problems** - it uses a ~3 s clip with
   `TRANSCRIBE_MODEL=tiny`, so it validates plumbing only.
 - **Long transcripts need care.** An hour is 1000-1500 segments. Documents render
-  in **one text view** (`DocumentPane` → `DocumentTextView`, ADR-11), so TextKit
+  in **one text view** (`DocumentPane` → `DocumentTextView`, ADR-12), so TextKit
   lays out only the visible fragments. Build the `NSAttributedString` **once per
   document** - key it on `LoadedDocument.key` (path + mtime + size), never on a
   body pass - and drive the playhead highlight from

@@ -146,7 +146,7 @@ public struct Transcriber: Sendable {
         let transcript = try assembleTranscript(jsonURL: jsonURL, txtURL: txtURL)
 
         // Through the store, so a re-transcription rotates the previous
-        // transcript to transcript.vN.md instead of destroying it (ADR-10).
+        // transcript to transcript.vN.md instead of destroying it (ADR-11).
         if let rotated = try store.writeTranscript(transcript.markdown, for: session) {
             AppLog.pipeline.info("rotated previous transcript to \(rotated.lastPathComponent, privacy: .public) session=\(session.id, privacy: .public)")
         }

@@ -21,7 +21,7 @@ typealias DocumentColor = UIColor
 /// row wrapped in a `Button` (the old tap-to-seek transcript row) cannot be
 /// selected at all, since the button consumes the drag. One text view gives the
 /// whole document a single selection, plus Cmd+A/Cmd+C and the macOS find bar
-/// for free (ADR-11).
+/// for free (ADR-12).
 ///
 /// It also scrolls itself, so callers must **not** wrap it in a `ScrollView`.
 struct DocumentPane: View {

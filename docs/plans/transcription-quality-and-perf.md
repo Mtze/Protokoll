@@ -362,7 +362,7 @@ attendee list is a high-cost, privacy-sensitive error.
    `## Part 1 (00:00:00-00:44:12)`. Chronology loss is a documented failure mode.
 6. Settings -> Summary: template editor prefilled with the default, plus Reset.
    EN + DE strings.
-7. **ADR-9** in `ARCHITECTURE.md` - the body spec is a user-owned file; the
+7. **ADR-10** in `ARCHITECTURE.md` - the body spec is a user-owned file; the
    frontmatter contract and grounding rules are not.
 8. Raise `characterBudget` to ~200k chars (~3 h) as a tested middle step, not
    400k on theory. Counterweight: context rot, and Anthropic's own claim that
@@ -415,7 +415,7 @@ Settings help text.
   (earnings22-keywords 15.4% -> 21.24% WER). Worth an A/B before we keep
   advertising it.
 - Docs to update in the same change (per CLAUDE.md): `README.md`, `CLAUDE.md`,
-  `AGENTS.md`, `docs/MODULES.md`, and ADR-9 in `ARCHITECTURE.md`.
+  `AGENTS.md`, `docs/MODULES.md`, and ADR-10 in `ARCHITECTURE.md`.
 
 ## Suggested order
 
@@ -559,7 +559,7 @@ three app targets build (Mac, iOS, watchOS).
 
 ## Problem 4 - summary prompt
 
-- Three-way split per **ADR-9**: enforced contract via `--append-system-prompt`,
+- Three-way split per **ADR-10**: enforced contract via `--append-system-prompt`,
   user-editable body spec, one-line postamble. Default body spec is a
   chronological account; decisions/action items are conditional, not mandatory.
 - Grounding rules explicitly forbid inventing speaker attribution, state that

@@ -308,3 +308,129 @@ final class MapReduceTracking: CommandRunning, @unchecked Sendable {
         return CommandResult(exitCode: 0, stdout: "---\ntitle: Long Meeting\nlanguage: en\n---\n\n# Long Meeting\n\nDone.", stderr: "")
     }
 }
+
+/// A scripted fake for the HTTP boundary so API-provider tests never hit the net.
+final class FakeHTTPPoster: HTTPPosting, @unchecked Sendable {
+    struct Call { let url: URL; let headers: [String: String]; let body: Data }
+    private let lock = NSLock()
+    private(set) var calls: [Call] = []
+    private let response: (Data, Int)
+
+    init(json: Any, status: Int = 200) {
+        self.response = ((try? JSONSerialization.data(withJSONObject: json)) ?? Data(), status)
+    }
+
+    func post(url: URL, headers: [String: String], body: Data) throws -> (data: Data, status: Int) {
+        lock.lock(); calls.append(Call(url: url, headers: headers, body: body)); lock.unlock()
+        return response
+    }
+}
+
+@Suite struct SummaryEngineTests {
+    private func session(with transcript: String) throws -> (Container, Session) {
+        let (container, session) = try makeSession()
+        try Data(transcript.utf8).write(to: session.transcriptURL)
+        return (container, session)
+    }
+
+    @Test func anthropicSummarizesWithoutShellingOut() throws {
+        let (container, s) = try session(with: "meeting body")
+        let text = "---\ntitle: API Meeting\nlanguage: en\n---\n\n# API Meeting\n\nDone."
+        let http = FakeHTTPPoster(json: ["content": [["type": "text", "text": text]]])
+        let runner = FakeCommandRunner()
+        let tools = ToolLocator(environment: ["SUMMARY_API_KEY": "secret"])
+        let summarizer = Summarizer(
+            runner: runner, tools: tools, store: container.store,
+            summaryProvider: "anthropic", summaryApiModel: "claude-test",
+            summaryApiBaseURL: "https://api.anthropic.com", http: http
+        )
+        let updated = try summarizer.summarize(session: s)
+        #expect(updated.metadata.title == "API Meeting")
+        #expect(FileManager.default.fileExists(atPath: s.protocolURL.path))
+        #expect(http.calls.count == 1)
+        #expect(runner.calls.isEmpty)                                   // no CLI call
+        #expect(http.calls[0].url.absoluteString == "https://api.anthropic.com/v1/messages")
+        #expect(http.calls[0].headers["x-api-key"] == "secret")
+    }
+
+    @Test func openAIStripsWrappingCodeFence() throws {
+        let (container, s) = try session(with: "meeting body")
+        let fenced = "```markdown\n---\ntitle: Fenced\nlanguage: en\n---\n\n# Fenced\n\nBody.\n```"
+        let http = FakeHTTPPoster(json: ["choices": [["message": ["content": fenced]]]])
+        let tools = ToolLocator(environment: ["SUMMARY_API_KEY": "secret"])
+        let summarizer = Summarizer(
+            runner: FakeCommandRunner(), tools: tools, store: container.store,
+            summaryProvider: "openai", summaryApiModel: "gpt-test",
+            summaryApiBaseURL: "https://api.openai.com/v1", http: http
+        )
+        let updated = try summarizer.summarize(session: s)
+        #expect(updated.metadata.title == "Fenced")                    // fence didn't hide frontmatter
+        let written = try String(contentsOf: s.protocolURL, encoding: .utf8)
+        #expect(!written.hasPrefix("```"))
+        #expect(http.calls[0].url.absoluteString == "https://api.openai.com/v1/chat/completions")
+    }
+
+    @Test func providerErrorSurfacesMessage() throws {
+        let (container, s) = try session(with: "body")
+        let http = FakeHTTPPoster(json: ["error": ["message": "invalid api key"]], status: 401)
+        let tools = ToolLocator(environment: ["SUMMARY_API_KEY": "secret"])
+        let summarizer = Summarizer(
+            runner: FakeCommandRunner(), tools: tools, store: container.store,
+            summaryProvider: "anthropic", summaryApiModel: "m",
+            summaryApiBaseURL: "https://api.anthropic.com", http: http
+        )
+        do {
+            _ = try summarizer.summarize(session: s)
+            Issue.record("expected providerFailed")
+        } catch let SummarizationError.providerFailed(message) {
+            #expect(message == "invalid api key")
+        }
+    }
+
+    @Test func missingKeyIsNotConfigured() throws {
+        let (container, s) = try session(with: "body")
+        let summarizer = Summarizer(
+            runner: FakeCommandRunner(), tools: ToolLocator(environment: [:]), store: container.store,
+            summaryProvider: "anthropic", summaryApiModel: "m",
+            summaryApiBaseURL: "https://api.anthropic.com", http: FakeHTTPPoster(json: [:])
+        )
+        #expect(throws: SummarizationError.self) { _ = try summarizer.summarize(session: s) }
+    }
+
+    @Test func nonHTTPSBaseURLRejected() throws {
+        let (container, s) = try session(with: "body")
+        let http = FakeHTTPPoster(json: ["choices": [["message": ["content": "x"]]]])
+        let summarizer = Summarizer(
+            runner: FakeCommandRunner(), tools: ToolLocator(environment: ["SUMMARY_API_KEY": "k"]),
+            store: container.store, summaryProvider: "openai", summaryApiModel: "m",
+            summaryApiBaseURL: "http://insecure.example", http: http
+        )
+        #expect(throws: SummarizationError.self) { _ = try summarizer.summarize(session: s) }
+        #expect(http.calls.isEmpty)                                    // never sent the key
+    }
+
+    @Test func keyFileResolvesOverEnvVar() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let file = dir.appendingPathComponent("key")
+        try Data("from-file\n".utf8).write(to: file)
+        let env = ["SUMMARY_API_KEY_FILE": file.path, "SUMMARY_API_KEY": "from-env"]
+        #expect(SummaryAPI.resolveKey(environment: env, provider: .anthropic) == "from-file")
+    }
+
+    @Test func pipelineConfigRoundTripsProviderFields() throws {
+        var config = PipelineConfig()
+        config.summaryProvider = "openai"
+        config.summaryApiModel = "gpt-4o"
+        config.summaryApiBaseURL = "https://api.openai.com/v1"
+        config.summaryMaxTokens = 4096
+        let data = try SessionStore.encoder.encode(config)
+        let decoded = try SessionStore.decoder.decode(PipelineConfig.self, from: data)
+        #expect(decoded == config)
+        // Old files without the new keys still decode to defaults.
+        let legacy = try SessionStore.decoder.decode(
+            PipelineConfig.self, from: Data(#"{"summaryLanguage":"de"}"#.utf8))
+        #expect(legacy.summaryProvider == "cli")
+        #expect(legacy.summaryMaxTokens == 8192)
+    }
+}

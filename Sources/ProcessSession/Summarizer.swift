@@ -3,17 +3,20 @@ import SharedKit
 
 public enum SummarizationError: Error, LocalizedError, Equatable {
     case transcriptMissing
-    case claudeFailed(String)
+    case providerFailed(String)
     case emptyOutput
+    case notConfigured(String)
 
     public var errorDescription: String? {
         switch self {
         case .transcriptMissing:
             return "No transcript.md to summarize. Run the transcribe step first."
-        case let .claudeFailed(message):
-            return "claude failed: \(message)"
+        case let .providerFailed(message):
+            return "Summary provider failed: \(message)"
         case .emptyOutput:
-            return "claude produced no protocol output."
+            return "The summary provider produced no protocol output."
+        case let .notConfigured(message):
+            return "Summary provider not configured: \(message)"
         }
     }
 }
@@ -31,11 +34,21 @@ public struct Summarizer: Sendable {
     let customInstructions: String
     /// `"auto"` (match the meeting, N8) or an ISO code to force the summary into.
     let summaryLanguage: String
-    /// Overrides ``ToolLocator/claudeModel`` when non-empty.
+    /// Overrides ``ToolLocator/claudeModel`` when non-empty. Used by the CLI
+    /// provider only.
     let summaryModel: String
     /// The user's body-spec template from `config/summary-prompt.md`. Empty means
     /// use ``SummarizePrompt/defaultBodyTemplate``.
     let template: String
+    /// Which engine summarizes (ADR-9): `cli`, `anthropic`, or `openai`.
+    let providerKind: SummaryProviderKind
+    /// Full model id for API providers (freeform).
+    let summaryApiModel: String
+    /// The resolved engine for the configured provider.
+    private let engine: SummaryEngine
+    /// Non-nil when the provider is misconfigured (missing key / base URL); the
+    /// summarize step fails cleanly with this instead of making a doomed request.
+    private let configError: String?
 
     public init(
         runner: CommandRunning,
@@ -45,7 +58,12 @@ public struct Summarizer: Sendable {
         customInstructions: String = "",
         summaryLanguage: String = "auto",
         summaryModel: String = "",
-        template: String = ""
+        template: String = "",
+        summaryProvider: String = "cli",
+        summaryApiModel: String = "",
+        summaryApiBaseURL: String = "",
+        summaryMaxTokens: Int = 8192,
+        http: HTTPPosting = URLSessionHTTPPoster()
     ) {
         self.runner = runner
         self.tools = tools
@@ -55,9 +73,40 @@ public struct Summarizer: Sendable {
         self.summaryLanguage = summaryLanguage
         self.summaryModel = summaryModel
         self.template = template
+        self.summaryApiModel = summaryApiModel
+
+        let kind = SummaryProviderKind(summaryProvider)
+        self.providerKind = kind
+        switch kind {
+        case .cli:
+            self.engine = ClaudeCLIEngine(runner: runner, claudeBinary: tools.claudeBinary)
+            self.configError = nil
+        case .anthropic, .openai:
+            let key = SummaryAPI.resolveKey(environment: tools.environment, provider: kind) ?? ""
+            let baseEmpty = summaryApiBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            if key.isEmpty {
+                self.configError = "no API key (set it in Settings or SUMMARY_API_KEY)"
+            } else if kind == .openai, baseEmpty {
+                self.configError = "no base URL for the OpenAI-compatible provider"
+            } else {
+                self.configError = nil
+            }
+            if kind == .anthropic {
+                self.engine = AnthropicEngine(http: http, apiKey: key,
+                                              baseURL: summaryApiBaseURL, maxTokens: summaryMaxTokens)
+            } else {
+                self.engine = OpenAIEngine(http: http, apiKey: key,
+                                           baseURL: summaryApiBaseURL, maxTokens: summaryMaxTokens)
+            }
+        }
     }
 
-    private var effectiveModel: String { summaryModel.isEmpty ? tools.claudeModel : summaryModel }
+    private var effectiveModel: String {
+        switch providerKind {
+        case .cli: return summaryModel.isEmpty ? tools.claudeModel : summaryModel
+        case .anthropic, .openai: return summaryApiModel
+        }
+    }
 
     /// The body spec: the user's `config/summary-prompt.md` if present and
     /// non-empty, otherwise the built-in default.
@@ -70,6 +119,7 @@ public struct Summarizer: Sendable {
         session: Session,
         onProgress: (@Sendable (String) -> Void)? = nil
     ) throws -> Session {
+        if let configError { throw SummarizationError.notConfigured(configError) }
         guard let transcriptData = try? Data(contentsOf: session.transcriptURL),
               let transcriptDoc = String(data: transcriptData, encoding: .utf8),
               !transcriptDoc.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
@@ -85,7 +135,7 @@ public struct Summarizer: Sendable {
         let chunks = chunker.chunk(body)
         let output: String
         if chunks.count <= 1 {
-            output = try runClaude(
+            output = try runEngine(
                 system: SummarizePrompt.systemPrompt(currentTitle: currentTitle, summaryLanguage: summaryLanguage),
                 stdin: SummarizePrompt.userMessage(
                     transcript: body, context: context,
@@ -147,35 +197,15 @@ public struct Summarizer: Sendable {
         return nil
     }
 
-    /// One `claude -p` call: print mode, no tools, contract in the system prompt.
-    private func runClaude(
+    /// One call to the configured engine (CLI or API). `system` carries the
+    /// enforced contract - `--append-system-prompt` for the CLI, the `system`
+    /// message for the APIs - and `stdin` the transcript plus the body spec.
+    private func runEngine(
         system: String,
         stdin: String,
         onProgress: (@Sendable (String) -> Void)?
     ) throws -> String {
-        AppLog.pipeline.debug("running claude model=\(effectiveModel, privacy: .public)")
-        let result = try runner.run(
-            executable: tools.claudeBinary,
-            arguments: [
-                "-p", SummarizePrompt.pointerPrompt,
-                "--model", effectiveModel,
-                "--append-system-prompt", system,
-                // "no tools (decision #5)" was only ever a comment; make it true.
-                "--permission-mode", "plan",
-                "--disallowed-tools", "Bash,Edit,Write,Read,WebFetch,WebSearch",
-            ],
-            stdin: stdin,
-            environment: nil,
-            onStderrLine: onProgress
-        )
-        guard result.succeeded else {
-            let stderr = result.stderr.isEmpty ? result.stdout : result.stderr
-            AppLog.pipeline.error("claude exited \(result.exitCode, privacy: .public): \(stderr, privacy: .public)")
-            throw SummarizationError.claudeFailed(stderr)
-        }
-        let output = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !output.isEmpty else { throw SummarizationError.emptyOutput }
-        return output
+        try engine.complete(prompt: system, input: stdin, model: effectiveModel, onProgress: onProgress)
     }
 
     /// Map-reduce for long transcripts (N9): compress each chunk neutrally, then
@@ -190,7 +220,7 @@ public struct Summarizer: Sendable {
         var partials: [String] = []
         for chunk in chunks {
             onProgress?("summarizing part \(chunk.index + 1)/\(chunks.count)")
-            let partial = try runClaude(
+            let partial = try runEngine(
                 // The map step is intentionally *not* driven by the user template:
                 // a shape-neutral intermediate keeps every output spec reachable.
                 system: SummarizePrompt.map(
@@ -205,7 +235,7 @@ public struct Summarizer: Sendable {
             partials.append("\(label)\n\n\(partial)")
         }
         onProgress?("synthesizing final protocol")
-        return try runClaude(
+        return try runEngine(
             system: SummarizePrompt.reduceSystemPrompt(
                 currentTitle: currentTitle, summaryLanguage: summaryLanguage
             ),

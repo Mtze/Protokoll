@@ -82,7 +82,7 @@ struct TranscriberConfigTests {
         #expect(Transcriber.timeout(forAudioSeconds: 3600) == 36_000)     // 10x realtime
     }
 
-    /// Re-transcribing (ADR-10) must rotate the previous transcript rather than
+    /// Re-transcribing (ADR-11) must rotate the previous transcript rather than
     /// overwrite it. This goes through the real Transcriber, so it also proves
     /// the write actually routes through SessionStore.
     @Test func retranscribingRotatesThePreviousTranscript() throws {

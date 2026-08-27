@@ -70,7 +70,7 @@ final class Scheduler {
     /// `force` re-runs transcription even though `transcript.md` exists, and
     /// carries through to the chained summarize so the protocol is rebuilt from
     /// the *new* transcript rather than left describing the old one. The previous
-    /// transcript and protocol are rotated, not destroyed (ADR-10).
+    /// transcript and protocol are rotated, not destroyed (ADR-11).
     func enqueueProcess(_ session: Session, force: Bool = false) {
         let transcribeJob = ProcessingJob(sessionID: session.id, title: session.displayTitle, step: .transcribe)
         jobs.append(transcribeJob)

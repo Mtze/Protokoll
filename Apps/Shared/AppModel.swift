@@ -55,9 +55,10 @@ final class AppModel {
         let device = self.deviceId
         self.scheduler = Scheduler(container: container) {
             guard let binary = HelperLocator.processSessionBinary() else { return nil }
+            let config = try? container.loadPipelineConfig()
             return PipelineRunner(binary: binary, deviceId: device,
                                   runner: ProcessCommandRunner(),
-                                  environment: HelperLocator.pipelineEnvironment())
+                                  environment: HelperLocator.pipelineEnvironment(config: config))
         }
         AppModel.shared = self
         // Refresh the list, index, and detail once a step finishes so the new
@@ -293,7 +294,7 @@ final class AppModel {
     }
 
     /// Re-runs transcription from the audio, then rebuilds the protocol from the
-    /// new transcript (ADR-10).
+    /// new transcript (ADR-11).
     ///
     /// Useful after changing the transcription language, vocabulary or model, or
     /// after installing a better engine - an early transcript may contain
@@ -330,7 +331,8 @@ final class AppModel {
         #if os(macOS)
         appChecks.append(ScreenRecordingCheck())
         #endif
-        let checks = DiagnosticsRunner.standardChecks(containerRoot: root) + appChecks
+        let provider = (try? container.loadPipelineConfig())?.summaryProvider ?? "cli"
+        let checks = DiagnosticsRunner.standardChecks(containerRoot: root, summaryProvider: provider) + appChecks
         let runner = DiagnosticsRunner(checks: checks)
         let results = await Task.detached { runner.runAll() }.value
         checkResults = results
