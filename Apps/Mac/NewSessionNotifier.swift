@@ -57,6 +57,15 @@ final class NewSessionNotifier: NSObject, UNUserNotificationCenterDelegate {
         // Notifications default on when the user hasn't set the toggle.
         let notificationsOn = defaults.object(forKey: SettingsKeys.notificationsEnabled) as? Bool ?? true
         for session in sessions where !knownIDs.contains(session.id) {
+            // A live recording / in-progress import writes session.json as
+            // .recorded before audio/mic.m4a exists; wait for the audio before
+            // acting, and don't mark the session known yet so a later scan still
+            // picks it up once the file lands (the importer's atomic rename
+            // guarantees it appears complete, never partial).
+            if session.metadata.pipeline.status == .recorded,
+               !FileManager.default.fileExists(atPath: session.micAudioURL.path) {
+                continue
+            }
             knownIDs.insert(session.id)
             guard session.metadata.pipeline.status == .recorded else { continue }
             if autoProcess {

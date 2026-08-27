@@ -67,6 +67,10 @@ brew install --cask --no-quarantine protokoll
   system audio), and crash-safe incremental capture (CAF → `mic.m4a`, ADR-3).
 - Optional **system-audio capture** (ScreenCaptureKit) for calls; mic + system
   are **mixed into one track** so the whole conversation is transcribed (ADR-7).
+- **Import an existing recording** (macOS): pick an audio file (m4a, mp3, wav,
+  aac, aiff, or the audio track of an mp4/mov) from the toolbar, the menu-bar
+  panel, or `⌘I`. It becomes a normal unprocessed session and runs through the
+  same pipeline; nothing about your recording ever leaves the Mac.
 
 **Pipeline** (`process-session`)
 - **Transcribe** locally via the vendored `transcribe.sh` (mlx-whisper /
@@ -92,6 +96,7 @@ brew install --cask --no-quarantine protokoll
 | Shortcut | Action |
 |---|---|
 | `⌘N` | Start / stop recording |
+| `⌘I` | Import an existing audio file as a session |
 | `⌘0` / `⇧⌘D` | Open Library / Diagnostics window |
 | `⌘F` | Search the library |
 | `⌘↩` | Primary action for the selected session (Process / Retry / Regenerate) |
@@ -215,7 +220,7 @@ Sources/SharedKit/      Foundation-only model, container, PipelineConfig, Pipeli
 Sources/ProcessSession/ the process-session pipeline CLI (ADR-1)
 Sources/Diagnostics/    preflight checks, remediation, System-Test
 Sources/SearchIndex/    local FTS5 search index (ADR-2)
-Sources/MediaKit/       audio mixing: mic + system → one track (ADR-7)
+Sources/MediaKit/       audio mixing (mic + system → one track, ADR-7) + import transcode
 Apps/Mac/               menubar + full window app, Recorder (ADR-3), onboarding, Settings
 Apps/iOS/               iOS recorder + viewer + search
 Apps/Watch/             watchOS recorder (ADR-6)
