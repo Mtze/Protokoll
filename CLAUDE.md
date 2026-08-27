@@ -15,8 +15,11 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   access. `SessionStore` is the *sole* reader/writer of `session.json`. Value
   types are `Sendable`. No AppKit/UIKit/SwiftUI here - Mac/iOS/watch reuse it.
 - `Sources/ProcessSession/` - the `process-session` pipeline CLI: transcribe
-  (shells out to `scripts/transcribe.sh`) → summarize (`claude -p`, print mode).
-  The **pipeline owns all file writes** (rotation N10, title lift F9).
+  (shells out to `scripts/transcribe.sh`) → summarize via a pluggable
+  `SummaryEngine` (ADR-9): local `claude -p` (default), the Anthropic Messages
+  API, or an OpenAI-compatible endpoint. API calls go through the injectable
+  `HTTPPosting` seam (fake it in tests, like `CommandRunning`). The **pipeline
+  owns all file writes** (rotation N10, title lift F9).
 - `Sources/Diagnostics/` - preflight checks, tiered remediation, System-Test.
   UI-free and testable.
 - `Sources/SearchIndex/` - local FTS5 index over the **system `sqlite3`** (ADR-5,
@@ -55,9 +58,14 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   `protocol.md` → `protocol.vN.md`.
 - **Pipeline tuning lives in the container**, not env. `PipelineConfig` at
   `<container>/config/pipeline.json` (transcription language/vocabulary/model,
-  summary language/model, custom instructions) is written by Settings and read
-  by `process-session`, so standalone runs honor it. App-behavior toggles use
-  `@AppStorage`/`SettingsKeys` (Mac).
+  summary language/model, custom instructions, plus the summary provider:
+  `summaryProvider`/`summaryApiModel`/`summaryApiBaseURL`/`summaryMaxTokens`) is
+  written by Settings and read by `process-session`, so standalone runs honor it.
+  App-behavior toggles use `@AppStorage`/`SettingsKeys` (Mac). **The API key is a
+  secret and never goes in the container** (ADR-9): it lives in the macOS Keychain
+  (`SummaryKeychain`, Mac) and reaches the pipeline as a 0600 key-file path
+  (`SUMMARY_API_KEY_FILE`), never as a raw env var; standalone runs read
+  `SUMMARY_API_KEY`/`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`.
 - **Preserve the summarize frontmatter contract.** `claude` must emit a leading
   `---` block with `title:` + `language:`; `Summarizer` parses those to set the
   session title/language. Custom prompt text is *appended* to the built-in

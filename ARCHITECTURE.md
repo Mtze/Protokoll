@@ -499,3 +499,46 @@ Start (unter macOS 15 ohne den alten Rechtsklick-Öffnen-Umweg); Nutzer bestäti
 über *Systemeinstellungen > Datenschutz & Sicherheit* oder installieren mit
 `--no-quarantine`. Der Cask-Bump-Schritt pusht auf `main` - bei Branch-Schutz muss
 der Bump stattdessen per PR erfolgen.
+
+### ADR-9 - Zusammenfassungs-Anbieter ist austauschbar (lokale CLI vs. Cloud-API)
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Der Summarize-Schritt ist nicht mehr an die lokale `claude`-CLI
+gebunden. `Summarizer` ruft die Modelle über ein `SummaryEngine`-Protokoll auf; es
+gibt drei Implementierungen: `ClaudeCLIEngine` (bisheriges Verhalten, Standard),
+`AnthropicEngine` (Anthropic Messages API) und `OpenAIEngine` (OpenAI-kompatibler
+Endpunkt mit konfigurierbarer Basis-URL). Die Wahl trifft `PipelineConfig`
+(`summaryProvider` = `cli` | `anthropic` | `openai`, plus `summaryApiModel`,
+`summaryApiBaseURL`, `summaryMaxTokens`) im Container. HTTP läuft über die
+injizierbare `HTTPPosting`-Naht (Analog zu `CommandRunning`), damit Unit-Tests nie
+echt ins Netz gehen.
+
+**Kontext & Begründung:**
+- Die lokale CLI setzt einen eingeloggten `claude`-Client auf der ausführenden
+  Maschine voraus. Ein API-Schlüssel-Pfad erlaubt Cloud-Modelle (auch selbst
+  gehostete OpenAI-kompatible) ohne diese Voraussetzung.
+- Der **Schlüssel ist ein Geheimnis** und darf nicht in `pipeline.json` landen
+  (der Container kann via iCloud synchronisieren, N3). Er liegt daher im
+  **macOS-Schlüsselbund** (nur Mac-Target) und wird dem `process-session`-
+  Subprozess **nicht als Klartext-Env-Variable** übergeben (per `ps e`/
+  `KERN_PROCARGS2` durch andere Nutzerprozesse lesbar und an Kindprozesse wie
+  `transcribe.sh`/`claude`/`ffmpeg` vererbt), sondern als **Pfad auf eine
+  0600-Datei** (`SUMMARY_API_KEY_FILE`); Standalone-Läufe lesen ersatzweise
+  `SUMMARY_API_KEY` bzw. `ANTHROPIC_API_KEY`/`OPENAI_API_KEY`.
+- Cloud-Anbieter senden den **vollständigen Transkript-Text off-device**. Die
+  Basis-URL wird auf `https://` beschränkt (Schlüssel + Transkript nie im
+  Klartext), und die Einstellungen zeigen bei API-Anbietern einen deutlichen
+  Datenschutz-Hinweis. Der Standard bleibt die lokale CLI (Privacy-first, N3).
+- Der `URLSession`-Aufruf ist **synchron** (Semaphore): die gesamte
+  `ProcessSession`-Pipeline ist synchroner, blockierender CLI-Code ohne Actor-/
+  Cooperative-Pool-Kontext (vgl. `ICloudDownloadWaiter`), ein Wechsel auf `async`
+  würde sich durch `Pipeline`/`main.swift` ziehen, ohne Laufzeitvorteil im
+  kurzlebigen Subprozess.
+
+**Konsequenz (bewusst):** OpenAI-kompatible Modelle verpacken die Antwort oft in
+Markdown-Code-Fences; die API-Engines entfernen einen führenden/abschließenden
+Fence, bevor der `title:`/`language:`-Frontmatter-Vertrag geparst wird. Der
+Schlüssel-Datei-Umweg erfordert etwas Lebenszyklus-Logik (Datei nach dem Lauf
+löschen); die Diagnostik prüft die `claude`-CLI nur noch, wenn der Anbieter `cli`
+ist.

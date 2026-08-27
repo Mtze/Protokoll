@@ -58,7 +58,11 @@ public struct Pipeline: Sendable {
         self.summarizer = Summarizer(runner: runner, tools: tools, store: container.store,
                                      customInstructions: config.summaryInstructions,
                                      summaryLanguage: config.summaryLanguage,
-                                     summaryModel: config.summaryModel)
+                                     summaryModel: config.summaryModel,
+                                     summaryProvider: config.summaryProvider,
+                                     summaryApiModel: config.summaryApiModel,
+                                     summaryApiBaseURL: config.summaryApiBaseURL,
+                                     summaryMaxTokens: config.summaryMaxTokens)
         self.waiter = ICloudDownloadWaiter()
         self.deviceId = deviceId
     }
