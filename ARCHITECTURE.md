@@ -586,3 +586,45 @@ bestehenden Protokoll-Rotation (N10). Der Schreibvorgang läuft dafür jetzt üb
 `transcript.vN.md` ansammeln. Das ist derselbe Kompromiss, den N10 für Protokolle
 bereits eingeht, und Aufräumen bleibt eine bewusste Nutzerentscheidung (siehe
 Issue #14, Retention).
+
+### ADR-11 — Dokumente rendern in einer Textview, nicht als Stapel von `Text`-Views
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Protokoll und Transkript werden in **einer** schreibgeschützten
+Textview gerendert (`NSTextView` auf macOS, `UITextView` auf iOS), gefüllt aus
+einem `NSAttributedString`. Die bisherigen SwiftUI-Renderer (`MarkdownText`,
+`TranscriptSegmentList`) entfallen. Die Zuordnung „Zeichenposition → Segment“
+liegt als `TranscriptTextLayout` in SharedKit und ist dort getestet.
+
+**Kontext & Begründung:**
+- **Auswahl über Blockgrenzen hinweg ist sonst unmöglich.** SwiftUI wählt nie
+  über mehrere `Text`-Views hinweg aus: bei einer View pro Block lässt sich
+  innerhalb *eines* Aufzählungspunkts markieren, aber nie über zwei. Genau das
+  ist der gemeldete Mangel - Nutzer wollen einen Ausschnitt kopieren, nicht das
+  ganze Dokument (`action.copy` gab es bereits).
+- **Im Transkript ging gar nichts.** Jede Zeile war ein `Button` (Tap-to-Seek);
+  ein Button verschluckt das Ziehen, deshalb war `.textSelection(.enabled)` dort
+  wirkungslos, obwohl der Modifier gesetzt war.
+- **Tap-to-Seek und Auswahl schließen sich nicht aus.** `super.mouseDown` führt
+  die Auswahlverfolgung bis zum Loslassen aus; eine danach *leere* Auswahl
+  bedeutet „Klick, kein Ziehen“ und löst den Sprung aus. Ein `.link`-Attribut
+  wäre der naheliegende Weg gewesen, erlaubt aber das Herausziehen des Links aus
+  der View und hätte die Auswahl per Ziehen kaputt gemacht.
+- **Die Performance-Gründe von vorher entfallen nicht, sie verlagern sich.**
+  TextKit legt selbst nur die sichtbaren Zeilenfragmente aus, der
+  `NSAttributedString` wird genau einmal pro Dokument gebaut (nicht pro
+  Body-Durchlauf), und die Hervorhebung des laufenden Segments sind zwei
+  Attribut-Änderungen statt eines Re-Renders. Der Auslöser bleibt
+  `AudioPlayerModel.currentSegment`, also einmal pro Segment statt pro Tick.
+- **Nebenertrag:** Cmd+A/Cmd+C über das ganze Dokument und die macOS-Suchleiste
+  (Cmd+F), die es mit dem View-Stapel nie gab.
+
+**Konsequenz (bewusst):**
+- Blocklayout ist jetzt Sache von Schriften und `NSParagraphStyle`. Eine
+  gezeichnete Trennlinie (`Divider`) wird zum Trennzeichen, der Zitatbalken zu
+  Einzug plus Kursivschrift.
+- Die Textview scrollt selbst; die Detailansichten dürfen sie **nicht** in eine
+  `ScrollView` legen.
+- watchOS hat keine solche Textview und bekommt eine einfache scrollbare
+  Textdarstellung. Für den watchOS-Viewer (Issue #9) ist das ohnehin offen.

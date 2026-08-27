@@ -7,17 +7,6 @@ import AppKit
 import UIKit
 #endif
 
-private extension View {
-    /// `.textSelection(.enabled)` where it exists; a no-op on watchOS.
-    @ViewBuilder func selectableText() -> some View {
-        #if os(watchOS)
-        self
-        #else
-        self.textSelection(.enabled)
-        #endif
-    }
-}
-
 // MARK: - Document loading + caching
 
 /// A document read from disk and fully parsed, ready to render with no further
@@ -35,8 +24,13 @@ struct LoadedDocument: Sendable, Equatable {
     var blocks: [MarkdownRenderBlock] = []
     /// Parsed transcript segments; empty when the document has no timestamps.
     var segments: [TranscriptSegment] = []
-    /// Display rows built from ``segments``.
-    var rows: [TranscriptRowItem] = []
+    /// Flattened transcript text plus per-segment character ranges, for the
+    /// selectable text view. Empty when ``segments`` is.
+    var layout: TranscriptTextLayout = .empty
+    /// Identity of the file this was read from - see ``DocumentLoader/key(for:pane:)``.
+    /// Views key their own derived work (the attributed string) off this, so a
+    /// rebuild cannot race the asynchronous reload that produced the document.
+    var key: String = ""
 
     var isEmpty: Bool { body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 }
@@ -59,15 +53,16 @@ enum DocumentLoader {
     /// Reads and parses `url`. Safe to call off the main actor; returns an empty
     /// document when the file is missing or unreadable.
     static func load(_ url: URL, parseTranscript: Bool) -> LoadedDocument {
+        let key = key(for: url, pane: parseTranscript ? "transcript" : "protocol")
         guard let raw = try? String(contentsOf: url, encoding: .utf8) else { return LoadedDocument() }
         let body = Frontmatter.split(raw).body
         guard !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return LoadedDocument(body: body)
+            return LoadedDocument(body: body, key: key)
         }
-        var document = LoadedDocument(body: body)
+        var document = LoadedDocument(body: body, key: key)
         if parseTranscript {
             document.segments = TranscriptParser.parse(body)
-            document.rows = document.segments.enumerated().map { TranscriptRowItem(id: $0.offset, segment: $0.element) }
+            document.layout = TranscriptTextLayout(segments: document.segments)
         }
         // The Markdown blocks double as the no-timestamps fallback, so parse them
         // whenever the transcript parse came back empty.
@@ -80,73 +75,9 @@ enum DocumentLoader {
 
 // MARK: - Markdown rendering
 
-/// A small, dependency-free block renderer for the Markdown prose in
-/// `protocol.md` / `transcript.md`. `AttributedString(markdown:)` only styles
-/// *inline* spans (bold/italic/code/links); block structure (headings, lists,
-/// rules) is laid out here so the summary reads like a document, not a wall of
-/// text. Colors come from the system so it looks right in light and dark mode.
-struct MarkdownText: View {
-    /// Pre-parsed blocks. Parsing (and the per-block `AttributedString(markdown:)`
-    /// call, ~34 µs each) used to happen on every body pass, so a long protocol
-    /// cost ~7 ms per render. The owning view parses once and caches instead.
-    let blocks: [MarkdownRenderBlock]
-
-    var body: some View {
-        LazyVStack(alignment: .leading, spacing: 8) {
-            ForEach(blocks) { block in
-                view(for: block)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .selectableText()
-    }
-
-    @ViewBuilder private func view(for block: MarkdownRenderBlock) -> some View {
-        switch block.kind {
-        case let .heading(level):
-            Text(block.attributed)
-                .font(headingFont(level))
-                .bold()
-                .padding(.top, level <= 2 ? 6 : 2)
-        case .paragraph:
-            Text(block.attributed)
-        case .bullet:
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("•").foregroundStyle(.secondary)
-                Text(block.attributed).frame(maxWidth: .infinity, alignment: .leading)
-            }
-        case let .ordered(number):
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("\(number).").foregroundStyle(.secondary).monospacedDigit()
-                Text(block.attributed).frame(maxWidth: .infinity, alignment: .leading)
-            }
-        case .quote:
-            HStack(alignment: .top, spacing: 8) {
-                RoundedRectangle(cornerRadius: 1.5).fill(.secondary).frame(width: 3)
-                Text(block.attributed).italic().foregroundStyle(.secondary)
-            }
-        case .code:
-            Text(block.plain)
-                .font(.system(.callout, design: .monospaced))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-                .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
-        case .rule:
-            Divider()
-        }
-    }
-
-    private func headingFont(_ level: Int) -> Font {
-        switch level {
-        case 1: return .title2
-        case 2: return .title3
-        default: return .headline
-        }
-    }
-}
-
 /// A ``MarkdownBlock`` with its inline Markdown already rendered, so rendering a
-/// document costs no parsing at all.
+/// document costs no parsing at all. ``DocumentAttributedText`` turns these into
+/// the paragraph styles the document pane displays.
 struct MarkdownRenderBlock: Identifiable, Equatable, Sendable {
     enum Kind: Equatable, Sendable {
         case heading(level: Int)
@@ -198,7 +129,7 @@ struct MarkdownRenderBlock: Identifiable, Equatable, Sendable {
     }
 }
 
-/// The block kinds `MarkdownText` lays out. Kept internal + testable-shaped.
+/// The block kinds `DocumentAttributedText` lays out. Kept internal + testable-shaped.
 enum MarkdownBlock: Equatable {
     case heading(level: Int, text: String)
     case paragraph(String)
@@ -286,123 +217,6 @@ enum MarkdownBlock: Equatable {
         let rest = line[digits.endIndex...]
         guard rest.hasPrefix(". ") else { return nil }
         return (number, String(rest.dropFirst(2)))
-    }
-}
-
-// MARK: - Tap-to-seek transcript list
-
-/// One transcript segment, pre-rendered for display. Building the time label
-/// once at parse time keeps `String(format:)` - which goes through `NSString`
-/// formatting and cost ~1.3 ms per pass across 1500 rows - off the render path.
-struct TranscriptRowItem: Identifiable, Equatable, Sendable {
-    let id: Int
-    let start: TimeInterval
-    let text: String
-    let timeLabel: String
-
-    init(id: Int, segment: TranscriptSegment) {
-        self.id = id
-        self.start = segment.start
-        self.text = segment.text
-        let total = Int(segment.start.rounded())
-        let (h, m, s) = (total / 3600, (total % 3600) / 60, total % 60)
-        self.timeLabel = h > 0
-            ? String(format: "%d:%02d:%02d", h, m, s)
-            : String(format: "%d:%02d", m, s)
-    }
-}
-
-/// Renders parsed transcript segments as a clean time+text list. Tapping a row
-/// seeks the shared audio model to that segment's start and plays from there;
-/// the segment under the playhead is highlighted. When `canSeek` is false
-/// (no audio loaded), rows are inert.
-///
-/// Performance shape matters here - an hour-long meeting is 1000-1500 rows:
-/// - `LazyVStack`, so only visible rows are built and laid out;
-/// - each row is its own `Equatable` view taking `isCurrent` as a plain `Bool`,
-///   so a highlight move re-runs two row bodies rather than all of them. The
-///   rows deliberately do **not** read the player, which is what keeps them out
-///   of the observation graph;
-/// - the highlight comes from `model.currentSegment`, which changes once per
-///   segment rather than on every player tick.
-struct TranscriptSegmentList: View {
-    let items: [TranscriptRowItem]
-    let model: AudioPlayerModel
-    let canSeek: Bool
-
-    var body: some View {
-        // The single observed read: an `Int?` that changes ~once per segment.
-        let current = canSeek ? model.currentSegment : nil
-        LazyVStack(alignment: .leading, spacing: 2) {
-            ForEach(items) { item in
-                TranscriptRow(
-                    item: item,
-                    isCurrent: item.id == current,
-                    canSeek: canSeek,
-                    model: model
-                )
-                .equatable()
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-/// A single tappable transcript row.
-///
-/// Holds only memcmp-comparable values plus a stable class reference, and builds
-/// its button action *inside* `body`. Storing a closure property instead would
-/// defeat SwiftUI's value comparison and re-run every row on every update, which
-/// is the whole thing this design avoids.
-private struct TranscriptRow: View, Equatable {
-    let item: TranscriptRowItem
-    let isCurrent: Bool
-    let canSeek: Bool
-    let model: AudioPlayerModel
-
-    /// `nonisolated` because SwiftUI compares views off the main actor, and the
-    /// stored `model` is a `@MainActor` class. Safe: the comparison never touches
-    /// it - only the value properties, which is also the point (an identical row
-    /// must compare equal so its body is skipped).
-    nonisolated static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.item == rhs.item && lhs.isCurrent == rhs.isCurrent && lhs.canSeek == rhs.canSeek
-    }
-
-    var body: some View {
-        Button {
-            model.seekAndPlay(to: item.start)
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(item.timeLabel)
-                    .font(.caption).monospacedDigit()
-                    .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
-                    .frame(width: 62, alignment: .leading)
-                Text(item.text)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 8)
-            .background(
-                isCurrent ? Color.accentColor.opacity(0.14) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 6)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!canSeek)
-        .modifier(SeekHelp(canSeek: canSeek))
-        .selectableText()
-    }
-}
-
-/// Adds the hover `.help` only when seeking is possible (an empty help string
-/// would show an empty tooltip on macOS).
-private struct SeekHelp: ViewModifier {
-    let canSeek: Bool
-    func body(content: Content) -> some View {
-        if canSeek { content.help("transcript.seek.help") } else { content }
     }
 }
 

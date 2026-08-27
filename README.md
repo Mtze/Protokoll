@@ -82,6 +82,9 @@ brew install --cask --no-quarantine protokoll
 - Native **playback**: scrubber, play/pause, and speed; the **transcript is
   tap-to-seek** (click a line to jump the audio there). Rendered Markdown
   summary with **Copy** and **Export**.
+- Protocol and transcript are **fully selectable**: drag across paragraphs,
+  bullet points or transcript segments and copy just that part (`⌘C`), search
+  the open document with `⌘F`. `⇧⌘C` still copies the whole thing.
 - **Session actions** on macOS live in the sidebar row's right-click menu (and
   the "Session" system menu): Process / Retry / Regenerate, **Rename**, Reveal in
   Finder, Assign to Project, and **Delete** (moved to the Trash).

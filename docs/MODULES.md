@@ -81,19 +81,26 @@ Cross-platform SwiftUI reused by Mac/iOS/watch. `AudioPlayerView` +
 `AudioPlayerModel` (scrubber, speed, tap-to-cycle on watch); an extra
 `AudioPlayerView(url:model:title:)` initializer lets a detail view share one
 `AudioPlayerModel` between the player and the transcript list. `DocumentViews`
-holds `MarkdownText` (dependency-free block renderer - headings/lists/quotes/
-code over `AttributedString` inline spans, light+dark), `TranscriptSegmentList`
-(time+text rows; tap seeks the shared player, current row highlighted),
-and `DocumentActions` (Copy to the platform pasteboard + Export via
-`NSSavePanel` on macOS / `ShareLink` on iOS).
+holds the Markdown block parser (`MarkdownBlock`/`MarkdownRenderBlock` -
+headings/lists/quotes/code with `AttributedString` inline spans) and
+`DocumentActions` (Copy to the platform pasteboard + Export via `NSSavePanel` on
+macOS / `ShareLink` on iOS).
+
+`DocumentTextView` renders both panes. Protocol and transcript go into **one**
+read-only `NSTextView`/`UITextView` (ADR-11) so a selection can span bullets and
+segments - a stack of SwiftUI `Text` views never can, and the old transcript rows
+were `Button`s, which swallow the drag entirely. `DocumentAttributedText` turns
+blocks into fonts + `NSParagraphStyle`s; `TranscriptTextLayout` (SharedKit,
+tested) maps character offsets to segments, which is what a click-to-seek and the
+playhead highlight need. The pane owns its scrolling - do not wrap it in a
+`ScrollView`. watchOS has no such text view and falls back to plain scrollable text.
 
 `DocumentLoader`/`LoadedDocument` read and parse a document **off the main actor**
 and cache it keyed on URL + mtime, so the detail views no longer re-read and
-re-parse on every body pass. Both renderers take pre-parsed input
-(`MarkdownRenderBlock` / `TranscriptRowItem`, with time labels precomputed) and use
-`LazyVStack`, and the transcript highlight is driven by
-`AudioPlayerModel.currentSegment` - an `Int?` that changes once per segment, where
-`currentTime` changes on every 10 Hz tick. See the performance notes in
+re-parse on every body pass. The attributed string is built once per document
+(keyed on `LoadedDocument.key`, never per body pass), and the highlight is driven
+by `AudioPlayerModel.currentSegment` - an `Int?` that changes once per segment,
+where `currentTime` changes on every 10 Hz tick. See the performance notes in
 `CLAUDE.md` before changing any of this; an hour-long meeting is 1000-1500 rows. The recording is one combined
 mic+system track (ADR-7), so the detail views label it neutrally
 (`player.recording`), not "Microphone"; a separate `System audio` player only

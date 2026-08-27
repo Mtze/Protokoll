@@ -157,9 +157,8 @@ struct IOSDetailView: View {
                 }
             }
             .padding(.horizontal)
-            ScrollView {
-                documentContent.padding()
-            }
+            // No ScrollView: the document pane is a text view and scrolls itself.
+            documentContent.padding(.horizontal)
         }
         .task(id: DocumentLoader.key(for: currentDocumentURL, pane: pane.rawValue)) {
             await loadDocument()
@@ -209,15 +208,12 @@ struct IOSDetailView: View {
 
     @ViewBuilder private var documentContent: some View {
         if !document.isEmpty {
-            if document.rows.isEmpty {
-                MarkdownText(blocks: document.blocks)
-            } else {
-                TranscriptSegmentList(items: document.rows, model: audioModel, canSeek: hasMicAudio)
-            }
+            DocumentPane(document: document, model: audioModel, canSeek: hasMicAudio)
         } else {
             Text(pane == .protocolDoc ? "detail.noProtocol" : "detail.noTranscript")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer()
         }
     }
 

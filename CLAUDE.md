@@ -37,7 +37,9 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   and watch have their own `AppModel`/views (`Apps/iOS/`, `Apps/Watch/`).
 - `Apps/Common/` - **cross-platform** SwiftUI/AVFoundation shared by all three
   apps: the audio player (scrubber/speed/tap-to-seek), live waveform,
-  `ProjectChip`, and the markdown/copy/export document views.
+  `ProjectChip`, and the document views - `DocumentTextView` renders protocol and
+  transcript into one selectable text view (ADR-11), `DocumentViews` keeps the
+  Markdown block parser and the copy/export actions.
 - `Sources/SharedKit/AppLog.swift` - the one logging facility (`os.Logger`,
   subsystem `com.protokoll`, a category per flow). Every module + app uses it.
 
@@ -162,13 +164,15 @@ before pushing**, never force-push; `.worktrees/` is gitignored.
   clip.**
 - **The System-Test cannot catch throughput problems** - it uses a ~3 s clip with
   `TRANSCRIBE_MODEL=tiny`, so it validates plumbing only.
-- **Long transcripts need care in SwiftUI.** An hour is 1000-1500 segments. Keep
-  `LazyVStack` (not `VStack`), keep `TranscriptRow` memcmp-comparable with **no
-  stored closures** (a captured closure defeats SwiftUI's value comparison and
-  re-runs every row), and drive the highlight from `AudioPlayerModel.currentSegment`
-  - an `Int?` that changes once per segment - never from `currentTime`, which
-  changes every tick. `DocumentLoader` parses off the main actor and caches on
-  URL + **mtime** (regenerating a protocol rewrites the same URL).
+- **Long transcripts need care.** An hour is 1000-1500 segments. Documents render
+  in **one text view** (`DocumentPane` → `DocumentTextView`, ADR-11), so TextKit
+  lays out only the visible fragments. Build the `NSAttributedString` **once per
+  document** - key it on `LoadedDocument.key` (path + mtime + size), never on a
+  body pass - and drive the playhead highlight from
+  `AudioPlayerModel.currentSegment`, an `Int?` that changes once per segment,
+  never from `currentTime`, which changes every tick; moving it is two attribute
+  edits, not a re-render. `DocumentLoader` parses off the main actor and caches
+  on URL + **mtime** (regenerating a protocol rewrites the same URL).
 
 ## Gotchas (hard-won)
 
