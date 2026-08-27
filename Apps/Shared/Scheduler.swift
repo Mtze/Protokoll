@@ -39,7 +39,10 @@ final class Scheduler {
 
     private var transcribeBusy = false
     private var summarizeBusy = false
-    private var transcribeQueue: [(folder: URL, job: ProcessingJob)] = []
+    // `force` travels with the queued transcribe for the same reason it does for
+    // summarize: a re-transcription must not be skipped because transcript.md
+    // already exists.
+    private var transcribeQueue: [(folder: URL, job: ProcessingJob, force: Bool)] = []
     // `force` travels with the queued job so a regenerate isn't dequeued by a
     // later default-force pump (which would see protocol.md and skip, breaking
     // N10 rotation).
@@ -63,11 +66,16 @@ final class Scheduler {
     }
 
     /// Enqueues a full process (transcribe → summarize) for a session.
-    func enqueueProcess(_ session: Session) {
+    ///
+    /// `force` re-runs transcription even though `transcript.md` exists, and
+    /// carries through to the chained summarize so the protocol is rebuilt from
+    /// the *new* transcript rather than left describing the old one. The previous
+    /// transcript and protocol are rotated, not destroyed (ADR-11).
+    func enqueueProcess(_ session: Session, force: Bool = false) {
         let transcribeJob = ProcessingJob(sessionID: session.id, title: session.displayTitle, step: .transcribe)
         jobs.append(transcribeJob)
-        transcribeQueue.append((session.folder, transcribeJob))
-        AppLog.scheduler.info("job enqueued session=\(session.id, privacy: .public) step=transcribe")
+        transcribeQueue.append((session.folder, transcribeJob, force))
+        AppLog.scheduler.info("job enqueued session=\(session.id, privacy: .public) step=transcribe force=\(force, privacy: .public)")
         pumpTranscribe()
     }
 
@@ -84,20 +92,23 @@ final class Scheduler {
 
     private func pumpTranscribe() {
         guard !transcribeBusy, !transcribeQueue.isEmpty else { return }
-        let (folder, job) = transcribeQueue.removeFirst()
+        let (folder, job, force) = transcribeQueue.removeFirst()
         transcribeBusy = true
         job.state = .running
         AppLog.scheduler.info("job started session=\(job.sessionID, privacy: .public) step=transcribe")
-        runStep(folder: folder, step: .transcribe, job: job) { [weak self] outcome in
+        runStep(folder: folder, step: .transcribe, force: force, job: job) { [weak self] outcome in
             guard let self else { return }
             self.transcribeBusy = false
             switch outcome {
             case .success:
                 job.state = .finished
                 AppLog.scheduler.info("job finished session=\(job.sessionID, privacy: .public) step=transcribe")
-                // Chain into a summarize once transcription lands.
+                // Chain into a summarize once transcription lands. A forced
+                // re-transcription forces the summarize too: otherwise
+                // protocol.md still exists, the step is skipped, and the session
+                // is left with a protocol describing the previous transcript.
                 if let session = try? self.container.store.load(folder: folder) {
-                    self.enqueueSummarize(session)
+                    self.enqueueSummarize(session, force: force)
                 }
             case let .failure(message):
                 job.state = .failed(message)

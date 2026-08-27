@@ -80,7 +80,18 @@ struct ClaudeCLIEngine: SummaryEngine {
         AppLog.pipeline.debug("running claude model=\(model, privacy: .public)")
         let result = try runner.run(
             executable: claudeBinary,
-            arguments: ["-p", prompt, "--model", model],
+            arguments: [
+                // The contract goes in the system prompt, not in `-p`: `-p` comes
+                // first on the command line, which puts it before the transcript
+                // and is the wrong end for long context. Without this the run also
+                // inherited Claude Code's coding-agent persona unopposed.
+                "-p", SummarizePrompt.pointerPrompt,
+                "--model", model,
+                "--append-system-prompt", prompt,
+                // "no tools (decision #5)" was only ever a comment; make it true.
+                "--permission-mode", "plan",
+                "--disallowed-tools", "Bash,Edit,Write,Read,WebFetch,WebSearch",
+            ],
             stdin: input,
             environment: nil,
             onStderrLine: onProgress

@@ -18,6 +18,7 @@ struct LibraryView: View {
     @State private var showingConsent = false
     @State private var sessionToDelete: Session?
     @State private var sessionToRename: Session?
+    @State private var sessionToRetranscribe: Session?
     @State private var renameText = ""
     @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
     @State private var showOnboarding = false
@@ -45,7 +46,8 @@ struct LibraryView: View {
             if let selection, let session = model.sessions.first(where: { $0.id == selection }) {
                 SessionDetailView(session: session,
                                   onDelete: { sessionToDelete = $0 },
-                                  onRename: { beginRename($0) })
+                                  onRename: { beginRename($0) },
+                                  onRetranscribe: { sessionToRetranscribe = $0 })
             } else {
                 ContentUnavailableView("library.selectPrompt", systemImage: "sidebar.left")
             }
@@ -75,27 +77,35 @@ struct LibraryView: View {
             OnboardingView(dismiss: { showOnboarding = false })
         }
         .safeAreaInset(edge: .top) {
-            if let error = model.systemAudioError {
-                SystemAudioBanner(message: error)
-                    .padding(8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.regularMaterial)
+            VStack(spacing: 0) {
+                if let error = model.systemAudioError {
+                    SystemAudioBanner(message: error)
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.regularMaterial)
+                }
+                if let warning = model.inputClippedWarning {
+                    InputClippedBanner(message: warning) { model.inputClippedWarning = nil }
+                        .padding(8)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(.regularMaterial)
+                }
             }
         }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
             ToolbarItem(placement: .navigation) { importButton }
             if model.isRecording {
-                ToolbarItem(placement: .principal) {
-                    RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt, compact: true)
-                        .frame(width: 180, height: 22)
-                }
+                // Deliberately does NOT read `model.recordingLevels` here - see
+                // RecordingToolbarIndicator.
+                ToolbarItem(placement: .principal) { RecordingToolbarIndicator() }
             }
         }
         .modifier(SessionDialogs(model: model, selection: $selection,
                                  showingConsent: $showingConsent,
                                  sessionToDelete: $sessionToDelete,
                                  sessionToRename: $sessionToRename,
+                                 sessionToRetranscribe: $sessionToRetranscribe,
                                  renameText: $renameText))
     }
 
@@ -145,6 +155,16 @@ struct LibraryView: View {
             }
         case .none:
             EmptyView()
+        }
+
+        // Re-transcribe from the audio. Offered whenever a transcript exists and
+        // nothing is running: useful after changing the language/vocabulary/model
+        // or installing a faster, less hallucination-prone engine. For a session
+        // that has never been processed, Process above already does this.
+        if model.canRetranscribe(session) {
+            Button { sessionToRetranscribe = session } label: {
+                Label("action.retranscribe", systemImage: "waveform.badge.magnifyingglass")
+            }
         }
 
         Button { beginRename(session) } label: { Label("action.rename", systemImage: "pencil") }
@@ -294,10 +314,23 @@ private struct SessionDialogs: ViewModifier {
     @Binding var showingConsent: Bool
     @Binding var sessionToDelete: Session?
     @Binding var sessionToRename: Session?
+    @Binding var sessionToRetranscribe: Session?
     @Binding var renameText: String
 
     func body(content: Content) -> some View {
         content
+            .confirmationDialog(
+                "retranscribe.confirm.title",
+                isPresented: Binding(get: { sessionToRetranscribe != nil },
+                                     set: { if !$0 { sessionToRetranscribe = nil } }),
+                titleVisibility: .visible,
+                presenting: sessionToRetranscribe
+            ) { session in
+                Button("action.retranscribe") { model.retranscribe(session) }
+                Button("common.cancel", role: .cancel) {}
+            } message: { _ in
+                Text("retranscribe.confirm.message")
+            }
             .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
                 Button("consent.confirm") { Task { await model.startRecording() } }
                 Button("common.cancel", role: .cancel) {}
@@ -369,6 +402,46 @@ private struct SessionRow: View {
         }
         .padding(.vertical, 2)
         .help(status.nameKey)
+    }
+}
+
+/// The live level meter in the library toolbar.
+///
+/// This exists purely to contain an observation. `AppModel.recordingLevels` is
+/// rewritten every 55 ms (~18 Hz) while recording; reading it directly in
+/// `LibraryView.body` made the *whole library* a dependent of it, and since
+/// `LibraryView` builds `SessionDetailView` with closure properties - which
+/// defeat SwiftUI's value comparison - the detail pane and its transcript list
+/// rebuilt at 18 Hz too. Reading the array here instead keeps the invalidation
+/// on this leaf, where redrawing 180x22 points is free.
+private struct RecordingToolbarIndicator: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        RecordingIndicator(levels: model.recordingLevels,
+                           startedAt: model.recordingStartedAt,
+                           compact: true)
+            .frame(width: 180, height: 22)
+    }
+}
+
+/// Shown after a recording whose input clipped. Dismissible, because it is
+/// advice for next time rather than a fault to fix now - the audio is already
+/// captured and the clipping cannot be undone.
+struct InputClippedBanner: View {
+    let message: String
+    var dismiss: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Image(systemName: "waveform.badge.exclamationmark")
+                .foregroundStyle(.orange)
+            Text(message).font(.callout)
+            Spacer()
+            Button("action.dismiss", action: dismiss)
+                .buttonStyle(.borderless)
+        }
+        .accessibilityElement(children: .combine)
     }
 }
 

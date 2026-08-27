@@ -53,6 +53,23 @@
         }
       }
     },
+    "action.dismiss": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ausblenden"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dismiss"
+          }
+        }
+      }
+    },
     "action.export": {
       "extractionState": "manual",
       "localizations": {
@@ -151,6 +168,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rename…"
+          }
+        }
+      }
+    },
+    "action.retranscribe": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erneut transkribieren"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe Again"
           }
         }
       }
@@ -716,6 +750,23 @@
         }
       }
     },
+    "diag.bootstrap.uv": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uv wird zur Installation benötigt. Die Installation von uv ist ein größerer Schritt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "uv is required to install this. Installing uv is a larger step."
+          }
+        }
+      }
+    },
     "diag.claude.explanation": {
       "extractionState": "manual",
       "localizations": {
@@ -831,6 +882,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Show details"
+          }
+        }
+      }
+    },
+    "diag.enginePerf.explanation": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mlx-whisper nutzt die GPU. Ohne sie läuft die Transkription auf der CPU und dauert etwa zwanzigmal länger."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "mlx-whisper uses the GPU. Without it, transcription falls back to the CPU and takes about twenty times longer."
+          }
+        }
+      }
+    },
+    "diag.enginePerf.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transkriptionsgeschwindigkeit"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcription speed"
           }
         }
       }
@@ -1283,13 +1368,13 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ausführen: pip install mlx-whisper (Apple Silicon) oder brew install whisper-cpp."
+            "value": "Ausführen: uv tool install mlx-whisper (Apple Silicon) oder brew install whisper-cpp."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Run: pip install mlx-whisper (Apple Silicon) or brew install whisper-cpp."
+            "value": "Run: uv tool install mlx-whisper (Apple Silicon) or brew install whisper-cpp."
           }
         }
       }
@@ -2416,6 +2501,23 @@
         }
       }
     },
+    "recording.warning.clipped": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Mikrofon war zu laut, die Aufnahme ist übersteuert. Das lässt sich nachträglich nicht beheben und verschlechtert die Transkription - vor der nächsten Aufnahme den Eingangspegel unter Systemeinstellungen > Ton verringern."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The microphone was too loud and the recording distorted. This cannot be repaired afterwards and it reduces transcription accuracy - lower the input level in System Settings > Sound before the next recording."
+          }
+        }
+      }
+    },
     "rename.placeholder": {
       "extractionState": "manual",
       "localizations": {
@@ -2446,6 +2548,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Rename session"
+          }
+        }
+      }
+    },
+    "retranscribe.confirm.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Aufnahme wird mit den aktuellen Einstellungen neu transkribiert, danach wird das Protokoll aus dem neuen Transkript erzeugt. Das dauert einige Minuten. Das bisherige Transkript und Protokoll bleiben als transcript.v1.md und protocol.v1.md erhalten."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The recording is transcribed from scratch with the current settings, and the protocol is then rebuilt from the new transcript. This takes a few minutes. The previous transcript and protocol are kept as transcript.v1.md and protocol.v1.md."
+          }
+        }
+      }
+    },
+    "retranscribe.confirm.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diese Aufnahme erneut transkribieren?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transcribe this recording again?"
           }
         }
       }
@@ -2977,6 +3113,91 @@
         }
       }
     },
+    "settings.summary.template": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Struktur der Zusammenfassung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Summary structure"
+          }
+        }
+      }
+    },
+    "settings.summary.template.customized": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Angepasst"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Customized"
+          }
+        }
+      }
+    },
+    "settings.summary.template.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beschreibt, was die Zusammenfassung enthalten soll. Die Vorgabe erzeugt einen chronologischen Verlauf des Meetings. Der Text kann vollständig umgeschrieben werden; Titel und Sprache des Meetings werden immer ermittelt, unabhängig vom Inhalt. Der Text ist auf Englisch, weil er die Aufgabe beschreibt - die Zusammenfassung entsteht weiterhin in der Sprache des Meetings."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Describes what the summary should contain. The default produces a chronological account of the meeting. You can rewrite this completely; the meeting title and language are always extracted regardless of what you put here. The text is written in English because it describes the task - your summary is still written in the meeting's language."
+          }
+        }
+      }
+    },
+    "settings.summary.template.recovery": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falls eine Änderung die Zusammenfassungen verschlechtert: zurücksetzen und neu erzeugen. Frühere Fassungen bleiben als protocol.vN.md erhalten, das Transkript bleibt unberührt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If a change makes summaries worse, reset to default and regenerate. Earlier versions are kept as protocol.vN.md and the transcript is never affected."
+          }
+        }
+      }
+    },
+    "settings.summary.template.reset": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Auf Standard zurücksetzen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reset to default"
+          }
+        }
+      }
+    },
     "settings.systemAudio": {
       "extractionState": "manual",
       "localizations": {
@@ -3215,6 +3436,23 @@
         }
       }
     },
+    "settings.transcription.audio": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio-Vorbereitung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Audio preparation"
+          }
+        }
+      }
+    },
     "settings.transcription.language": {
       "extractionState": "manual",
       "localizations": {
@@ -3266,6 +3504,74 @@
         }
       }
     },
+    "settings.transcription.preprocessing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vorbereitung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparation"
+          }
+        }
+      }
+    },
+    "settings.transcription.preprocessing.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entfernt tieffrequentes Rumpeln und korrigiert den Aufnahmepegel vor der Transkription. Eine Rauschunterdrückung wird absichtlich nicht angeboten: Sie verschlechtert die Genauigkeit großer Modelle messbar."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Removes low-frequency rumble and corrects the recording level before transcription. Noise reduction is deliberately not offered: it measurably worsens accuracy with large models."
+          }
+        }
+      }
+    },
+    "settings.transcription.preprocessing.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keine"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None"
+          }
+        }
+      }
+    },
+    "settings.transcription.preprocessing.safe": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hochpass und Pegelkorrektur"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "High-pass and level correction"
+          }
+        }
+      }
+    },
     "settings.transcription.vocabulary": {
       "extractionState": "manual",
       "localizations": {
@@ -3296,6 +3602,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "Product names, acronyms, hostnames (comma-separated). Greatly improves recognition of technical terms."
+          }
+        }
+      }
+    },
+    "settings.voiceProcessing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo-Unterdrückung"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Echo cancellation"
+          }
+        }
+      }
+    },
+    "settings.voiceProcessing.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS-Echo-Unterdrückung für das Mikrofon verwenden. Aktivieren, wenn das Meeting über die Lautsprecher läuft, damit das Mikrofon die anderen Teilnehmenden nicht doppelt aufnimmt. Bei Kopfhörern ausgeschaltet lassen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use macOS echo cancellation on the microphone. Turn this on when the meeting plays through your speakers, so the microphone does not record the other participants a second time. Leave it off when you wear headphones."
           }
         }
       }

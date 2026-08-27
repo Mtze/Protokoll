@@ -7,84 +7,120 @@ import AppKit
 import UIKit
 #endif
 
-private extension View {
-    /// `.textSelection(.enabled)` where it exists; a no-op on watchOS.
-    @ViewBuilder func selectableText() -> some View {
-        #if os(watchOS)
-        self
-        #else
-        self.textSelection(.enabled)
-        #endif
+// MARK: - Document loading + caching
+
+/// A document read from disk and fully parsed, ready to render with no further
+/// work on the main actor.
+///
+/// This exists because the detail views used to re-read the file *and* re-parse
+/// it on every body pass - a ~10.5 ms main-actor hitch for a 1500-segment
+/// transcript, repeated whenever anything else in the view invalidated (job
+/// progress lines during processing, or the ~18 Hz recording level meter).
+struct LoadedDocument: Sendable, Equatable {
+    /// Body text with our YAML frontmatter stripped.
+    var body: String = ""
+    /// Render-ready Markdown blocks, for the protocol pane and as the transcript
+    /// fallback when no timestamps were found.
+    var blocks: [MarkdownRenderBlock] = []
+    /// Parsed transcript segments; empty when the document has no timestamps.
+    var segments: [TranscriptSegment] = []
+    /// Flattened transcript text plus per-segment character ranges, for the
+    /// selectable text view. Empty when ``segments`` is.
+    var layout: TranscriptTextLayout = .empty
+    /// Identity of the file this was read from - see ``DocumentLoader/key(for:pane:)``.
+    /// Views key their own derived work (the attributed string) off this, so a
+    /// rebuild cannot race the asynchronous reload that produced the document.
+    var key: String = ""
+
+    var isEmpty: Bool { body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+}
+
+enum DocumentLoader {
+    /// Identity for `.task(id:)`.
+    ///
+    /// Includes modification time and size, not just the path: regenerating a
+    /// protocol rewrites the *same* URL (`protocol.md`), so keying on the URL
+    /// alone would leave a stale parse on screen. `transcript.md` is immutable
+    /// once written (N10), so this only really matters for the protocol - but
+    /// keying both the same way keeps one code path.
+    static func key(for url: URL, pane: String) -> String {
+        let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey])
+        let stamp = values?.contentModificationDate?.timeIntervalSince1970 ?? 0
+        let size = values?.fileSize ?? 0
+        return "\(pane)|\(url.path)|\(stamp)|\(size)"
+    }
+
+    /// Reads and parses `url`. Safe to call off the main actor; returns an empty
+    /// document when the file is missing or unreadable.
+    static func load(_ url: URL, parseTranscript: Bool) -> LoadedDocument {
+        let key = key(for: url, pane: parseTranscript ? "transcript" : "protocol")
+        guard let raw = try? String(contentsOf: url, encoding: .utf8) else { return LoadedDocument() }
+        let body = Frontmatter.split(raw).body
+        guard !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return LoadedDocument(body: body, key: key)
+        }
+        var document = LoadedDocument(body: body, key: key)
+        if parseTranscript {
+            document.segments = TranscriptParser.parse(body)
+            document.layout = TranscriptTextLayout(segments: document.segments)
+        }
+        // The Markdown blocks double as the no-timestamps fallback, so parse them
+        // whenever the transcript parse came back empty.
+        if document.segments.isEmpty {
+            document.blocks = MarkdownRenderBlock.parse(body)
+        }
+        return document
     }
 }
 
 // MARK: - Markdown rendering
 
-/// A small, dependency-free block renderer for the Markdown prose in
-/// `protocol.md` / `transcript.md`. `AttributedString(markdown:)` only styles
-/// *inline* spans (bold/italic/code/links); block structure (headings, lists,
-/// rules) is laid out here so the summary reads like a document, not a wall of
-/// text. Colors come from the system so it looks right in light and dark mode.
-struct MarkdownText: View {
-    let markdown: String
-
-    private var blocks: [MarkdownBlock] { MarkdownBlock.parse(markdown) }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
-                view(for: block)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .selectableText()
+/// A ``MarkdownBlock`` with its inline Markdown already rendered, so rendering a
+/// document costs no parsing at all. ``DocumentAttributedText`` turns these into
+/// the paragraph styles the document pane displays.
+struct MarkdownRenderBlock: Identifiable, Equatable, Sendable {
+    enum Kind: Equatable, Sendable {
+        case heading(level: Int)
+        case paragraph
+        case bullet
+        case ordered(number: Int)
+        case quote
+        case code
+        case rule
     }
 
-    @ViewBuilder private func view(for block: MarkdownBlock) -> some View {
-        switch block {
-        case let .heading(level, text):
-            Text(inline(text))
-                .font(headingFont(level))
-                .bold()
-                .padding(.top, level <= 2 ? 6 : 2)
-        case let .paragraph(text):
-            Text(inline(text))
-        case let .bullet(text):
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("•").foregroundStyle(.secondary)
-                Text(inline(text)).frame(maxWidth: .infinity, alignment: .leading)
-            }
-        case let .ordered(number, text):
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("\(number).").foregroundStyle(.secondary).monospacedDigit()
-                Text(inline(text)).frame(maxWidth: .infinity, alignment: .leading)
-            }
-        case let .quote(text):
-            HStack(alignment: .top, spacing: 8) {
-                RoundedRectangle(cornerRadius: 1.5).fill(.secondary).frame(width: 3)
-                Text(inline(text)).italic().foregroundStyle(.secondary)
-            }
-        case let .code(text):
-            Text(text)
-                .font(.system(.callout, design: .monospaced))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(8)
-                .background(Color.secondary.opacity(0.12), in: RoundedRectangle(cornerRadius: 6))
-        case .rule:
-            Divider()
-        }
-    }
+    let id: Int
+    let kind: Kind
+    /// Inline-styled text, empty for `.rule` and `.code`.
+    let attributed: AttributedString
+    /// Verbatim text, used by `.code` (which must not be Markdown-parsed).
+    let plain: String
 
-    private func headingFont(_ level: Int) -> Font {
-        switch level {
-        case 1: return .title2
-        case 2: return .title3
-        default: return .headline
+    /// Parses a whole document into render-ready blocks. Call this off the body
+    /// path (e.g. from `.task`), not inside a view's `body`.
+    static func parse(_ markdown: String) -> [MarkdownRenderBlock] {
+        MarkdownBlock.parse(markdown).enumerated().map { index, block in
+            switch block {
+            case let .heading(level, text):
+                return .init(id: index, kind: .heading(level: level), attributed: inline(text), plain: text)
+            case let .paragraph(text):
+                return .init(id: index, kind: .paragraph, attributed: inline(text), plain: text)
+            case let .bullet(text):
+                return .init(id: index, kind: .bullet, attributed: inline(text), plain: text)
+            case let .ordered(number, text):
+                return .init(id: index, kind: .ordered(number: number), attributed: inline(text), plain: text)
+            case let .quote(text):
+                return .init(id: index, kind: .quote, attributed: inline(text), plain: text)
+            case let .code(text):
+                return .init(id: index, kind: .code, attributed: AttributedString(), plain: text)
+            case .rule:
+                return .init(id: index, kind: .rule, attributed: AttributedString(), plain: "")
+            }
         }
     }
 
     /// Inline-only Markdown (bold/italic/`code`/links); falls back to plain text.
-    private func inline(_ string: String) -> AttributedString {
+    private static func inline(_ string: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(
             interpretedSyntax: .inlineOnlyPreservingWhitespace
         )
@@ -93,7 +129,7 @@ struct MarkdownText: View {
     }
 }
 
-/// The block kinds `MarkdownText` lays out. Kept internal + testable-shaped.
+/// The block kinds `DocumentAttributedText` lays out. Kept internal + testable-shaped.
 enum MarkdownBlock: Equatable {
     case heading(level: Int, text: String)
     case paragraph(String)
@@ -181,82 +217,6 @@ enum MarkdownBlock: Equatable {
         let rest = line[digits.endIndex...]
         guard rest.hasPrefix(". ") else { return nil }
         return (number, String(rest.dropFirst(2)))
-    }
-}
-
-// MARK: - Tap-to-seek transcript list
-
-/// Renders parsed transcript segments as a clean time+text list. Tapping a row
-/// seeks the shared audio model to that segment's start and plays from there;
-/// the segment under the playhead is highlighted. When `canSeek` is false
-/// (no audio loaded), rows are inert.
-struct TranscriptSegmentList: View {
-    let segments: [TranscriptSegment]
-    let model: AudioPlayerModel
-    let canSeek: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            ForEach(Array(segments.enumerated()), id: \.offset) { index, segment in
-                row(index: index, segment: segment)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    @ViewBuilder private func row(index: Int, segment: TranscriptSegment) -> some View {
-        let isCurrent = index == currentIndex
-        Button {
-            model.seekAndPlay(to: segment.start)
-        } label: {
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(timeLabel(segment.start))
-                    .font(.caption).monospacedDigit()
-                    .foregroundStyle(isCurrent ? Color.accentColor : .secondary)
-                    .frame(width: 62, alignment: .leading)
-                Text(segment.text)
-                    .font(.body)
-                    .foregroundStyle(.primary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.vertical, 6)
-            .padding(.horizontal, 8)
-            .background(
-                isCurrent ? Color.accentColor.opacity(0.14) : Color.clear,
-                in: RoundedRectangle(cornerRadius: 6)
-            )
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .disabled(!canSeek)
-        .modifier(SeekHelp(canSeek: canSeek))
-        .selectableText()
-    }
-
-    /// Index of the last segment whose start is at or before the playhead.
-    private var currentIndex: Int? {
-        guard canSeek, model.isLoaded else { return nil }
-        let time = model.currentTime
-        var found: Int?
-        for (index, segment) in segments.enumerated() {
-            if segment.start <= time + 0.05 { found = index } else { break }
-        }
-        return found
-    }
-
-    private func timeLabel(_ seconds: TimeInterval) -> String {
-        let total = Int(seconds.rounded())
-        let (h, m, s) = (total / 3600, (total % 3600) / 60, total % 60)
-        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
-    }
-}
-
-/// Adds the hover `.help` only when seeking is possible (an empty help string
-/// would show an empty tooltip on macOS).
-private struct SeekHelp: ViewModifier {
-    let canSeek: Bool
-    func body(content: Content) -> some View {
-        if canSeek { content.help("transcript.seek.help") } else { content }
     }
 }
 

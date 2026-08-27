@@ -542,3 +542,132 @@ Fence, bevor der `title:`/`language:`-Frontmatter-Vertrag geparst wird. Der
 Schlüssel-Datei-Umweg erfordert etwas Lebenszyklus-Logik (Datei nach dem Lauf
 löschen); die Diagnostik prüft die `claude`-CLI nur noch, wenn der Anbieter `cli`
 ist.
+
+### ADR-10 — Die Zusammenfassungs-Struktur ist eine Nutzerdatei, der Frontmatter-Vertrag nicht
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Der Summarize-Prompt wird in drei Teile zerlegt:
+
+1. **Erzwungener Vertrag** (`SummarizePrompt.systemPrompt`), übergeben via
+   `claude --append-system-prompt`. Er besitzt den YAML-Frontmatter-Vertrag
+   (`title:` + `language:`), die Titel- und Sprachregeln sowie die
+   **Grounding-Regeln**. Nicht editierbar.
+2. **Struktur-Vorgabe** (`SummaryTemplate.default` in SharedKit), editierbar über
+   `<container>/config/summary-prompt.md`. Sie beschreibt nur, *was* im Protokoll
+   stehen soll. Standard ist ein **chronologischer Verlauf**.
+3. **Postambel**, eine Zeile Vertrags-Erinnerung nach dem Nutzertext (Recency).
+
+Zusätzlich: eine **deterministische Frontmatter-Reparatur** in Swift
+(`FrontmatterRepair.swift`) garantiert den Vertrag unabhängig davon, was das Modell
+liefert, und der **Map-Schritt bleibt eingebaut und formneutral**.
+
+**Kontext & Begründung:**
+- Der alte Prompt erzwang vier Abschnitte (`Beschlüsse` / `Action Items` /
+  `Themen` / `Offene Punkte`) und eine Owner-Spalte pro Aufgabe. `transcript.md`
+  enthält aber **keine Sprecherzuordnung** - `Transcriber` schreibt nur
+  `**[HH:MM:SS]** Text`. Der Prompt forderte damit strukturell eine Halluzination.
+  Die Grounding-Regeln verbieten das jetzt explizit.
+- `extraBlock` wies das Modell an, die eingebaute Struktur den Nutzeranweisungen
+  **vorzuziehen** - deshalb half es nicht, eigene Instruktionen zu ergänzen.
+- Eine Datei statt eines `PipelineConfig`-Feldes, weil mehrzeilige Prosa als
+  JSON-String nicht lesbar und nicht diffbar ist, und weil **„Datei fehlt“ =
+  „Standard“** jede Migration erspart (N3/ADR-2: die Dateien sind die Wahrheit).
+- **Ein** Template für Einzeldurchlauf *und* Reduce-Schritt. Drei editierbare
+  Templates wurden verworfen: Nutzer würden `build` anpassen und `reduce`
+  vergessen, wodurch ein 55-Minuten-Meeting still anders aussieht als ein
+  40-Minuten-Meeting - ohne jeden Hinweis in der UI.
+- Der Map-Schritt filterte bisher jeden Chunk in dieselben vier Kategorien,
+  **bevor** der Reduce-Schritt lief. Bei `characterBudget = 48_000` griff dieser
+  Pfad ab ca. 45 Minuten, also im Medianfall. Ein formneutrales Zwischenergebnis
+  hält jede mögliche Struktur-Vorgabe erreichbar; das Budget steigt auf 200 000
+  Zeichen (~3 h), damit der Einzeldurchlauf der Normalfall bleibt.
+
+**Konsequenz (bewusst):** Wer das Template anpasst, erhält künftige Verbesserungen
+des Standardtexts nicht mehr automatisch (die sicherheitsrelevanten Teile liegen
+aber außerhalb und verbessern sich weiter). Ein unverändertes Template löscht die
+Datei statt sie zu schreiben, damit genau das nur bewusst passiert. Erholung ist
+immer „zurücksetzen und neu erzeugen“: `writeProtocol` rotiert nach
+`protocol.vN.md` und `transcript.md` ist unveränderlich (N10), es geht also nie
+etwas verloren.
+
+### ADR-11 — Erneutes Transkribieren rotiert, statt zu überschreiben
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Die Sessionliste bekommt eine Aktion **„Erneut
+transkribieren“** (Kontextmenü + „Session“-Systemmenü). Sie führt den
+Transcribe-Schritt mit `--force` erneut aus und erzeugt anschließend das
+Protokoll aus dem *neuen* Transkript neu. Dabei wird `transcript.md` **nicht
+überschrieben**, sondern nach `transcript.vN.md` rotiert - analog zur bereits
+bestehenden Protokoll-Rotation (N10). Der Schreibvorgang läuft dafür jetzt über
+`SessionStore.writeTranscript`, nicht mehr direkt aus `Transcriber`.
+
+**Kontext & Begründung:**
+- N10 hält `transcript.md` für unveränderlich, weil das Transkript die
+  Rohaufzeichnung des Meetings ist und nichts es automatisch ersetzen soll. Das
+  bleibt so: **nur eine ausdrückliche Nutzeraktion** ersetzt es.
+- Der Bedarf ist real und belegt: früh erzeugte Transkripte enthalten
+  Halluzinationsschleifen (gemessen: 38,9 % der Segmente exakt 1 s auseinander,
+  längste Kette 140 Segmente), die die aktuelle Pipeline nicht mehr produziert.
+  Ohne diese Aktion bliebe die einzige Möglichkeit, die Session zu löschen und
+  die Aufnahme zu verlieren.
+- Ebenso nach dem Ändern von Sprache, Vokabular oder Modell in den Einstellungen.
+- **Rotation statt Überschreiben**, weil ein erneuter Lauf nicht zwangsläufig
+  besser ist. Wer neu transkribiert, vergleicht in der Regel mit dem, was er
+  vorher hatte; ein zerstörender Schreibvorgang würde genau diesen Vergleich
+  unmöglich machen.
+- **Der Summarize-Schritt wird mitgezwungen.** Ohne das existiert `protocol.md`
+  weiterhin, der Schritt wird übersprungen, und die Session bliebe mit einem
+  Protokoll zurück, das das *alte* Transkript beschreibt - stillschweigend
+  inkonsistent.
+- Eine **Rückfrage** vor dem Start, weil der Lauf je nach Länge Minuten dauert
+  und das sichtbare Transkript austauscht. Der Dialog nennt ausdrücklich, dass
+  die bisherigen Fassungen erhalten bleiben.
+
+**Konsequenz (bewusst):** Sessionordner können mit der Zeit mehrere
+`transcript.vN.md` ansammeln. Das ist derselbe Kompromiss, den N10 für Protokolle
+bereits eingeht, und Aufräumen bleibt eine bewusste Nutzerentscheidung (siehe
+Issue #14, Retention).
+
+### ADR-12 — Dokumente rendern in einer Textview, nicht als Stapel von `Text`-Views
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Protokoll und Transkript werden in **einer** schreibgeschützten
+Textview gerendert (`NSTextView` auf macOS, `UITextView` auf iOS), gefüllt aus
+einem `NSAttributedString`. Die bisherigen SwiftUI-Renderer (`MarkdownText`,
+`TranscriptSegmentList`) entfallen. Die Zuordnung „Zeichenposition → Segment“
+liegt als `TranscriptTextLayout` in SharedKit und ist dort getestet.
+
+**Kontext & Begründung:**
+- **Auswahl über Blockgrenzen hinweg ist sonst unmöglich.** SwiftUI wählt nie
+  über mehrere `Text`-Views hinweg aus: bei einer View pro Block lässt sich
+  innerhalb *eines* Aufzählungspunkts markieren, aber nie über zwei. Genau das
+  ist der gemeldete Mangel - Nutzer wollen einen Ausschnitt kopieren, nicht das
+  ganze Dokument (`action.copy` gab es bereits).
+- **Im Transkript ging gar nichts.** Jede Zeile war ein `Button` (Tap-to-Seek);
+  ein Button verschluckt das Ziehen, deshalb war `.textSelection(.enabled)` dort
+  wirkungslos, obwohl der Modifier gesetzt war.
+- **Tap-to-Seek und Auswahl schließen sich nicht aus.** `super.mouseDown` führt
+  die Auswahlverfolgung bis zum Loslassen aus; eine danach *leere* Auswahl
+  bedeutet „Klick, kein Ziehen“ und löst den Sprung aus. Ein `.link`-Attribut
+  wäre der naheliegende Weg gewesen, erlaubt aber das Herausziehen des Links aus
+  der View und hätte die Auswahl per Ziehen kaputt gemacht.
+- **Die Performance-Gründe von vorher entfallen nicht, sie verlagern sich.**
+  TextKit legt selbst nur die sichtbaren Zeilenfragmente aus, der
+  `NSAttributedString` wird genau einmal pro Dokument gebaut (nicht pro
+  Body-Durchlauf), und die Hervorhebung des laufenden Segments sind zwei
+  Attribut-Änderungen statt eines Re-Renders. Der Auslöser bleibt
+  `AudioPlayerModel.currentSegment`, also einmal pro Segment statt pro Tick.
+- **Nebenertrag:** Cmd+A/Cmd+C über das ganze Dokument und die macOS-Suchleiste
+  (Cmd+F), die es mit dem View-Stapel nie gab.
+
+**Konsequenz (bewusst):**
+- Blocklayout ist jetzt Sache von Schriften und `NSParagraphStyle`. Eine
+  gezeichnete Trennlinie (`Divider`) wird zum Trennzeichen, der Zitatbalken zu
+  Einzug plus Kursivschrift.
+- Die Textview scrollt selbst; die Detailansichten dürfen sie **nicht** in eine
+  `ScrollView` legen.
+- watchOS hat keine solche Textview und bekommt eine einfache scrollbare
+  Textdarstellung. Für den watchOS-Viewer (Issue #9) ist das ohnehin offen.

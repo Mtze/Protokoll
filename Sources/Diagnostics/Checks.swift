@@ -15,6 +15,21 @@ public protocol DiagnosticCheck: Sendable {
     func run(runner: CommandRunning) -> CheckResult
 }
 
+extension ProcessInfo {
+    /// Whether this is Apple silicon, where a Metal-accelerated engine exists and
+    /// the CPU-only fallback is therefore a real, avoidable penalty. Reads the
+    /// machine hardware name rather than `#if arch`, so a Rosetta-translated
+    /// build still answers about the *host*.
+    public var isAppleSilicon: Bool {
+        var size = 0
+        guard sysctlbyname("hw.machine", nil, &size, nil, 0) == 0, size > 0 else { return false }
+        var bytes = [UInt8](repeating: 0, count: size)
+        guard sysctlbyname("hw.machine", &bytes, &size, nil, 0) == 0 else { return false }
+        let machine = String(decoding: bytes.prefix { $0 != 0 }, as: UTF8.self)
+        return machine.hasPrefix("arm64")
+    }
+}
+
 extension DiagnosticCheck {
     /// Whether an executable is resolvable on PATH (via `command -v`).
     func resolves(_ tool: String, runner: CommandRunning) -> CommandResult {
@@ -45,23 +60,36 @@ public struct FFmpegCheck: DiagnosticCheck {
     }
 }
 
+/// Installing mlx-whisper. **Not `pip`**: Homebrew's Python enforces PEP 668, so
+/// `pip install` fails with `error: externally-managed-environment` and the
+/// one-click fix silently never works. `uv tool install` needs no venv and drops
+/// the binary in `~/.local/bin`, which ``ShellPath/augmented`` already adds to
+/// the subprocess PATH.
+private let installMLXWhisper = AutoFix(
+    titleKey: "diag.whisper.fix",
+    command: ShellCommand("uv", ["tool", "install", "mlx-whisper"]),
+    bootstrap: Bootstrap(
+        toolName: "uv",
+        explanationKey: "diag.bootstrap.uv",
+        installCommand: ShellCommand("brew", ["install", "uv"])
+    ),
+    manualInstructionsKey: "diag.whisper.manual"
+)
+
+/// The engines `transcribe.sh`'s `detect_engine()` picks from, in the same
+/// preference order. Kept here so the checks predict what will actually run;
+/// if the script's order changes, change it here too.
+let whisperEnginePreference = ["mlx_whisper", "whisper-cli", "whisper-cpp", "whisper"]
+
 /// A local whisper engine present (mlx-whisper preferred, others accepted).
 public struct WhisperEngineCheck: DiagnosticCheck {
     public init() {}
     public let id = CheckID.whisperEngine
     public let titleKey = "diag.whisper.title"
     public let explanationKey = "diag.whisper.explanation"
-    public var remediation: Remediation {
-        .autoFix(AutoFix(
-            titleKey: "diag.whisper.fix",
-            command: ShellCommand("pip", ["install", "--upgrade", "mlx-whisper"]),
-            bootstrap: Bootstrap(toolName: "python3", explanationKey: "diag.bootstrap.python"),
-            manualInstructionsKey: "diag.whisper.manual"
-        ))
-    }
+    public var remediation: Remediation { .autoFix(installMLXWhisper) }
     public func run(runner: CommandRunning) -> CheckResult {
-        let engines = ["mlx_whisper", "whisper-cli", "whisper-cpp", "whisper"]
-        for engine in engines where resolves(engine, runner: runner).succeeded {
+        for engine in whisperEnginePreference where resolves(engine, runner: runner).succeeded {
             return CheckResult(id: id, outcome: .passed, detail: "found \(engine)")
         }
         // faster-whisper is a Python import, not a binary.
@@ -70,6 +98,53 @@ public struct WhisperEngineCheck: DiagnosticCheck {
             return CheckResult(id: id, outcome: .passed, detail: "found faster-whisper")
         }
         return CheckResult(id: id, outcome: .failed, detail: "no local whisper engine on PATH")
+    }
+}
+
+/// Whether the engine that will actually run is GPU-accelerated.
+///
+/// ``WhisperEngineCheck`` passes as soon as *any* engine resolves, which made a
+/// silent ~19x slowdown invisible: with only `openai-whisper` installed,
+/// `detect_engine()` picks it and it runs `large-v3` entirely on the CPU
+/// (its CLI selects `cuda if available else cpu`, and there is no CUDA on a
+/// Mac). A one-hour meeting then takes three hours instead of ~8 minutes.
+///
+/// This is a **warning**, not a failure: on an Intel Mac `openai-whisper` is the
+/// correct choice. The detail is phrased in wall-clock terms because that is
+/// what the user actually cares about.
+public struct WhisperEnginePerformanceCheck: DiagnosticCheck {
+    /// Whether this machine has a GPU that mlx/Metal can use. Injected so the
+    /// check is testable on any host.
+    public var isAppleSilicon: Bool
+
+    public init(isAppleSilicon: Bool = ProcessInfo.processInfo.isAppleSilicon) {
+        self.isAppleSilicon = isAppleSilicon
+    }
+
+    public let id = CheckID.whisperEnginePerformance
+    public let titleKey = "diag.enginePerf.title"
+    public let explanationKey = "diag.enginePerf.explanation"
+    public var remediation: Remediation { .autoFix(installMLXWhisper) }
+
+    public func run(runner: CommandRunning) -> CheckResult {
+        if resolves("mlx_whisper", runner: runner).succeeded {
+            return CheckResult(id: id, outcome: .passed, detail: "mlx-whisper (Metal GPU)")
+        }
+        if resolves("whisper-cli", runner: runner).succeeded || resolves("whisper-cpp", runner: runner).succeeded {
+            return CheckResult(id: id, outcome: .passed, detail: "whisper.cpp (Metal)")
+        }
+        if resolves("whisper", runner: runner).succeeded {
+            guard isAppleSilicon else {
+                // No GPU path exists here; openai-whisper is the right engine.
+                return CheckResult(id: id, outcome: .passed, detail: "openai-whisper (CPU; no GPU engine on this Mac)")
+            }
+            return CheckResult(
+                id: id,
+                outcome: .warning,
+                detail: "only openai-whisper found: it runs on the CPU, so a 1-hour meeting takes about 3 hours instead of about 8 minutes"
+            )
+        }
+        return CheckResult(id: id, outcome: .unknown, detail: "no engine to assess")
     }
 }
 
@@ -90,9 +165,22 @@ public struct WhisperModelCheck: DiagnosticCheck {
         ))
     }
     public func run(runner: CommandRunning) -> CheckResult {
-        // mlx present → model is fetched on first use; not a hard failure.
+        // mlx present → model is fetched on first use; not a hard failure. Warn
+        // rather than pass, because the first large-v3 fetch is ~2.9 GB and
+        // silently stalls the first real run if it happens then.
         if resolves("mlx_whisper", runner: runner).succeeded {
-            return CheckResult(id: id, outcome: .passed, detail: "mlx downloads the model on first use")
+            let cached = try? runner.run(
+                executable: "/bin/sh",
+                arguments: ["-lc", "ls -d \"$HOME/.cache/huggingface/hub\"/*whisper*\(model)* >/dev/null 2>&1"]
+            )
+            if cached?.succeeded == true {
+                return CheckResult(id: id, outcome: .passed, detail: "mlx model cached")
+            }
+            return CheckResult(
+                id: id,
+                outcome: .warning,
+                detail: "mlx downloads \(model) on first use (about 2.9 GB); the first run will be slow"
+            )
         }
         let candidates = [
             "$HOME/.cache/whisper.cpp/ggml-\(model).bin",

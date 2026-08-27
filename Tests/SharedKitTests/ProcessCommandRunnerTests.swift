@@ -22,5 +22,36 @@ struct ProcessCommandRunnerTests {
         #expect(URL(fileURLWithPath: printed).resolvingSymlinksInPath().path
                 == dir.resolvingSymlinksInPath().path)
     }
+
+    /// A wedged engine must be killed rather than run forever. Before this, a
+    /// stuck `whisper` kept its claim heartbeat alive for 19+ hours and looked
+    /// exactly like healthy progress.
+    @Test func killsASubprocessThatOverrunsItsBudget() throws {
+        let start = Date()
+        #expect(throws: CommandTimedOut.self) {
+            try ProcessCommandRunner().run(
+                executable: "/bin/sleep", arguments: ["30"], stdin: nil, environment: nil,
+                workingDirectory: nil, timeout: 1, onStderrLine: nil)
+        }
+        // Killed promptly, not after the full 30 s.
+        #expect(Date().timeIntervalSince(start) < 10)
+    }
+
+    /// A command that finishes inside its budget is unaffected.
+    @Test func doesNotDisturbACommandThatFinishesInTime() throws {
+        let result = try ProcessCommandRunner().run(
+            executable: "/bin/echo", arguments: ["ok"], stdin: nil, environment: nil,
+            workingDirectory: nil, timeout: 30, onStderrLine: nil)
+        #expect(result.succeeded)
+        #expect(result.stdout.contains("ok"))
+    }
+
+    /// No budget means the previous behaviour, unchanged.
+    @Test func noTimeoutMeansNoEnforcement() throws {
+        let result = try ProcessCommandRunner().run(
+            executable: "/bin/echo", arguments: ["ok"], stdin: nil, environment: nil,
+            workingDirectory: nil, timeout: nil, onStderrLine: nil)
+        #expect(result.succeeded)
+    }
 }
 #endif

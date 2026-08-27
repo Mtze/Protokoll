@@ -151,3 +151,63 @@ import Testing
         #expect(segments[0].text == "Kept.")
     }
 }
+
+/// The transcript highlight index. This is the one place in the UI performance
+/// work where a fix could be silently *wrong* rather than merely slow, so it is
+/// checked against the linear definition it replaced.
+@Suite struct TranscriptHighlightIndexTests {
+    /// The original implementation, kept as the oracle.
+    private func linearIndex(at time: TimeInterval, in segments: [TranscriptSegment]) -> Int? {
+        var found: Int?
+        for (index, segment) in segments.enumerated() {
+            if segment.start <= time + 0.05 { found = index } else { break }
+        }
+        return found
+    }
+
+    private let segments = [0.0, 2.5, 7.0, 7.25, 19.0, 60.0, 3600.0]
+        .map { TranscriptSegment(start: $0, text: "s\($0)") }
+
+    @Test func matchesTheLinearDefinitionAcrossTheTimeline() {
+        // Includes exact starts, just-before, just-after, gaps and beyond-the-end.
+        var probes: [TimeInterval] = [-5, -0.04, 0, 0.01, 2.45, 2.5, 6.9, 7, 7.2,
+                                      7.25, 18, 19, 59, 60, 3599, 3600, 9999]
+        probes += stride(from: 0.0, through: 65.0, by: 0.25)
+        for probe in probes {
+            #expect(TranscriptSegment.index(at: probe, in: segments) == linearIndex(at: probe, in: segments),
+                    "mismatch at t=\(probe)")
+        }
+    }
+
+    @Test func isNilBeforeTheFirstSegment() {
+        #expect(TranscriptSegment.index(at: -1, in: segments) == nil)
+        // ...but the tolerance means a hair before 0 still counts as segment 0.
+        #expect(TranscriptSegment.index(at: -0.01, in: segments) == 0)
+    }
+
+    /// A silent gap must hold the previous segment, not flicker to nil.
+    @Test func holdsThePreviousSegmentDuringAGap() {
+        #expect(TranscriptSegment.index(at: 30, in: segments) == 4)   // between 19 and 60
+        #expect(TranscriptSegment.index(at: 100, in: segments) == 5)  // between 60 and 3600
+    }
+
+    @Test func clampsPastTheEnd() {
+        #expect(TranscriptSegment.index(at: 100_000, in: segments) == segments.count - 1)
+    }
+
+    @Test func handlesEmptyAndSingleSegment() {
+        #expect(TranscriptSegment.index(at: 5, in: []) == nil)
+        let one = [TranscriptSegment(start: 10, text: "only")]
+        #expect(TranscriptSegment.index(at: 5, in: one) == nil)
+        #expect(TranscriptSegment.index(at: 10, in: one) == 0)
+        #expect(TranscriptSegment.index(at: 500, in: one) == 0)
+    }
+
+    /// Adjacent segments sharing a start time must resolve to the last of them,
+    /// matching the linear scan.
+    @Test func duplicateStartsResolveToTheLast() {
+        let dupes = [0.0, 5.0, 5.0, 5.0, 9.0].map { TranscriptSegment(start: $0, text: "x") }
+        #expect(TranscriptSegment.index(at: 5, in: dupes) == linearIndex(at: 5, in: dupes))
+        #expect(TranscriptSegment.index(at: 5, in: dupes) == 3)
+    }
+}

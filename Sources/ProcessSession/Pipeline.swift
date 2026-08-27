@@ -51,14 +51,19 @@ public struct Pipeline: Sendable {
     ) {
         self.container = container
         let config = (try? container.loadPipelineConfig()) ?? PipelineConfig()
-        self.transcriber = Transcriber(runner: runner, tools: tools,
+        self.transcriber = Transcriber(runner: runner, tools: tools, store: container.store,
                                        language: config.transcriptionLanguage,
                                        vocabulary: config.vocabulary,
-                                       model: config.transcriptionModel)
+                                       model: config.transcriptionModel,
+                                       preprocess: config.audioPreprocessing)
+        // Absent template file → built-in default, so standalone runs and app runs
+        // agree and there is nothing to migrate.
+        let template = (try? container.loadSummaryTemplate()) ?? nil
         self.summarizer = Summarizer(runner: runner, tools: tools, store: container.store,
                                      customInstructions: config.summaryInstructions,
                                      summaryLanguage: config.summaryLanguage,
                                      summaryModel: config.summaryModel,
+                                     template: template ?? "",
                                      summaryProvider: config.summaryProvider,
                                      summaryApiModel: config.summaryApiModel,
                                      summaryApiBaseURL: config.summaryApiBaseURL,

@@ -105,6 +105,59 @@ private func makeTempContainer() throws -> Container {
     }
 }
 
+/// Re-transcription (ADR-11) is the one thing that replaces `transcript.md`,
+/// which is otherwise immutable (N10). It must rotate, never destroy - a user
+/// re-transcribing an old recording is often comparing against what they had.
+@Suite struct TranscriptRotationTests {
+    @Test func firstWriteDoesNotRotate() throws {
+        let container = try makeTempContainer()
+        let session = try container.createSession(device: .mac)
+        #expect(try container.store.writeTranscript("first", for: session) == nil)
+        #expect(try String(contentsOf: session.transcriptURL, encoding: .utf8) == "first")
+    }
+
+    @Test func rotatesTheExistingTranscript() throws {
+        let container = try makeTempContainer()
+        let session = try container.createSession(device: .mac)
+
+        try container.store.writeTranscript("original", for: session)
+        let rotated = try container.store.writeTranscript("redone", for: session)
+
+        #expect(rotated == session.rotatedTranscriptURL(version: 1))
+        // The original survives in full.
+        #expect(try String(contentsOf: session.rotatedTranscriptURL(version: 1), encoding: .utf8) == "original")
+        #expect(try String(contentsOf: session.transcriptURL, encoding: .utf8) == "redone")
+    }
+
+    @Test func rotatesRepeatedlyWithoutOverwriting() throws {
+        let container = try makeTempContainer()
+        let session = try container.createSession(device: .mac)
+
+        try container.store.writeTranscript("v0", for: session)
+        try container.store.writeTranscript("v1", for: session)
+        let third = try container.store.writeTranscript("v2", for: session)
+
+        #expect(third == session.rotatedTranscriptURL(version: 2))
+        #expect(try String(contentsOf: session.rotatedTranscriptURL(version: 1), encoding: .utf8) == "v0")
+        #expect(try String(contentsOf: session.rotatedTranscriptURL(version: 2), encoding: .utf8) == "v1")
+        #expect(try String(contentsOf: session.transcriptURL, encoding: .utf8) == "v2")
+    }
+
+    /// Transcript and protocol rotation are independent counters.
+    @Test func transcriptRotationDoesNotDisturbProtocols() throws {
+        let container = try makeTempContainer()
+        let session = try container.createSession(device: .mac)
+
+        try container.store.writeProtocol("protocol A", for: session)
+        try container.store.writeTranscript("transcript A", for: session)
+        try container.store.writeTranscript("transcript B", for: session)
+
+        #expect(try String(contentsOf: session.protocolURL, encoding: .utf8) == "protocol A")
+        #expect(!FileManager.default.fileExists(atPath: session.rotatedProtocolURL(version: 1).path))
+        #expect(try String(contentsOf: session.rotatedTranscriptURL(version: 1), encoding: .utf8) == "transcript A")
+    }
+}
+
 @Suite struct ClaimTests {
     @Test func acquireRenewRelease() throws {
         let container = try makeTempContainer()

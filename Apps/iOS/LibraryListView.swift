@@ -132,6 +132,8 @@ struct IOSDetailView: View {
     @State private var pane: Pane = .protocolDoc
     /// One player shared by the audio control and the tap-to-seek transcript list.
     @State private var audioModel = AudioPlayerModel()
+    /// The current document, read and parsed off the main actor by `loadDocument`.
+    @State private var document = LoadedDocument()
 
     private var hasMicAudio: Bool {
         FileManager.default.fileExists(atPath: session.micAudioURL.path)
@@ -150,14 +152,16 @@ struct IOSDetailView: View {
                     Text("detail.pane.transcript").tag(Pane.transcript)
                 }
                 .pickerStyle(.segmented).labelsHidden()
-                if let body = documentBody, !body.isEmpty {
-                    DocumentActions(bodyText: body, fileURL: currentDocumentURL, exportName: exportName)
+                if !document.body.isEmpty {
+                    DocumentActions(bodyText: document.body, fileURL: currentDocumentURL, exportName: exportName)
                 }
             }
             .padding(.horizontal)
-            ScrollView {
-                documentContent.padding()
-            }
+            // No ScrollView: the document pane is a text view and scrolls itself.
+            documentContent.padding(.horizontal)
+        }
+        .task(id: DocumentLoader.key(for: currentDocumentURL, pane: pane.rawValue)) {
+            await loadDocument()
         }
         .navigationTitle(session.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
@@ -189,28 +193,27 @@ struct IOSDetailView: View {
         pane == .protocolDoc ? session.protocolURL : session.transcriptURL
     }
 
-    private var documentBody: String? {
-        guard let raw = try? String(contentsOf: currentDocumentURL, encoding: .utf8) else { return nil }
-        return Frontmatter.split(raw).body
+    /// Reads and parses the current document off the main actor, then hands the
+    /// segment starts to the shared player so it can drive the highlight.
+    private func loadDocument() async {
+        let url = currentDocumentURL
+        let wantsTranscript = pane == .transcript
+        let loaded = await Task.detached(priority: .userInitiated) {
+            DocumentLoader.load(url, parseTranscript: wantsTranscript)
+        }.value
+        guard !Task.isCancelled else { return }
+        document = loaded
+        audioModel.segmentStarts = wantsTranscript ? loaded.segments : []
     }
 
     @ViewBuilder private var documentContent: some View {
-        if let body = documentBody, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            switch pane {
-            case .protocolDoc:
-                MarkdownText(markdown: body)
-            case .transcript:
-                let segments = TranscriptParser.parse(body)
-                if segments.isEmpty {
-                    MarkdownText(markdown: body)
-                } else {
-                    TranscriptSegmentList(segments: segments, model: audioModel, canSeek: hasMicAudio)
-                }
-            }
+        if !document.isEmpty {
+            DocumentPane(document: document, model: audioModel, canSeek: hasMicAudio)
         } else {
             Text(pane == .protocolDoc ? "detail.noProtocol" : "detail.noTranscript")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer()
         }
     }
 

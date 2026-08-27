@@ -42,7 +42,9 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   and watch have their own `AppModel`/views (`Apps/iOS/`, `Apps/Watch/`).
 - `Apps/Common/` - **cross-platform** SwiftUI/AVFoundation shared by all three
   apps: the audio player (scrubber/speed/tap-to-seek), live waveform,
-  `ProjectChip`, and the markdown/copy/export document views.
+  `ProjectChip`, and the document views - `DocumentTextView` renders protocol and
+  transcript into one selectable text view (ADR-12), `DocumentViews` keeps the
+  Markdown block parser and the copy/export actions.
 - `Sources/SharedKit/AppLog.swift` - the one logging facility (`os.Logger`,
   subsystem `com.protokoll`, a category per flow). Every module + app uses it.
 
@@ -57,21 +59,50 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   are `Sendable` value types.
 - **`session.json` is canonical.** Only `SessionStore` reads/writes it.
 - **`transcript.md` is immutable** once written (N10); regen rotates
-  `protocol.md` → `protocol.vN.md`.
+  `protocol.md` → `protocol.vN.md`. The **one** exception is the user-invoked
+  "Transcribe Again" action (ADR-11), which rotates `transcript.md` →
+  `transcript.vN.md` and forces the summarize too, so the protocol never
+  silently describes the previous transcript. All transcript writes go through
+  `SessionStore.writeTranscript` so the rotation cannot be bypassed.
 - **Pipeline tuning lives in the container**, not env. `PipelineConfig` at
-  `<container>/config/pipeline.json` (transcription language/vocabulary/model,
-  summary language/model, custom instructions, plus the summary provider:
-  `summaryProvider`/`summaryApiModel`/`summaryApiBaseURL`/`summaryMaxTokens`) is
-  written by Settings and read by `process-session`, so standalone runs honor it.
-  App-behavior toggles use `@AppStorage`/`SettingsKeys` (Mac). **The API key is a
-  secret and never goes in the container** (ADR-9): it lives in the macOS Keychain
-  (`SummaryKeychain`, Mac) and reaches the pipeline as a 0600 key-file path
-  (`SUMMARY_API_KEY_FILE`), never as a raw env var; standalone runs read
+  `<container>/config/pipeline.json` (transcription language/vocabulary/model/
+  audio preprocessing, summary language/model, custom instructions, plus the
+  summary provider: `summaryProvider`/`summaryApiModel`/`summaryApiBaseURL`/
+  `summaryMaxTokens`) is written by Settings and read by `process-session`, so
+  standalone runs honor it. The summary body spec is a sibling *file*,
+  `config/summary-prompt.md` (absent = default). App-behavior toggles use
+  `@AppStorage`/`SettingsKeys` (Mac). **The API key is a secret and never goes in
+  the container** (ADR-9): it lives in the macOS Keychain (`SummaryKeychain`,
+  Mac) and reaches the pipeline as a 0600 key-file path (`SUMMARY_API_KEY_FILE`),
+  never as a raw env var; standalone runs read
   `SUMMARY_API_KEY`/`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`.
-- **Preserve the summarize frontmatter contract.** `claude` must emit a leading
-  `---` block with `title:` + `language:`; `Summarizer` parses those to set the
-  session title/language. Custom prompt text is *appended* to the built-in
-  prompt (`SummarizePrompt.extra`), it never replaces the required format.
+- **Audio is never denoised.** Spectral denoising measurably *raises* WER for
+  large Whisper models (ICAART 2024: helps base/small, hurts medium/large).
+  `transcribe.sh --preprocess safe` does only `highpass=f=80` plus one **static**
+  measured gain (`ebur128` then `volume=NdB`, ~6 s/hour). Never add `loudnorm`
+  (its `LRA` is dynamic-range compression and costs ~75 s/hour) and never
+  `silenceremove` (it compacts the timeline, desynchronising every transcript
+  timestamp after the first pause and breaking tap-to-seek).
+- **The gain policy never attenuates.** The true-peak ceiling limits how much
+  `compute_gain` *boosts* and nothing else. Attenuating audio that is already
+  clipped cannot un-clip it - the distortion is in the samples - it only makes
+  speech quieter, which is the one thing that reliably hurts Whisper. Getting
+  this wrong once silently dropped 3.5 minutes of speech from a real meeting
+  (741 words -> 528 on the same 5 minutes). `transcribe.sh --self-test` covers
+  the policy and runs in CI; add a case there before changing it.
+- **Preserve the summarize frontmatter contract** (ADR-10). Three parts, and the
+  split is the design: the **enforced contract** (`SummarizePrompt.systemPrompt`,
+  passed via `--append-system-prompt`) owns `title:` + `language:`, the title/
+  language rules and the grounding rules; the **body spec**
+  (`SummaryTemplate.default` in SharedKit, overridable via
+  `<container>/config/summary-prompt.md`) says only *what* the protocol contains
+  and defaults to a chronological account; a one-line **postamble** repeats the
+  contract last. `Summarizer.repairFrontmatter` then *guarantees* the contract in
+  Swift - the prompt asks, the repair pass enforces - so a hostile template can
+  change a summary's shape but never break the file. **The transcript has no
+  speaker labels**, so never write a prompt that demands per-person attribution.
+  The map step stays built-in and **shape-neutral** so any body spec is reachable
+  on long meetings.
 - **Subprocess boundary is `CommandRunning`** (in SharedKit) - fake it in tests,
   never shell out for real in unit tests.
 - **Log via `AppLog`, never `print`** in library/app code. Pick the matching
@@ -124,6 +155,35 @@ before pushing**, never force-push; `.worktrees/` is gitignored.
 - AVFoundation export **works headless** in `swift test` (MediaKit), but
   `AVAudioFile.write` needs a buffer in the file's **processing format** (float),
   not its storage format - a mismatch crashes.
+
+## Performance (hard-won, measured)
+
+- **Install a GPU engine.** `detect_engine()` falls through to `openai-whisper`,
+  the reference PyTorch build, whose CLI picks `cuda if available else cpu` - so
+  on Apple silicon it runs `large-v3` entirely on the **CPU**. Measured on a real
+  52-min German meeting: **2 h 51 m** that way versus **6 m 38 s** with
+  mlx-whisper plus the conditioning flag below, with *better* output. Install with
+  `uv tool install mlx-whisper`, **never `pip`** - Homebrew Python enforces PEP 668
+  and `pip install` fails with `externally-managed-environment`, which is why the
+  one-click Diagnostics fix silently never worked.
+- **`condition_on_previous_text` is duration-gated, not off.** Carrying decoded
+  text between windows is how one hallucinated window poisons the rest: the same
+  meeting had 6 degenerate runs, the worst 141 consecutive 1-second segments,
+  which also wrecks tap-to-seek. But on a *short* clip disabling it measurably
+  hurt (lowercase, unpunctuated), so `transcribe.sh --condition auto` keeps it
+  under 10 minutes and drops it above. **Never evaluate this flag on a short
+  clip.**
+- **The System-Test cannot catch throughput problems** - it uses a ~3 s clip with
+  `TRANSCRIBE_MODEL=tiny`, so it validates plumbing only.
+- **Long transcripts need care.** An hour is 1000-1500 segments. Documents render
+  in **one text view** (`DocumentPane` → `DocumentTextView`, ADR-12), so TextKit
+  lays out only the visible fragments. Build the `NSAttributedString` **once per
+  document** - key it on `LoadedDocument.key` (path + mtime + size), never on a
+  body pass - and drive the playhead highlight from
+  `AudioPlayerModel.currentSegment`, an `Int?` that changes once per segment,
+  never from `currentTime`, which changes every tick; moving it is two attribute
+  edits, not a re-render. `DocumentLoader` parses off the main actor and caches
+  on URL + **mtime** (regenerating a protocol rewrites the same URL).
 
 ## Gotchas (hard-won)
 
@@ -180,9 +240,11 @@ written before its audio, for both import and live recording).
 
 Session actions (macOS): the sidebar row **context menu** is the home for
 per-session actions (`LibraryView.sessionMenuItems(for:)`) - Process/Retry/
-Regenerate, Rename, Reveal in Finder, Assign to Project, Delete - and the
-"Session" system menu (`AppCommands`) mirrors them for the selected session via
-`DetailActions`. The detail pane keeps only the primary action + project menu (no
+Regenerate, **Transcribe Again**, Rename, Reveal in Finder, Assign to Project,
+Delete - and the "Session" system menu (`AppCommands`) mirrors them for the
+selected session via `DetailActions`. "Transcribe Again" appears only when
+`AppModel.canRetranscribe` holds (audio + an existing transcript, nothing
+running) and confirms first, since it costs minutes. The detail pane keeps only the primary action + project menu (no
 Reveal/Delete icons). Rename persists a custom title via `AppModel.rename(_:to:)`
 (sets `metadata.title`, reindexes; empty reverts to the derived `displayTitle`).
 

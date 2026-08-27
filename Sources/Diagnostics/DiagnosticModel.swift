@@ -6,6 +6,7 @@ import SharedKit
 public enum CheckID: String, Sendable, CaseIterable {
     case claude
     case whisperEngine
+    case whisperEnginePerformance
     case whisperModel
     case ffmpeg
     case path

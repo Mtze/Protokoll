@@ -22,7 +22,7 @@ done
 
 command -v brew >/dev/null || {
   echo "Homebrew not found. Install it from https://brew.sh, or install ffmpeg and" >&2
-  echo "an engine (pip install mlx-whisper / faster-whisper) by hand." >&2
+  echo "an engine (uv tool install mlx-whisper, or pip install faster-whisper) by hand." >&2
   exit 1
 }
 

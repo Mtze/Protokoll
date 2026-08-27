@@ -14,11 +14,16 @@ struct SessionDetailView: View {
     /// Invoked when the user asks to rename this session; the library owns the
     /// rename dialog.
     var onRename: (Session) -> Void = { _ in }
+    /// Invoked when the user asks to re-transcribe; the library owns the
+    /// confirmation dialog.
+    var onRetranscribe: (Session) -> Void = { _ in }
 
     enum Pane: String, CaseIterable, Identifiable { case protocolDoc, transcript; var id: String { rawValue } }
     @State private var pane: Pane = .protocolDoc
     /// One player shared by the audio control and the tap-to-seek transcript list.
     @State private var audioModel = AudioPlayerModel()
+    /// The current document, read and parsed off the main actor by `loadDocument`.
+    @State private var document = LoadedDocument()
 
     private var status: PipelineStatus { session.metadata.pipeline.status }
 
@@ -57,12 +62,15 @@ struct SessionDetailView: View {
         case .none: primary = nil
         }
         let playPause: (() -> Void)? = hasMicAudio ? { audioModel.playPause() } : nil
+        let retranscribe: (() -> Void)? = model.canRetranscribe(session)
+            ? { onRetranscribe(session) } : nil
         return DetailActions(
             primary: primary,
+            retranscribe: retranscribe,
             rename: { onRename(session) },
             delete: { onDelete(session) },
             reveal: { revealInFinder() },
-            copyDocument: { if let body = documentBody { DocumentPasteboard.copy(body) } },
+            copyDocument: { if !document.body.isEmpty { DocumentPasteboard.copy(document.body) } },
             showProtocol: { pane = .protocolDoc },
             showTranscript: { pane = .transcript },
             playPause: playPause,
@@ -234,46 +242,47 @@ struct SessionDetailView: View {
                 .labelsHidden()
                 .fixedSize()
                 Spacer()
-                if let body = documentBody, !body.isEmpty {
-                    DocumentActions(bodyText: body, fileURL: currentDocumentURL, exportName: exportName)
+                if !document.body.isEmpty {
+                    DocumentActions(bodyText: document.body, fileURL: currentDocumentURL, exportName: exportName)
                 }
             }
 
-            ScrollView {
-                documentContent.padding(.vertical, 4)
-            }
+            // No ScrollView: the document pane is a text view and scrolls itself.
+            documentContent
         }
         .frame(maxHeight: .infinity)
+        // Reload whenever the file identity changes: pane switch, session switch,
+        // or the pipeline rewriting protocol.md in place (the key includes mtime).
+        .task(id: DocumentLoader.key(for: currentDocumentURL, pane: pane.rawValue)) {
+            await loadDocument()
+        }
     }
 
     private var currentDocumentURL: URL {
         pane == .protocolDoc ? session.protocolURL : session.transcriptURL
     }
 
-    /// The document body with our YAML frontmatter stripped, or `nil` when the
-    /// file is missing/unreadable.
-    private var documentBody: String? {
-        guard let raw = try? String(contentsOf: currentDocumentURL, encoding: .utf8) else { return nil }
-        return Frontmatter.split(raw).body
+    /// Reads and parses the current document off the main actor, then hands the
+    /// segment starts to the shared player so it can drive the highlight.
+    private func loadDocument() async {
+        let url = currentDocumentURL
+        let wantsTranscript = pane == .transcript
+        let loaded = await Task.detached(priority: .userInitiated) {
+            DocumentLoader.load(url, parseTranscript: wantsTranscript)
+        }.value
+        guard !Task.isCancelled else { return }
+        document = loaded
+        audioModel.segmentStarts = wantsTranscript ? loaded.segments : []
     }
 
     @ViewBuilder private var documentContent: some View {
-        if let body = documentBody, !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            switch pane {
-            case .protocolDoc:
-                MarkdownText(markdown: body)
-            case .transcript:
-                let segments = TranscriptParser.parse(body)
-                if segments.isEmpty {
-                    MarkdownText(markdown: body)
-                } else {
-                    TranscriptSegmentList(segments: segments, model: audioModel, canSeek: hasMicAudio)
-                }
-            }
+        if !document.isEmpty {
+            DocumentPane(document: document, model: audioModel, canSeek: hasMicAudio)
         } else {
             Text(pane == .protocolDoc ? "detail.noProtocol" : "detail.noTranscript")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+            Spacer()
         }
     }
 

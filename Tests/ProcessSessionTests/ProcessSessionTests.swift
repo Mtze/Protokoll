@@ -221,28 +221,91 @@ private func vendoredScriptEnv() -> ToolLocator {
             .joined(separator: "\n\n")
         try Data(longBody.utf8).write(to: session.transcriptURL)
 
-        let runner = FakeCommandRunner()
-        // Map calls: prompt contains "PART". Reduce: prompt contains "final protocol".
-        runner.stub(when: { exe, _ in exe == "claude" }, return: CommandResult(exitCode: 0, stdout: "partial notes", stderr: "")) { _ in }
-
-        // Distinguish reduce output so we can assert synthesis ran.
-        final class Tracking: CommandRunning, @unchecked Sendable {
-            var mapCalls = 0; var reduceCalls = 0
-            let lock = NSLock()
-            func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, workingDirectory: URL?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
-                lock.lock(); defer { lock.unlock() }
-                let prompt = arguments.count > 1 ? arguments[1] : ""
-                if prompt.contains("PART") { mapCalls += 1; return CommandResult(exitCode: 0, stdout: "notes", stderr: "") }
-                reduceCalls += 1
-                return CommandResult(exitCode: 0, stdout: "---\ntitle: Long Meeting\n---\n\n# Long Meeting\n\nDone.", stderr: "")
-            }
-        }
-        let tracking = Tracking()
+        let tracking = MapReduceTracking()
         let summarizer = Summarizer(runner: tracking, tools: vendoredScriptEnv(), store: container.store, chunker: TranscriptChunker(characterBudget: 200))
         let updated = try summarizer.summarize(session: session)
         #expect(tracking.mapCalls > 1)
         #expect(tracking.reduceCalls == 1)
         #expect(updated.metadata.title == "Long Meeting")
+    }
+
+    /// The guarantee that makes a user-editable body spec safe for long meetings:
+    /// the custom template drives only the **reduce** step. If it leaked into the
+    /// map step, a template asking for (say) decisions only would discard the
+    /// narrative before the final pass ever saw it - which is exactly how the old
+    /// four-bucket map prompt broke every meeting past ~45 minutes.
+    @Test func customTemplateReachesReduceButNeverMap() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("mn-mrt-\(UUID().uuidString)")
+        let container = Container(locator: LocalFolderContainer(root: root))
+        let session = try container.createSession(device: .mac)
+        let longBody = (0..<20).map { "**[00:0\($0):00]** paragraph \($0) with enough words to matter here" }
+            .joined(separator: "\n\n")
+        try Data(longBody.utf8).write(to: session.transcriptURL)
+
+        let tracking = MapReduceTracking()
+        let summarizer = Summarizer(
+            runner: tracking, tools: vendoredScriptEnv(), store: container.store,
+            chunker: TranscriptChunker(characterBudget: 200),
+            template: "MARKER-CUSTOM-SPEC"
+        )
+        _ = try summarizer.summarize(session: session)
+
+        #expect(tracking.mapCalls > 1)
+        #expect(tracking.reduceCalls == 1)
+        #expect(tracking.mapStdins.allSatisfy { !$0.contains("MARKER-CUSTOM-SPEC") })
+        #expect(tracking.reduceStdins.contains { $0.contains("MARKER-CUSTOM-SPEC") })
+    }
+
+    /// Partials must be labelled with real time ranges, so the reducer has
+    /// absolute time to order by rather than a bare "Part 3".
+    @Test func reduceInputCarriesChunkTimeRanges() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("mn-mrr-\(UUID().uuidString)")
+        let container = Container(locator: LocalFolderContainer(root: root))
+        let session = try container.createSession(device: .mac)
+        let longBody = (0..<20).map { "**[00:\(String(format: "%02d", $0)):00]** paragraph \($0) with enough words here" }
+            .joined(separator: "\n\n")
+        try Data(longBody.utf8).write(to: session.transcriptURL)
+
+        let tracking = MapReduceTracking()
+        _ = try Summarizer(runner: tracking, tools: vendoredScriptEnv(), store: container.store,
+                           chunker: TranscriptChunker(characterBudget: 200)).summarize(session: session)
+
+        let reduceInput = tracking.reduceStdins.first ?? ""
+        #expect(reduceInput.contains("## Part 1 (00:00:00-"))
+    }
+
+    @Test func chunkTimeRangeIsDerivedFromMarkers() {
+        let chunk = TranscriptChunk(
+            index: 0,
+            text: "**[00:00:05]** first\n\n**[00:44:12]** last"
+        )
+        #expect(chunk.timeRange == "00:00:05-00:44:12")
+        #expect(TranscriptChunk(index: 0, text: "no markers here").timeRange == nil)
+    }
+}
+
+/// Counts map vs reduce calls and records what each was fed. Discriminates on the
+/// map prompt's own marker text rather than argument position, so composing the
+/// call differently cannot silently break the distinction.
+final class MapReduceTracking: CommandRunning, @unchecked Sendable {
+    var mapCalls = 0
+    var reduceCalls = 0
+    var mapStdins: [String] = []
+    var reduceStdins: [String] = []
+    private let lock = NSLock()
+
+    func run(executable: String, arguments: [String], stdin: String?, environment: [String: String]?, workingDirectory: URL?, onStderrLine: (@Sendable (String) -> Void)?) throws -> CommandResult {
+        lock.lock(); defer { lock.unlock() }
+        let system = arguments.firstIndex(of: "--append-system-prompt")
+            .flatMap { $0 + 1 < arguments.count ? arguments[$0 + 1] : nil } ?? ""
+        if system.contains("This is an intermediate note") {
+            mapCalls += 1
+            mapStdins.append(stdin ?? "")
+            return CommandResult(exitCode: 0, stdout: "notes", stderr: "")
+        }
+        reduceCalls += 1
+        reduceStdins.append(stdin ?? "")
+        return CommandResult(exitCode: 0, stdout: "---\ntitle: Long Meeting\nlanguage: en\n---\n\n# Long Meeting\n\nDone.", stderr: "")
     }
 }
 

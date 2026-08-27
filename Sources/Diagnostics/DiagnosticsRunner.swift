@@ -26,6 +26,8 @@ public struct DiagnosticsRunner: Sendable {
         var checks: [any DiagnosticCheck] = []
         if summaryProvider == "cli" { checks.append(ClaudeCheck()) }
         checks.append(WhisperEngineCheck())
+        // Warns when the CPU-only fallback engine is what would actually run.
+        checks.append(WhisperEnginePerformanceCheck())
         checks.append(WhisperModelCheck(model: model))
         checks.append(FFmpegCheck())
         checks.append(PathCheck())

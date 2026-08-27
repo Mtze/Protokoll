@@ -8,6 +8,8 @@ final class ProbeRunner: CommandRunning, @unchecked Sendable {
     var available: Set<String>
     var pythonImports: Set<String>
     var homeHasClaude = true
+    /// Whether the mlx (HuggingFace) model cache already holds the model.
+    var mlxModelCached = false
     private(set) var lastCalls: [[String]] = []
     private let lock = NSLock()
 
@@ -35,6 +37,11 @@ final class ProbeRunner: CommandRunning, @unchecked Sendable {
         }
         if script.contains("ggml-") {
             return CommandResult(exitCode: 1, stdout: "", stderr: "")
+        }
+        if script.contains("huggingface") {
+            return mlxModelCached
+                ? CommandResult(exitCode: 0, stdout: "", stderr: "")
+                : CommandResult(exitCode: 1, stdout: "", stderr: "")
         }
         return CommandResult(exitCode: 0, stdout: "", stderr: "")
     }
@@ -72,10 +79,61 @@ final class ProbeRunner: CommandRunning, @unchecked Sendable {
         #expect(WhisperEngineCheck().run(runner: ProbeRunner()).outcome == .failed)
     }
 
-    @Test func modelWarnsWhenMLXPresentButNoGGML() {
-        // mlx present → model fetched on first use → pass, not fail.
+    @Test func modelWarnsWhenMLXPresentButNotYetDownloaded() {
+        // mlx present but no cached weights → warn: the first fetch is ~2.9 GB
+        // and would otherwise stall the first real run with no explanation.
         let runner = ProbeRunner(available: ["mlx_whisper"])
+        #expect(WhisperModelCheck().run(runner: runner).outcome == .warning)
+    }
+
+    @Test func modelPassesWhenMLXWeightsAreCached() {
+        let runner = ProbeRunner(available: ["mlx_whisper"])
+        runner.mlxModelCached = true
         #expect(WhisperModelCheck().run(runner: runner).outcome == .passed)
+    }
+
+    // MARK: Engine performance
+
+    /// The regression this guards: with only `openai-whisper` installed,
+    /// `WhisperEngineCheck` passes and the user gets a CPU-only run that takes
+    /// ~19x longer, with nothing in the UI saying so.
+    @Test func enginePerformanceWarnsForCPUOnlyEngineOnAppleSilicon() {
+        let runner = ProbeRunner(available: ["whisper"])
+        let result = WhisperEnginePerformanceCheck(isAppleSilicon: true).run(runner: runner)
+        #expect(result.outcome == .warning)
+        // The old check still passes, which is exactly why this one exists.
+        #expect(WhisperEngineCheck().run(runner: runner).outcome == .passed)
+    }
+
+    @Test func enginePerformancePassesForMLX() {
+        let runner = ProbeRunner(available: ["mlx_whisper", "whisper"])
+        #expect(WhisperEnginePerformanceCheck(isAppleSilicon: true).run(runner: runner).outcome == .passed)
+    }
+
+    @Test func enginePerformancePassesForWhisperCpp() {
+        let runner = ProbeRunner(available: ["whisper-cli"])
+        #expect(WhisperEnginePerformanceCheck(isAppleSilicon: true).run(runner: runner).outcome == .passed)
+    }
+
+    /// On an Intel Mac there is no GPU engine to switch to, so openai-whisper is
+    /// the correct choice and must not be nagged about.
+    @Test func enginePerformancePassesForCPUEngineOnIntel() {
+        let runner = ProbeRunner(available: ["whisper"])
+        #expect(WhisperEnginePerformanceCheck(isAppleSilicon: false).run(runner: runner).outcome == .passed)
+    }
+
+    /// `pip install` fails on Homebrew Python with PEP 668, which is why the
+    /// one-click fix never worked. It must use `uv`.
+    @Test func mlxRemediationUsesUvNotPip() {
+        for remediation in [WhisperEngineCheck().remediation, WhisperEnginePerformanceCheck().remediation] {
+            guard case let .autoFix(fix) = remediation else {
+                Issue.record("expected autoFix remediation")
+                continue
+            }
+            #expect(fix.command.displayString == "uv tool install mlx-whisper")
+            #expect(fix.bootstrap?.toolName == "uv")
+            #expect(fix.bootstrap?.installCommand?.displayString == "brew install uv")
+        }
     }
 
     @Test func modelWarnsWhenNothingPresent() {
@@ -122,10 +180,11 @@ final class ProbeRunner: CommandRunning, @unchecked Sendable {
 
     @Test func runnerRunsAllChecks() {
         let runner = ProbeRunner(available: ["claude", "mlx_whisper", "ffmpeg"])
+        runner.mlxModelCached = true  // otherwise the model check warns, correctly
         let root = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let diag = DiagnosticsRunner(checks: DiagnosticsRunner.standardChecks(containerRoot: root), runner: runner)
         let results = diag.runAll()
-        #expect(results.count == 6)
+        #expect(results.count == 7)
         #expect(HealthLevel.aggregate(results) == .green)
     }
 }
