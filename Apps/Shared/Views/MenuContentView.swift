@@ -1,5 +1,6 @@
 import SwiftUI
 import SharedKit
+import UniformTypeIdentifiers
 
 /// The menubar panel: record/stop with a visible recording indicator (N4),
 /// the aggregate health dot, unprocessed sessions with a Process action (F13),
@@ -9,12 +10,14 @@ struct MenuContentView: View {
     @Environment(\.openWindow) private var openWindow
     @AppStorage(SettingsKeys.consentReminder) private var consentReminder = true
     @State private var showingConsent = false
+    @State private var showingImporter = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             headerRow
             Divider()
             recordButton
+            importButton
 
             if model.isRecording {
                 RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt)
@@ -23,6 +26,17 @@ struct MenuContentView: View {
 
             if let error = model.systemAudioError {
                 SystemAudioBanner(message: error)
+            }
+
+            if let error = model.importError {
+                Button { model.clearImportError() } label: {
+                    Label(error, systemImage: "exclamationmark.triangle.fill")
+                        .font(.caption)
+                        .foregroundStyle(.orange)
+                        .multilineTextAlignment(.leading)
+                }
+                .buttonStyle(.plain)
+                .help("common.ok")
             }
 
             if !model.scheduler.jobs.isEmpty {
@@ -81,6 +95,23 @@ struct MenuContentView: View {
             Button("common.cancel", role: .cancel) {}
         } message: {
             Text("consent.message")
+        }
+    }
+
+    private var importButton: some View {
+        Button {
+            showingImporter = true
+        } label: {
+            Label("action.importAudio", systemImage: "square.and.arrow.down")
+                .frame(maxWidth: .infinity)
+        }
+        .controlSize(.large)
+        .fileImporter(isPresented: $showingImporter,
+                      allowedContentTypes: [.audio, .movie],
+                      allowsMultipleSelection: false) { result in
+            if case let .success(urls) = result, let url = urls.first {
+                Task { await model.importAudio(from: url) }
+            }
         }
     }
 

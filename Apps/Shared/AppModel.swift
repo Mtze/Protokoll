@@ -3,6 +3,7 @@ import Observation
 import SharedKit
 import Diagnostics
 import SearchIndex
+import MediaKit
 
 /// The app-wide observable model shared by the menubar and the library window.
 /// Owns the container, the session list, the scheduler, and diagnostics state.
@@ -212,6 +213,48 @@ final class AppModel {
         stopLevelMonitoring()
         reloadSessions()
     }
+
+    // MARK: Import
+
+    /// Surfaced when importing a pre-recorded file failed (unsupported codec,
+    /// no audio track, disk error), so it never fails silently.
+    private(set) var importError: String?
+
+    /// Imports an existing audio file as a normal session: creates the folder,
+    /// transcodes the audio into the canonical `mic.m4a`, and leaves the session
+    /// `.recorded` - exactly the on-disk shape a live recording produces. No
+    /// `process()` call: the existing `NewSessionNotifier` (auto-process setting)
+    /// / notification / Process paths take over just as they do for a recording.
+    func importAudio(from url: URL) async {
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+        var created: Session?
+        do {
+            let values = try? url.resourceValues(forKeys: [.creationDateKey, .contentModificationDateKey])
+            let startedAt = values?.creationDate ?? values?.contentModificationDate ?? Date()
+            var session = try container.createSession(device: .mac, startedAt: startedAt)
+            created = session
+            try await AudioImporter.makeMicTrack(from: url, into: session.micAudioURL)
+            if let duration = await AudioImporter.duration(of: session.micAudioURL) {
+                session.metadata.duration = duration
+                session.metadata.endedAt = startedAt.addingTimeInterval(duration)
+            }
+            session.metadata.audioTracks = [.mic]
+            session.metadata.pipeline.status = .recorded
+            try container.store.save(session)
+            importError = nil
+            reloadSessions()
+        } catch {
+            // Roll back the half-built session so no broken .recorded folder is
+            // left in the library or picked up by the notifier.
+            if let created { try? container.deleteSession(created) }
+            importError = (error as? LocalizedError)?.errorDescription ?? String(localized: "import.error.failed")
+            AppLog.recording.error("audio import failed: \(AppLog.describe(error), privacy: .public)")
+        }
+    }
+
+    /// Dismisses the import-error alert.
+    func clearImportError() { importError = nil }
 
     // MARK: Recording meter
 

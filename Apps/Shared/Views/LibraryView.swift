@@ -1,6 +1,7 @@
 import SwiftUI
 import SharedKit
 import SearchIndex
+import UniformTypeIdentifiers
 #if canImport(AppKit)
 import AppKit
 #endif
@@ -21,6 +22,7 @@ struct LibraryView: View {
     @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
     @State private var showOnboarding = false
     @State private var projectFilter: String?
+    @State private var showingImporter = false
 
     /// Sessions to show: filtered by the selected project (browse, in-memory),
     /// then narrowed to the FTS-matched subset when searching (F7/F10).
@@ -50,6 +52,21 @@ struct LibraryView: View {
         }
         .searchable(text: $searchText, prompt: Text("library.search.prompt"))
         .focusedSceneValue(\.recordAction, recordTapped)
+        .focusedSceneValue(\.importAction, { showingImporter = true })
+        .fileImporter(isPresented: $showingImporter,
+                      allowedContentTypes: [.audio, .movie],
+                      allowsMultipleSelection: false) { result in
+            if case let .success(urls) = result, let url = urls.first {
+                Task { await model.importAudio(from: url) }
+            }
+        }
+        .alert("import.error.title",
+               isPresented: Binding(get: { model.importError != nil },
+                                    set: { if !$0 { model.clearImportError() } })) {
+            Button("common.ok", role: .cancel) { model.clearImportError() }
+        } message: {
+            Text(verbatim: model.importError ?? "")
+        }
         .task(id: searchText + "\u{1}" + (projectFilter ?? "")) {
             await model.search(searchText, filter: SearchFilter(projectID: projectFilter))
         }
@@ -67,6 +84,7 @@ struct LibraryView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
+            ToolbarItem(placement: .navigation) { importButton }
             if model.isRecording {
                 ToolbarItem(placement: .principal) {
                     RecordingIndicator(levels: model.recordingLevels, startedAt: model.recordingStartedAt, compact: true)
@@ -250,6 +268,16 @@ struct LibraryView: View {
         }
         .tint(model.isRecording ? .red : .accentColor)
         .help(model.isRecording ? "menu.stop" : "action.newRecording")
+    }
+
+    /// Import an existing recording from a file, turning it into a session.
+    private var importButton: some View {
+        Button {
+            showingImporter = true
+        } label: {
+            Label("action.importAudio", systemImage: "square.and.arrow.down")
+        }
+        .help("action.importAudio")
     }
 
     private func snippet(for id: String) -> String? {

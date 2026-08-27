@@ -27,7 +27,9 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   status / date. Note: `search()` needs a non-empty query - browse/filter the
   in-memory `sessions` list, not the index.
 - `Sources/MediaKit/` - AVFoundation audio mixing (mic + system → one track,
-  ADR-7), in its own SPM target so it's unit-testable via `swift test`.
+  ADR-7) and `AudioImporter` (transcode an arbitrary recording to the canonical
+  `mic.m4a` for import), in its own SPM target so it's unit-testable via
+  `swift test`.
 - `Apps/Mac/` - `MenuBarExtra` app + `Recorder` actor (CAF→m4a, ADR-3).
   `AppCommands.swift` holds all keyboard shortcuts: a menu-bar `Commands` block
   whose context-dependent items read `focusedSceneValue`s (`recordAction`,
@@ -166,6 +168,15 @@ before pushing**, never force-push; `.worktrees/` is gitignored.
 - **User docs:** a self-contained static one-pager lives in `site/index.html`
   (assets in `site/`), deployed to GitHub Pages by `.github/workflows/pages.yml`
   on pushes touching `site/`. Published at `https://mtze.github.io/Protokoll/`.
+
+Import pre-recorded audio (macOS): **Import Audio…** (toolbar, menu-bar panel, or
+`⌘I`) turns an existing file into a session. `AudioImporter.makeMicTrack`
+transcodes it to `audio/mic.m4a` (atomic rename so the pipeline / notifier never
+see a partial file) and `AppModel.importAudio` leaves the session `.recorded` -
+the *same* on-disk shape a recording produces, so the existing auto-process /
+notification / **Process** paths drive it, unchanged. `NewSessionNotifier` only
+acts on a `.recorded` session **once `mic.m4a` exists** (a session.json is
+written before its audio, for both import and live recording).
 
 Session actions (macOS): the sidebar row **context menu** is the home for
 per-session actions (`LibraryView.sessionMenuItems(for:)`) - Process/Retry/

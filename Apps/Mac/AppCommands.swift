@@ -18,6 +18,12 @@ struct RecordActionKey: FocusedValueKey {
     typealias Value = () -> Void
 }
 
+/// An import action published by the library scene, so `⌘I` opens the same file
+/// picker as the toolbar Import button.
+struct ImportActionKey: FocusedValueKey {
+    typealias Value = () -> Void
+}
+
 /// Actions for the session shown in the detail pane, published so the menu-bar
 /// Session commands can drive it. `nil` fields disable their command. The
 /// closures are formed in the (main-actor) view body and only invoked from
@@ -51,6 +57,10 @@ extension FocusedValues {
         get { self[RecordActionKey.self] }
         set { self[RecordActionKey.self] = newValue }
     }
+    var importAction: ImportActionKey.Value? {
+        get { self[ImportActionKey.self] }
+        set { self[ImportActionKey.self] = newValue }
+    }
     var detailActions: DetailActions? {
         get { self[DetailActionsKey.self] }
         set { self[DetailActionsKey.self] = newValue }
@@ -64,6 +74,7 @@ struct ProtokollCommands: Commands {
     let model: AppModel
     @Environment(\.openWindow) private var openWindow
     @FocusedValue(\.recordAction) private var recordAction
+    @FocusedValue(\.importAction) private var importAction
     @FocusedValue(\.detailActions) private var detailActions
 
     var body: some Commands {
@@ -77,6 +88,15 @@ struct ProtokollCommands: Commands {
                 }
             }
             .keyboardShortcut("n", modifiers: .command)
+
+            Button("action.importAudio") {
+                if let importAction {
+                    importAction()
+                } else {
+                    openWindow(id: WindowID.library)
+                }
+            }
+            .keyboardShortcut("i", modifiers: .command)
 
             Divider()
 
