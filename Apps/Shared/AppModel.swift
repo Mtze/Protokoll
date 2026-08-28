@@ -162,15 +162,16 @@ final class AppModel {
         justStoppedSession = nil
     }
 
-    /// Re-runs the session's custom action steps (ADR-13): all failed/stale
-    /// ones, or a single step by id.
+    /// Re-runs the session's custom action steps (ADR-13): all failed, stale,
+    /// or orphaned mid-run ones, or a single step by id.
     func runActions(_ session: Session, only stepID: String? = nil) {
         if let stepID {
             scheduler.enqueueActions(session, only: stepID)
             return
         }
         for state in session.metadata.pipeline.steps ?? []
-        where state.status == StepState.failed || state.status == StepState.stale {
+        where state.status == StepState.failed || state.status == StepState.stale
+            || state.status == StepState.running {
             scheduler.enqueueActions(session, only: state.stepID)
         }
     }

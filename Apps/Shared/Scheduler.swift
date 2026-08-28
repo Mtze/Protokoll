@@ -230,6 +230,16 @@ final class Scheduler {
             return
         }
         Task.detached(priority: .userInitiated) {
+            // The secret files materialized for this run (ADR-9/ADR-13) are
+            // single-use: delete them as soon as the subprocess is done rather
+            // than waiting for the next stale-pruning pass.
+            defer {
+                for key in ["CONNECTION_KEYS_FILE", "SUMMARY_API_KEY_FILE"] {
+                    if let path = runner.environment[key] {
+                        try? FileManager.default.removeItem(atPath: path)
+                    }
+                }
+            }
             let outcome: StepOutcome
             do {
                 try runner.run(folder: folder, step: step, force: force) { line in

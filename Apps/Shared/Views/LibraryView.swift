@@ -168,7 +168,8 @@ struct LibraryView: View {
         }
 
         if SessionAction.hasRerunnableSteps(status: session.metadata.pipeline.status,
-                                            steps: session.metadata.pipeline.steps) {
+                                            steps: session.metadata.pipeline.steps,
+                                            hasActiveJob: model.activeJob(for: session.id) != nil) {
             Button { model.runActions(session) } label: {
                 Label("step.rerunAll", systemImage: "sparkles")
             }

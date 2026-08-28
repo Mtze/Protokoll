@@ -26,3 +26,27 @@ struct SessionActionTests {
         #expect(SessionAction.forDetail(status: .recorded, hasActiveJob: true) == SessionAction.none)
     }
 }
+
+/// The "Re-run actions" affordance (ADR-13): offered for failed, stale, and
+/// orphaned-running steps of a done session, but never while a job is active.
+struct RerunnableStepsTests {
+    @Test func offersRerunForFailedStaleAndOrphanedRunning() {
+        for status in [StepState.failed, StepState.stale, StepState.running] {
+            let steps = [StepState(stepID: "s1", name: "X", status: status)]
+            #expect(SessionAction.hasRerunnableSteps(status: .done, steps: steps, hasActiveJob: false))
+        }
+        let done = [StepState(stepID: "s1", name: "X", status: StepState.done)]
+        #expect(!SessionAction.hasRerunnableSteps(status: .done, steps: done, hasActiveJob: false))
+        #expect(!SessionAction.hasRerunnableSteps(status: .done, steps: nil, hasActiveJob: false))
+    }
+
+    @Test func activeJobBlocksRerun() {
+        let steps = [StepState(stepID: "s1", name: "X", status: StepState.failed)]
+        #expect(!SessionAction.hasRerunnableSteps(status: .done, steps: steps, hasActiveJob: true))
+    }
+
+    @Test func nonDoneStatusOffersNoRerun() {
+        let steps = [StepState(stepID: "s1", name: "X", status: StepState.failed)]
+        #expect(!SessionAction.hasRerunnableSteps(status: .failed(message: "x"), steps: steps, hasActiveJob: false))
+    }
+}

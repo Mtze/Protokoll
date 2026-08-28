@@ -145,7 +145,12 @@ struct SessionDetailView: View {
                                     .lineLimit(1).truncationMode(.tail)
                             }
                             Spacer()
-                            if state.status == StepState.failed || state.status == StepState.stale {
+                            // Per-step re-run for anything not cleanly done, but
+                            // never while a job is already in flight (each click
+                            // would enqueue another one).
+                            if model.activeJob(for: session.id) == nil,
+                               state.status == StepState.failed || state.status == StepState.stale
+                                || state.status == StepState.running {
                                 Button { model.runActions(session, only: state.stepID) } label: {
                                     Image(systemName: "arrow.clockwise")
                                 }
@@ -266,7 +271,8 @@ struct SessionDetailView: View {
             case .none:
                 EmptyView()
             }
-            if SessionAction.hasRerunnableSteps(status: status, steps: session.metadata.pipeline.steps) {
+            if SessionAction.hasRerunnableSteps(status: status, steps: session.metadata.pipeline.steps,
+                                                hasActiveJob: model.activeJob(for: session.id) != nil) {
                 Button { model.runActions(session) } label: {
                     Label("step.rerunAll", systemImage: "sparkles")
                 }

@@ -18,11 +18,18 @@ public enum SessionAction: Equatable, Sendable {
         }
     }
 
-    /// Whether a done session has action steps worth re-running (failed or
-    /// stale, ADR-13) - drives the "Re-run actions" affordance next to the
-    /// primary action.
-    public static func hasRerunnableSteps(status: PipelineStatus, steps: [StepState]?) -> Bool {
-        guard status == .done, let steps else { return false }
-        return steps.contains { $0.status == StepState.failed || $0.status == StepState.stale }
+    /// Whether a done session has action steps worth re-running (failed,
+    /// stale, or orphaned mid-run, ADR-13) - drives the "Re-run actions"
+    /// affordance next to the primary action. Hidden while a job is in flight
+    /// so repeated clicks cannot pile up duplicate action jobs.
+    public static func hasRerunnableSteps(
+        status: PipelineStatus,
+        steps: [StepState]?,
+        hasActiveJob: Bool = false
+    ) -> Bool {
+        guard !hasActiveJob, status == .done, let steps else { return false }
+        return steps.contains {
+            $0.status == StepState.failed || $0.status == StepState.stale || $0.status == StepState.running
+        }
     }
 }

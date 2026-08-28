@@ -39,8 +39,10 @@ public struct ActionRunner: Sendable {
 
     /// Which steps a run executes: `only` names one step id (explicit re-run,
     /// ignores prior state), `force` re-runs everything enabled, otherwise only
-    /// enabled steps that have never completed (recorded status missing or
-    /// pending). Stale/failed steps stay manual (regenerate decision).
+    /// enabled steps that have never completed. Stale/failed steps stay manual
+    /// (regenerate decision). A recorded `running` counts as never-completed:
+    /// this run holds the claim, so a persisted `running` can only be the
+    /// orphan of a run that died mid-step - it must not be skipped forever.
     static func stepsToRun(
         pipeline: PipelineDefinition,
         recorded: [StepState]?,
@@ -53,7 +55,7 @@ public struct ActionRunner: Sendable {
             guard step.enabled else { return false }
             if force { return true }
             let status = states[step.id] ?? StepState.pending
-            return status == StepState.pending
+            return status == StepState.pending || status == StepState.running
         }
     }
 

@@ -191,6 +191,23 @@ struct ActionRunnerTests {
         #expect(prompt.contains("boardURL: Standup board"))
     }
 
+    @Test func orphanedRunningStepIsRetried() throws {
+        // A persisted `running` can only be the orphan of a run that died
+        // mid-step (this run holds the claim), so it must run again.
+        let (container, session) = try makeSession()
+        try container.store.setStepStates(
+            [StepState(stepID: "s1", name: "X", status: StepState.running)],
+            in: session.folder
+        )
+        let reloaded = try container.store.load(folder: session.folder)
+        let fake = FakeRunner(stdouts: ["recovered"])
+        let runner = try makeRunner(fake, store: container.store)
+        let updated = try runner.run(session: reloaded,
+                                     pipeline: PipelineDefinition(id: "p", name: "P", steps: [step("s1")]))
+        #expect(fake.invocations.count == 1)
+        #expect(updated.metadata.pipeline.steps?.first?.status == StepState.done)
+    }
+
     @Test func stepSelectionRules() {
         let enabled = step("s1")
         var disabled = step("s2"); disabled.enabled = false
