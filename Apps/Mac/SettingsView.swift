@@ -76,6 +76,14 @@ final class ProjectsStore {
     func save() { try? container.saveProjects(projects) }
     func add() { projects.append(Project(name: "", color: ProjectColor.palette.first ?? "#3B82F6")) }
     func delete(_ project: Project) { projects.removeAll { $0.id == project.id } }
+
+    /// Clears references to a deleted pipeline (ADR-13) so no project keeps a
+    /// dangling `pipelineID` and an invalid picker selection.
+    func clearPipeline(_ pipelineID: String) {
+        for index in projects.indices where projects[index].pipelineID == pipelineID {
+            projects[index].pipelineID = nil
+        }
+    }
 }
 
 /// App settings, organized into native preference tabs. App-behavior toggles are
@@ -109,7 +117,8 @@ struct SettingsView: View {
                 .tabItem { Label("settings.tab.summary", systemImage: "doc.text") }
             ProjectsTab(store: projectsStore, pipelines: pipelinesStore.config.pipelines)
                 .tabItem { Label("settings.tab.projects", systemImage: "tag") }
-            AutomationsTab(connectionsStore: connectionsStore, pipelinesStore: pipelinesStore)
+            AutomationsTab(connectionsStore: connectionsStore, pipelinesStore: pipelinesStore,
+                           projectsStore: projectsStore)
                 .tabItem { Label("settings.tab.automations", systemImage: "sparkles") }
             ProcessingTab()
                 .tabItem { Label("settings.tab.processing", systemImage: "gearshape.2") }

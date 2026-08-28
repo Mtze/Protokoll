@@ -52,6 +52,8 @@ final class PipelinesStore {
 struct AutomationsTab: View {
     @Bindable var connectionsStore: ConnectionsStore
     @Bindable var pipelinesStore: PipelinesStore
+    /// Deleting a pipeline also clears projects that referenced it.
+    @Bindable var projectsStore: ProjectsStore
     @AppStorage(SettingsKeys.stepCommandAllowlist) private var commandAllowlist = ""
     @State private var editedPipelineID: String?
 
@@ -85,7 +87,10 @@ struct AutomationsTab: View {
                         }
                         .buttonStyle(.borderless)
                         .help("pipeline.edit")
-                        Button(role: .destructive) { pipelinesStore.delete(pipeline) } label: {
+                        Button(role: .destructive) {
+                            pipelinesStore.delete(pipeline)
+                            projectsStore.clearPipeline(pipeline.id)
+                        } label: {
                             Image(systemName: "trash")
                         }
                         .buttonStyle(.borderless)
@@ -317,6 +322,11 @@ private struct StepEditor: View {
         }
         .formStyle(.grouped)
         .navigationTitle(step.name.isEmpty ? String(localized: "step.new") : step.name)
+        // Normalize on appearance too: the connection may have become custom
+        // since this step was configured, and the picker is locked then.
+        .onAppear {
+            if isCustomConnection { step.access = ActionStep.accessReadWrite }
+        }
         .onChange(of: step.connectionID) {
             if isCustomConnection { step.access = ActionStep.accessReadWrite }
         }
