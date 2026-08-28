@@ -16,6 +16,11 @@ final class AppModel {
 
     private(set) var sessions: [Session] = []
     private(set) var isRecording = false
+    /// True from the moment Stop is pressed until the CAF->m4a export / mix
+    /// finishes. The stop button reads it to disable itself so a second tap can't
+    /// re-enter `stopRecording` during the multi-second export (which would throw
+    /// `notRecording`). Cleared even if the export fails.
+    private(set) var isStopping = false
     private(set) var activeRecordingID: String?
 
     // Live recording meter (N4 visible indicator).
@@ -160,6 +165,7 @@ final class AppModel {
     }
 
     func startRecording() async {
+        guard !isStopping else { return }
         guard await Recorder.requestMicrophoneAccess() else {
             health = .red
             return
@@ -168,7 +174,12 @@ final class AppModel {
             let session = try container.createSession(device: .mac)
             // Opt-in OS echo cancellation on the mic path (Settings > Recording).
             let voiceProcessing = UserDefaults.standard.bool(forKey: SettingsKeys.voiceProcessing)
-            try await recorder.start(session: session, voiceProcessing: voiceProcessing)
+            let inputDeviceUID = UserDefaults.standard.string(forKey: SettingsKeys.preferredInputDeviceUID)
+            try await recorder.start(
+                session: session,
+                voiceProcessing: voiceProcessing,
+                inputDeviceUID: (inputDeviceUID?.isEmpty ?? true) ? nil : inputDeviceUID
+            )
             isRecording = true
             activeRecordingID = session.id
             startLevelMonitoring()
@@ -190,7 +201,8 @@ final class AppModel {
     }
 
     func stopRecording() async {
-        guard isRecording else { return }
+        guard isRecording, !isStopping else { return }
+        isStopping = true
         #if os(macOS)
         var systemProduced = false
         if capturingSystemAudio {
@@ -224,6 +236,10 @@ final class AppModel {
         isRecording = false
         activeRecordingID = nil
         stopLevelMonitoring()
+        // Clear last, so a view observing `isStopping` re-renders once mic.m4a is
+        // finalized and reloadSessions() has refreshed the list - the moment the
+        // player and Process action become valid.
+        isStopping = false
         reloadSessions()
     }
 

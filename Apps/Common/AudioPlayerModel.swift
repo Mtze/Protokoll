@@ -55,9 +55,12 @@ public final class AudioPlayerModel {
         if stored > 0 { rate = Float(stored) }
     }
 
-    /// Loads a file for playback. No-op if the same URL is already loaded.
+    /// Loads a file for playback. No-op if the same URL is *already loaded*; a
+    /// same-URL call still reloads when the previous attempt failed (`isLoaded ==
+    /// false`), e.g. the file only appeared after the recording finished
+    /// exporting.
     public func load(_ url: URL) {
-        guard loadedURL != url else { return }
+        guard loadedURL != url || !isLoaded else { return }
         stopTicker()
         player?.stop()
         player = nil

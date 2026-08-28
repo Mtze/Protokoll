@@ -65,6 +65,9 @@ brew install --cask --no-quarantine protokoll
 **Recording**
 - Microphone capture with a **live waveform** that reacts to input (mic *and*
   system audio), and crash-safe incremental capture (CAF → `mic.m4a`, ADR-3).
+- **Pick the input device** in Settings → General → Recording; the list covers
+  virtual and aggregate devices (enumerated via the CoreAudio HAL). Leave it on
+  *System Default* to follow the macOS input selection.
 - Optional **system-audio capture** (ScreenCaptureKit) for calls; mic + system
   are **mixed into one track** so the whole conversation is transcribed (ADR-7).
 - **Import an existing recording** (macOS): pick an audio file (m4a, mp3, wav,
@@ -112,7 +115,7 @@ brew install --cask --no-quarantine protokoll
 
 Menu items disable when nothing is selected; all labels are localized.
 
-**Settings** (tabbed): General (consent reminder, system audio, playback speed),
+**Settings** (tabbed): General (input device, consent reminder, system audio, playback speed),
 Transcription (language, domain vocabulary, model), Summary (language, model,
 custom instructions), Processing (auto-process, notifications), Advanced
 (container path, tool overrides). Pipeline settings persist to the container so

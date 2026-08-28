@@ -77,7 +77,11 @@ struct MenuContentView: View {
                 Task { await model.startRecording() }
             }
         } label: {
-            if model.isRecording {
+            if model.isStopping {
+                // The export after Stop takes a few seconds; show it is under way
+                // and block a second tap (see `.disabled` below).
+                Label("menu.stopping", systemImage: "stop.circle")
+            } else if model.isRecording {
                 Label("menu.stop", systemImage: "stop.circle.fill")
                     .foregroundStyle(.red)
                     .symbolEffect(.pulse, options: .repeating)
@@ -89,6 +93,7 @@ struct MenuContentView: View {
         .tint(model.isRecording ? .red : .accentColor)
         .controlSize(.large)
         .frame(maxWidth: .infinity)
+        .disabled(model.isStopping)
         .keyboardShortcut("n", modifiers: .command)
         .confirmationDialog("consent.title", isPresented: $showingConsent, titleVisibility: .visible) {
             Button("consent.confirm") { Task { await model.startRecording() } }

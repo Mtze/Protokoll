@@ -145,6 +145,16 @@ before pushing**, never force-push; `.worktrees/` is gitignored.
 - Recording is **one combined track** (ADR-7): mic + optional system audio are
   mixed into `mic.m4a` on stop, which is what gets transcribed. Screen Recording
   permission is required for system audio; failures surface, never silent.
+  `stop()` writes `mic.m4a` to a `.partial` sibling and **atomically renames** it,
+  so the player / pipeline / `NewSessionNotifier` never observe a half-exported
+  file (a visible partial file left the audio player stuck disabled). The input
+  **device** is selectable in Settings (`SettingsKeys.preferredInputDeviceUID`,
+  empty = system default): `AudioInputDevices` enumerates input-capable devices
+  via the CoreAudio HAL and `Recorder.start(...inputDeviceUID:)` binds
+  `kAudioOutputUnitProperty_CurrentDevice` on `engine.inputNode.audioUnit`
+  **after** the voice-processing toggle (AEC swaps in AUVoiceIO and would reset
+  it). `AppModel.isStopping` is true across the post-stop export window; the
+  record/stop button + `⌘N` disable on it so a second tap can't re-enter `stop`.
 
 ## Testing conventions
 

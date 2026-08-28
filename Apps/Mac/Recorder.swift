@@ -1,4 +1,6 @@
+import AudioToolbox
 import AVFoundation
+import CoreAudio
 import Foundation
 import MediaKit
 import SharedKit
@@ -57,7 +59,12 @@ actor Recorder {
     /// denoiser can undo. It is opt-in because it *is* itself an enhancement
     /// chain (so it carries the same "may hurt ASR" risk as any denoiser), it
     /// changes the input format, and it can fail on some devices.
-    func start(session: Session, voiceProcessing: Bool = false) throws {
+    ///
+    /// `inputDeviceUID` selects a specific input device (from Settings). `nil`
+    /// keeps the system default. The device is bound *after* the voice-processing
+    /// toggle, because enabling AEC swaps in the AUVoiceIO audio unit and would
+    /// reset any device set on the old one.
+    func start(session: Session, voiceProcessing: Bool = false, inputDeviceUID: String? = nil) throws {
         guard !isRecording else { return }
         let input = engine.inputNode
         if voiceProcessing {
@@ -72,6 +79,7 @@ actor Recorder {
             // A previous run may have left it on; the node outlives one recording.
             try? input.setVoiceProcessingEnabled(false)
         }
+        bindInputDevice(inputDeviceUID, on: input)
         // Read the format *after* toggling: voice processing changes it.
         let format = input.outputFormat(forBus: 0)
         try FileManager.default.createDirectory(at: session.audioDirectory, withIntermediateDirectories: true)
@@ -104,6 +112,37 @@ actor Recorder {
         AppLog.recording.info("recording started session=\(session.id, privacy: .public) folder=\(AppLog.folderName(session.folder), privacy: .public)")
     }
 
+    /// Points the engine's input node at a specific CoreAudio device. A no-op
+    /// when `uid` is nil (system default). If the UID no longer resolves (device
+    /// unplugged) we log and fall back to the default rather than fail the run.
+    private func bindInputDevice(_ uid: String?, on input: AVAudioInputNode) {
+        guard let uid, !uid.isEmpty else { return }
+        guard let deviceID = AudioInputDevices.deviceID(forUID: uid) else {
+            AppLog.recording.warning("preferred input device is unavailable; using system default")
+            return
+        }
+        // Drop any graph format cached from a previous device before rebinding.
+        engine.reset()
+        guard let audioUnit = input.audioUnit else {
+            AppLog.recording.warning("input node has no audio unit; using system default")
+            return
+        }
+        var device = deviceID
+        let status = AudioUnitSetProperty(
+            audioUnit,
+            kAudioOutputUnitProperty_CurrentDevice,
+            kAudioUnitScope_Global,
+            0,
+            &device,
+            UInt32(MemoryLayout<AudioDeviceID>.size)
+        )
+        if status == noErr {
+            AppLog.recording.info("input device bound uid=\(uid, privacy: .public)")
+        } else {
+            AppLog.recording.warning("failed to bind input device status=\(status, privacy: .public); using system default")
+        }
+    }
+
     /// Stops capture, finalizes the CAF, and produces `mic.m4a` - mixing in the
     /// system-audio track when present (ADR-7) so the transcript covers the whole
     /// call, not just the mic. Returns the session with updated `endedAt`/`duration`.
@@ -128,15 +167,23 @@ actor Recorder {
         }
         didClip = clipped
 
+        // Produce mic.m4a via a temp file and an atomic rename, so the player,
+        // pipeline, and NewSessionNotifier never observe a half-written export
+        // (a partial mic.m4a would leave the audio player stuck disabled).
+        let finalURL = session.micAudioURL
+        let partialURL = finalURL.appendingPathExtension("partial")
+        try? FileManager.default.removeItem(at: partialURL)
         let systemURL = session.systemAudioURL
         if mixSystemAudio, FileManager.default.fileExists(atPath: systemURL.path) {
             AppLog.recording.info("mixing mic + system audio session=\(session.id, privacy: .public)")
-            try await AudioMixer.mix([session.micCaptureURL, systemURL], into: session.micAudioURL)
+            try await AudioMixer.mix([session.micCaptureURL, systemURL], into: partialURL)
             try? FileManager.default.removeItem(at: systemURL)
         } else {
             AppLog.recording.info("converting CAF to m4a session=\(session.id, privacy: .public)")
-            try await Self.convertCAFToM4A(caf: session.micCaptureURL, m4a: session.micAudioURL)
+            try await Self.convertCAFToM4A(caf: session.micCaptureURL, m4a: partialURL)
         }
+        try? FileManager.default.removeItem(at: finalURL)
+        try FileManager.default.moveItem(at: partialURL, to: finalURL)
         try? FileManager.default.removeItem(at: session.micCaptureURL)
 
         let ended = Date()

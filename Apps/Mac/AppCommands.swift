@@ -83,7 +83,8 @@ struct ProtokollCommands: Commands {
     var body: some Commands {
         // A single "Session" menu gathers recording + selected-session actions.
         CommandMenu("commands.menu.session") {
-            Button(model.isRecording ? "menu.stop" : "menu.record") {
+            Button(model.isStopping ? "menu.stopping"
+                   : (model.isRecording ? "menu.stop" : "menu.record")) {
                 if let recordAction {
                     recordAction()
                 } else {
@@ -91,6 +92,7 @@ struct ProtokollCommands: Commands {
                 }
             }
             .keyboardShortcut("n", modifiers: .command)
+            .disabled(model.isStopping)
 
             Button("action.importAudio") {
                 if let importAction {

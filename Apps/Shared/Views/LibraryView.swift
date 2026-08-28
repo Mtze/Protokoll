@@ -94,12 +94,14 @@ struct LibraryView: View {
         }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
-            ToolbarItem(placement: .navigation) { importButton }
             if model.isRecording {
-                // Deliberately does NOT read `model.recordingLevels` here - see
+                // Sits right next to the record/stop button so it is obvious the
+                // two belong together (which control stops the recording). Also
+                // deliberately does NOT read `model.recordingLevels` here - see
                 // RecordingToolbarIndicator.
-                ToolbarItem(placement: .principal) { RecordingToolbarIndicator() }
+                ToolbarItem(placement: .navigation) { RecordingToolbarIndicator() }
             }
+            ToolbarItem(placement: .navigation) { importButton }
         }
         .modifier(SessionDialogs(model: model, selection: $selection,
                                  showingConsent: $showingConsent,
@@ -283,10 +285,17 @@ struct LibraryView: View {
         Button {
             recordTapped()
         } label: {
-            Label(model.isRecording ? "menu.stop" : "menu.record",
-                  systemImage: model.isRecording ? "stop.circle.fill" : "record.circle")
+            if model.isStopping {
+                // The export after Stop takes a few seconds; show it is under way
+                // and block a second tap (see `.disabled` below).
+                Label("menu.stopping", systemImage: "stop.circle")
+            } else {
+                Label(model.isRecording ? "menu.stop" : "menu.record",
+                      systemImage: model.isRecording ? "stop.circle.fill" : "record.circle")
+            }
         }
         .tint(model.isRecording ? .red : .accentColor)
+        .disabled(model.isStopping)
         .help(model.isRecording ? "menu.stop" : "action.newRecording")
     }
 
