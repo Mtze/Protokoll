@@ -75,6 +75,13 @@ struct LibraryView: View {
             await model.search(searchText, filter: SearchFilter(projectID: projectFilter))
         }
         .onAppear { if !onboardingDone { showOnboarding = true } }
+        .onChange(of: model.pendingRevealSessionID) {
+            // A tapped completion notification selects its session.
+            if let id = model.pendingRevealSessionID {
+                selection = id
+                model.pendingRevealSessionID = nil
+            }
+        }
         .sheet(isPresented: $showOnboarding) {
             OnboardingView(dismiss: { showOnboarding = false })
         }
@@ -156,7 +163,20 @@ struct LibraryView: View {
         switch SessionAction.forDetail(status: session.metadata.pipeline.status,
                                        hasActiveJob: model.activeJob(for: session.id) != nil) {
         case .process:
-            Button { model.process(session) } label: { Label("action.process", systemImage: "gearshape.2") }
+            if model.pipelinesConfig.pipelines.isEmpty {
+                Button { model.process(session) } label: { Label("action.process", systemImage: "gearshape.2") }
+            } else {
+                // With custom pipelines, Process becomes a picker (ADR-13); the
+                // checkmark shows what would run, the choice persists.
+                Menu {
+                    pipelineChoice(for: session, id: nil, name: nil)
+                    ForEach(model.pipelinesConfig.pipelines) { pipeline in
+                        pipelineChoice(for: session, id: pipeline.id, name: pipeline.name)
+                    }
+                } label: {
+                    Label("action.process", systemImage: "gearshape.2")
+                }
+            }
         case .retry:
             Button { model.retry(session) } label: { Label("action.retry", systemImage: "arrow.clockwise") }
         case .regenerate:
@@ -210,6 +230,27 @@ struct LibraryView: View {
 
         Button(role: .destructive) { sessionToDelete = session } label: {
             Label("action.delete", systemImage: "trash")
+        }
+    }
+
+    /// One entry of the Process pipeline picker: `id == nil` is the built-in
+    /// default. Selecting persists the override, then processes.
+    @ViewBuilder private func pipelineChoice(for session: Session, id: String?, name: String?) -> some View {
+        let resolved = PipelineResolver.resolve(session: session.metadata,
+                                                projects: model.projects,
+                                                config: model.pipelinesConfig)?.id
+        Button {
+            model.setPipelineOverride(id ?? "", for: session)
+            if let fresh = model.sessions.first(where: { $0.id == session.id }) {
+                model.process(fresh)
+            }
+        } label: {
+            let title = name ?? String(localized: "pipeline.builtin")
+            if resolved == id {
+                Label { Text(verbatim: title) } icon: { Image(systemName: "checkmark") }
+            } else {
+                Text(verbatim: title)
+            }
         }
     }
 

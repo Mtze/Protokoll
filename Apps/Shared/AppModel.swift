@@ -4,6 +4,9 @@ import SharedKit
 import Diagnostics
 import SearchIndex
 import MediaKit
+#if canImport(AppKit)
+import AppKit
+#endif
 
 /// The app-wide observable model shared by the menubar and the library window.
 /// Owns the container, the session list, the scheduler, and diagnostics state.
@@ -50,6 +53,9 @@ final class AppModel {
     /// post-stop materials card (ADR-13). While set, auto-processing holds off
     /// for that session so the card cannot be raced.
     private(set) var justStoppedSession: Session?
+    /// Set when a completion notification is tapped; the library selects this
+    /// session and clears it.
+    var pendingRevealSessionID: String?
     /// User-defined pipelines (ADR-13), for pipeline pickers.
     private(set) var pipelinesConfig = PipelinesConfig()
 
@@ -80,7 +86,7 @@ final class AppModel {
     }
 
     #if os(macOS)
-    @ObservationIgnored private var notifier: NewSessionNotifier?
+    @ObservationIgnored private var notifier: SessionNotifier?
     #endif
 
     @ObservationIgnored private var didBootstrap = false
@@ -97,13 +103,26 @@ final class AppModel {
         #if os(macOS)
         // Watch for new/iCloud-arrived sessions (F13). Sessions still recording
         // or showing the post-stop card are held, not marked known.
-        let notifier = NewSessionNotifier(container: container, isHeld: { [weak self] id in
+        let notifier = SessionNotifier(container: container, isHeld: { [weak self] id in
             self?.activeRecordingID == id || self?.justStoppedSession?.id == id
+        }, onReveal: { [weak self] id in
+            self?.pendingRevealSessionID = id
+            NSApplication.shared.activate()
         }) { [weak self] session in
             self?.process(session)
         }
         notifier.start()
         self.notifier = notifier
+        // Announce a finished chain (F13 counterpart): success only - failures
+        // stay in-app, a failed run must never read as "done".
+        scheduler.onSessionCompleted = { [weak self] sessionID, success in
+            // Read fresh from disk: the in-memory list may predate the final
+            // status write of the just-finished subprocess.
+            guard success, let self,
+                  let session = try? self.container.session(id: sessionID),
+                  session.metadata.pipeline.status == .done else { return }
+            self.notifier?.notifyCompleted(session)
+        }
         #endif
     }
 
@@ -300,7 +319,7 @@ final class AppModel {
     /// Imports an existing audio file as a normal session: creates the folder,
     /// transcodes the audio into the canonical `mic.m4a`, and leaves the session
     /// `.recorded` - exactly the on-disk shape a live recording produces. No
-    /// `process()` call: the existing `NewSessionNotifier` (auto-process setting)
+    /// `process()` call: the existing `SessionNotifier` (auto-process setting)
     /// / notification / Process paths take over just as they do for a recording.
     func importAudio(from url: URL) async {
         let accessing = url.startAccessingSecurityScopedResource()
