@@ -24,6 +24,10 @@ struct MenuContentView: View {
                     .frame(height: 28)
             }
 
+            if let stopped = model.justStoppedSession {
+                PostStopCard(session: stopped)
+            }
+
             if let error = model.systemAudioError {
                 SystemAudioBanner(message: error)
             }
@@ -168,6 +172,68 @@ struct MenuContentView: View {
             }
         }
         .padding(.top, 2)
+    }
+}
+
+/// The post-stop card (ADR-13): right after a recording stops, offer to paste
+/// material links (agenda doc, reference pages) and pick a pipeline before
+/// processing. Skippable - closing the popover or dismissing keeps the session
+/// untouched; while the card shows, auto-processing holds off for the session.
+private struct PostStopCard: View {
+    @Environment(AppModel.self) private var model
+    let session: Session
+    @State private var materialsText = ""
+    @State private var pipelineID = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Label("card.justRecorded", systemImage: "checkmark.circle")
+                    .font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Button { save(); model.dismissPostStopCard() } label: {
+                    Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .help("common.dismiss")
+            }
+            Text(session.displayTitle).font(.callout).lineLimit(1)
+            TextField("card.materials", text: $materialsText, prompt: Text("card.materials.prompt"), axis: .vertical)
+                .lineLimit(1...3)
+                .textFieldStyle(.roundedBorder)
+            if !model.pipelinesConfig.pipelines.isEmpty {
+                Picker("card.pipeline", selection: $pipelineID) {
+                    Text("card.pipeline.auto").tag("")
+                    ForEach(model.pipelinesConfig.pipelines) { pipeline in
+                        Text(pipeline.name).tag(pipeline.id)
+                    }
+                }
+                .font(.caption)
+            }
+            Button {
+                save()
+                if let current = model.sessions.first(where: { $0.id == session.id }) {
+                    model.process(current)
+                }
+                model.dismissPostStopCard()
+            } label: {
+                Label("action.process", systemImage: "gearshape.arrow.triangle.2.circlepath")
+                    .frame(maxWidth: .infinity)
+            }
+            .controlSize(.regular)
+        }
+        .padding(8)
+        .background(.quaternary.opacity(0.5), in: RoundedRectangle(cornerRadius: 8))
+        .onAppear { materialsText = (session.metadata.materials ?? []).joined(separator: "\n") }
+    }
+
+    /// Persists the card's values; parsing splits on whitespace/newlines.
+    private func save() {
+        model.setMaterials(AppModel.parseMaterialLinks(materialsText), for: session)
+        if !pipelineID.isEmpty,
+           let current = model.sessions.first(where: { $0.id == session.id }) {
+            model.setPipelineOverride(pipelineID, for: current)
+        }
     }
 }
 

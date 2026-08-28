@@ -46,6 +46,13 @@ final class AppModel {
     /// dismissible banner. Cleared when a new recording starts.
     var inputClippedWarning: String?
 
+    /// The session that just stopped recording on this Mac, driving the
+    /// post-stop materials card (ADR-13). While set, auto-processing holds off
+    /// for that session so the card cannot be raced.
+    private(set) var justStoppedSession: Session?
+    /// User-defined pipelines (ADR-13), for pipeline pickers.
+    private(set) var pipelinesConfig = PipelinesConfig()
+
     /// Shared reference so the `NSApplicationDelegate` can gate quit on active
     /// work (confirm-on-quit, ADR-4).
     static weak var shared: AppModel?
@@ -86,8 +93,11 @@ final class AppModel {
         await rebuildIndex()
         await runDiagnostics()
         #if os(macOS)
-        // Watch for new/iCloud-arrived sessions (F13).
-        let notifier = NewSessionNotifier(container: container) { [weak self] session in
+        // Watch for new/iCloud-arrived sessions (F13). Sessions still recording
+        // or showing the post-stop card are held, not marked known.
+        let notifier = NewSessionNotifier(container: container, isHeld: { [weak self] id in
+            self?.activeRecordingID == id || self?.justStoppedSession?.id == id
+        }) { [weak self] session in
             self?.process(session)
         }
         notifier.start()
@@ -98,6 +108,7 @@ final class AppModel {
     func reloadSessions() {
         sessions = (try? container.allSessions()) ?? []
         projects = (try? container.loadProjects()) ?? []
+        pipelinesConfig = (try? container.loadPipelines()) ?? PipelinesConfig()
     }
 
     /// Reloads just the project/tag definitions (after Settings edits, F7).
@@ -119,6 +130,34 @@ final class AppModel {
         try? container.store.save(updated)
         reloadSessions()
         Task { await rebuildIndex() }
+    }
+
+    /// Sets a session's material links (ADR-13, F5). Empty clears them.
+    func setMaterials(_ links: [String], for session: Session) {
+        var updated = session
+        updated.metadata.materials = links.isEmpty ? nil : links
+        try? container.store.save(updated)
+        reloadSessions()
+    }
+
+    /// Parses a free-text materials field (whitespace/newline separated links).
+    static func parseMaterialLinks(_ text: String) -> [String] {
+        text.split(whereSeparator: \.isWhitespace).map(String.init)
+    }
+
+    /// Persists a per-session pipeline override (ADR-13). `nil` = follow the
+    /// project/global default again.
+    func setPipelineOverride(_ pipelineID: String?, for session: Session) {
+        var updated = session
+        updated.metadata.pipelineID = pipelineID
+        try? container.store.save(updated)
+        reloadSessions()
+    }
+
+    /// Dismisses the post-stop materials card and releases the auto-process
+    /// hold for that session.
+    func dismissPostStopCard() {
+        justStoppedSession = nil
     }
 
     /// Renames a session by persisting a custom title (F9). An empty title clears
@@ -211,6 +250,11 @@ final class AppModel {
             #endif
             session.metadata.pipeline.status = .recorded
             try container.store.save(session)
+            #if os(macOS)
+            // Offer the post-stop materials card (ADR-13); auto-processing
+            // holds off for this session while the card is up.
+            justStoppedSession = session
+            #endif
             #if os(macOS)
             // Clipping cannot be repaired after the fact, so say so now rather
             // than let it silently cost transcription accuracy.

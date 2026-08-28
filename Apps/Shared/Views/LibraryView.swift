@@ -20,6 +20,8 @@ struct LibraryView: View {
     @State private var sessionToRename: Session?
     @State private var sessionToRetranscribe: Session?
     @State private var renameText = ""
+    @State private var sessionToEditMaterials: Session?
+    @State private var materialsText = ""
     @AppStorage(SettingsKeys.onboardingDone) private var onboardingDone = false
     @State private var showOnboarding = false
     @State private var projectFilter: String?
@@ -106,7 +108,9 @@ struct LibraryView: View {
                                  sessionToDelete: $sessionToDelete,
                                  sessionToRename: $sessionToRename,
                                  sessionToRetranscribe: $sessionToRetranscribe,
-                                 renameText: $renameText))
+                                 renameText: $renameText,
+                                 sessionToEditMaterials: $sessionToEditMaterials,
+                                 materialsText: $materialsText))
     }
 
     /// The session list (sidebar column), extracted to keep `body` type-checkable.
@@ -140,6 +144,12 @@ struct LibraryView: View {
         sessionToRename = session
     }
 
+    /// Opens the materials dialog (ADR-13), prefilled with the current links.
+    private func beginEditMaterials(_ session: Session) {
+        materialsText = (session.metadata.materials ?? []).joined(separator: " ")
+        sessionToEditMaterials = session
+    }
+
     /// The per-session actions shown in the sidebar row context menu, mirrored by
     /// the "Session" system menu (`ProtokollCommands`).
     @ViewBuilder private func sessionMenuItems(for session: Session) -> some View {
@@ -168,6 +178,7 @@ struct LibraryView: View {
         }
 
         Button { beginRename(session) } label: { Label("action.rename", systemImage: "pencil") }
+        Button { beginEditMaterials(session) } label: { Label("action.materials", systemImage: "link") }
         Button { reveal(session) } label: { Label("action.reveal", systemImage: "folder") }
 
         if !model.projects.isEmpty {
@@ -316,6 +327,8 @@ private struct SessionDialogs: ViewModifier {
     @Binding var sessionToRename: Session?
     @Binding var sessionToRetranscribe: Session?
     @Binding var renameText: String
+    @Binding var sessionToEditMaterials: Session?
+    @Binding var materialsText: String
 
     func body(content: Content) -> some View {
         content
@@ -359,6 +372,20 @@ private struct SessionDialogs: ViewModifier {
                 TextField("rename.placeholder", text: $renameText)
                 Button("common.save") { model.rename(session, to: renameText) }
                 Button("common.cancel", role: .cancel) {}
+            }
+            .alert(
+                "materials.title",
+                isPresented: Binding(get: { sessionToEditMaterials != nil },
+                                     set: { if !$0 { sessionToEditMaterials = nil } }),
+                presenting: sessionToEditMaterials
+            ) { session in
+                TextField("materials.placeholder", text: $materialsText)
+                Button("common.save") {
+                    model.setMaterials(AppModel.parseMaterialLinks(materialsText), for: session)
+                }
+                Button("common.cancel", role: .cancel) {}
+            } message: { _ in
+                Text("materials.message")
             }
     }
 }

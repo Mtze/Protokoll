@@ -130,22 +130,28 @@ public struct Summarizer: Sendable {
         let (_, body) = Frontmatter.split(transcriptDoc)
         let currentTitle = session.hasExplicitTitle ? session.metadata.title : nil
         let context = Self.meetingContext(for: session, transcriptBody: body)
+        // Fetched material links + a manually placed agenda.md (ADR-13, F5).
+        let materials = MaterialsFetcher.loadLocalMaterials(for: session)
 
         // Long transcripts (N9) go through map-reduce; short ones stay single-shot.
         let chunks = chunker.chunk(body)
         let output: String
         if chunks.count <= 1 {
             output = try runEngine(
-                system: SummarizePrompt.systemPrompt(currentTitle: currentTitle, summaryLanguage: summaryLanguage),
+                system: SummarizePrompt.systemPrompt(currentTitle: currentTitle,
+                                                     summaryLanguage: summaryLanguage,
+                                                     hasMaterials: !materials.isEmpty),
                 stdin: SummarizePrompt.userMessage(
                     transcript: body, context: context,
-                    bodyTemplate: bodyTemplate, extra: customInstructions
+                    bodyTemplate: bodyTemplate, extra: customInstructions,
+                    materials: materials
                 ),
                 onProgress: onProgress
             )
         } else {
             output = try mapReduce(
-                chunks: chunks, currentTitle: currentTitle, context: context, onProgress: onProgress
+                chunks: chunks, currentTitle: currentTitle, context: context,
+                materials: materials, onProgress: onProgress
             )
         }
 
@@ -215,6 +221,7 @@ public struct Summarizer: Sendable {
         chunks: [TranscriptChunk],
         currentTitle: String?,
         context: MeetingContext,
+        materials: [String] = [],
         onProgress: (@Sendable (String) -> Void)?
     ) throws -> String {
         var partials: [String] = []
@@ -237,14 +244,16 @@ public struct Summarizer: Sendable {
         onProgress?("synthesizing final protocol")
         return try runEngine(
             system: SummarizePrompt.reduceSystemPrompt(
-                currentTitle: currentTitle, summaryLanguage: summaryLanguage
+                currentTitle: currentTitle, summaryLanguage: summaryLanguage,
+                hasMaterials: !materials.isEmpty
             ),
             stdin: SummarizePrompt.userMessage(
                 transcript: partials.joined(separator: "\n\n"),
                 context: context,
                 bodyTemplate: bodyTemplate,
                 extra: customInstructions,
-                transcriptTag: "notes"
+                transcriptTag: "notes",
+                materials: materials
             ),
             onProgress: onProgress
         )

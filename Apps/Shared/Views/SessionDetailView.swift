@@ -147,6 +147,23 @@ struct SessionDetailView: View {
                         ForEach(projects) { ProjectChip(name: $0.name, colorHex: $0.color) }
                     }
                 }
+                if let materials = session.metadata.materials, !materials.isEmpty {
+                    // Material links (ADR-13); edited via the row context menu.
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(materials, id: \.self) { link in
+                            if let url = URL(string: link) {
+                                Link(destination: url) {
+                                    Label(link, systemImage: "link")
+                                        .font(.caption).lineLimit(1).truncationMode(.middle)
+                                }
+                            } else {
+                                Label(link, systemImage: "link")
+                                    .font(.caption).foregroundStyle(.secondary)
+                                    .lineLimit(1).truncationMode(.middle)
+                            }
+                        }
+                    }
+                }
             }
             Spacer(minLength: 8)
             metaActions
