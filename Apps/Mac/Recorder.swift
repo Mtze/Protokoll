@@ -112,15 +112,37 @@ actor Recorder {
         AppLog.recording.info("recording started session=\(session.id, privacy: .public) folder=\(AppLog.folderName(session.folder), privacy: .public)")
     }
 
-    /// Points the engine's input node at a specific CoreAudio device. A no-op
-    /// when `uid` is nil (system default). If the UID no longer resolves (device
-    /// unplugged) we log and fall back to the default rather than fail the run.
+    /// Whether the last `start` bound an explicit (non-default) input device on
+    /// the retained engine. The `kAudioOutputUnitProperty_CurrentDevice` property
+    /// sticks on the long-lived engine, so we need this to know we must actively
+    /// restore the system default when the user switches back to "Default".
+    private var boundExplicitDevice = false
+
+    /// Points the engine's input node at the preferred CoreAudio device. When no
+    /// (valid) device is selected it follows the system default: normally a no-op
+    /// (stock `AVAudioEngine` already tracks the default), but if a previous run
+    /// left a specific device bound it actively rebinds to the current default so
+    /// "Default" doesn't stick to the old device.
     private func bindInputDevice(_ uid: String?, on input: AVAudioInputNode) {
-        guard let uid, !uid.isEmpty else { return }
-        guard let deviceID = AudioInputDevices.deviceID(forUID: uid) else {
+        if let uid, !uid.isEmpty {
+            if let deviceID = AudioInputDevices.deviceID(forUID: uid) {
+                applyInputDevice(deviceID, on: input, label: "uid=\(uid)")
+                boundExplicitDevice = true
+                return
+            }
             AppLog.recording.warning("preferred input device is unavailable; using system default")
-            return
         }
+        // System-default path. Only actively rebind if a prior run left a specific
+        // device on the retained engine; otherwise leave the stock default route.
+        guard boundExplicitDevice else { return }
+        if let defaultID = AudioInputDevices.defaultInputDeviceID() {
+            applyInputDevice(defaultID, on: input, label: "system-default")
+        }
+        boundExplicitDevice = false
+    }
+
+    /// Binds `deviceID` as the engine input node's current CoreAudio device.
+    private func applyInputDevice(_ deviceID: AudioDeviceID, on input: AVAudioInputNode, label: String) {
         // Drop any graph format cached from a previous device before rebinding.
         engine.reset()
         guard let audioUnit = input.audioUnit else {
@@ -137,7 +159,7 @@ actor Recorder {
             UInt32(MemoryLayout<AudioDeviceID>.size)
         )
         if status == noErr {
-            AppLog.recording.info("input device bound uid=\(uid, privacy: .public)")
+            AppLog.recording.info("input device bound \(label, privacy: .public)")
         } else {
             AppLog.recording.warning("failed to bind input device status=\(status, privacy: .public); using system default")
         }
