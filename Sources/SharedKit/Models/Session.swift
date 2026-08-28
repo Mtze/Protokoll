@@ -35,7 +35,20 @@ public struct Session: Sendable, Equatable, Identifiable {
     /// Local audit artifacts of custom action steps (ADR-13), `steps/<id>.md`.
     public var stepsDirectory: URL { folder.appendingPathComponent("steps", isDirectory: true) }
     public func stepArtifactURL(stepID: String) -> URL {
-        stepsDirectory.appendingPathComponent("\(stepID).md")
+        stepsDirectory.appendingPathComponent("\(Self.safeArtifactName(stepID)).md")
+    }
+
+    /// Step ids come from the synced container (`pipelines.json`) and must
+    /// never form a path: a crafted id like `../transcript` would otherwise
+    /// escape `steps/` and clobber protected session files (N10). Anything but
+    /// letters, digits, `-` and `_` is flattened; the app's UUID ids pass
+    /// through unchanged.
+    static func safeArtifactName(_ stepID: String) -> String {
+        let cleaned = String(stepID.map { character in
+            character.isLetter || character.isNumber || character == "-" || character == "_"
+                ? character : "_"
+        })
+        return cleaned.isEmpty ? "step" : cleaned
     }
 
     /// Path for the Nth rotated protocol version (`protocol.v1.md`, …), N10.

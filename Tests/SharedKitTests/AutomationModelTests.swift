@@ -127,6 +127,18 @@ struct AutomationModelTests {
         #expect(decoded.status == "paused-by-future-build")
     }
 
+    @Test func stepArtifactURLNeverEscapesTheStepsFolder() throws {
+        let container = makeContainer()
+        let session = try container.createSession(device: .mac)
+        for hostile in ["../transcript", "../../etc/passwd", "..", ".", "a/b", ""] {
+            let url = session.stepArtifactURL(stepID: hostile).standardizedFileURL
+            #expect(url.path.hasPrefix(session.stepsDirectory.path), "escaped for id \(hostile)")
+            #expect(!url.path.contains(".."))
+        }
+        // Normal UUID-style ids keep their name.
+        #expect(session.stepArtifactURL(stepID: "9C1D-2").lastPathComponent == "9C1D-2.md")
+    }
+
     @Test func claimWithUnknownStepDecodesAsSummarize() throws {
         let json = #"{"deviceId":"mac-1","step":"actions","startedAt":"2026-08-28T10:00:00Z","heartbeat":"2026-08-28T10:00:00Z"}"#
         let claim = try SessionStore.decoder.decode(Claim.self, from: Data(json.utf8))
