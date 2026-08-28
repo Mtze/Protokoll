@@ -17,14 +17,18 @@ public struct DiagnosticsRunner: Sendable {
 
     /// The standard shell-resolvable checks, in display order.
     /// `summaryProvider` gates the `claude` CLI check: an API provider (ADR-9)
-    /// summarizes over the network and needs no local `claude` login.
+    /// summarizes over the network and needs no local `claude` login - unless
+    /// automations are configured (`usesAutomations`), which always run through
+    /// the local `claude` + npx-launched MCP servers (ADR-13).
     public static func standardChecks(
         containerRoot: URL?,
         model: String = "large-v3",
-        summaryProvider: String = "cli"
+        summaryProvider: String = "cli",
+        usesAutomations: Bool = false
     ) -> [any DiagnosticCheck] {
         var checks: [any DiagnosticCheck] = []
-        if summaryProvider == "cli" { checks.append(ClaudeCheck()) }
+        if summaryProvider == "cli" || usesAutomations { checks.append(ClaudeCheck()) }
+        if usesAutomations { checks.append(NpxCheck()) }
         checks.append(WhisperEngineCheck())
         // Warns when the CPU-only fallback engine is what would actually run.
         checks.append(WhisperEnginePerformanceCheck())

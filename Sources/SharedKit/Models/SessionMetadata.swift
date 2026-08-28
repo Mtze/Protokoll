@@ -34,7 +34,8 @@ public struct GeoCoordinate: Codable, Sendable, Equatable {
 /// ``stale``) so newer writers never break older readers; anything unknown is
 /// simply displayed as-is. ``stale`` marks a completed step whose protocol was
 /// regenerated afterwards - external re-runs stay a manual decision.
-public struct StepState: Codable, Sendable, Equatable {
+public struct StepState: Codable, Sendable, Equatable, Identifiable {
+    public var id: String { stepID }
     public var stepID: String
     /// Denormalized display name, so history stays readable after the step is
     /// renamed or deleted from its pipeline.

@@ -64,9 +64,11 @@ final class AppModel {
         self.scheduler = Scheduler(container: container) {
             guard let binary = HelperLocator.processSessionBinary() else { return nil }
             let config = try? container.loadPipelineConfig()
+            let connections = (try? container.loadConnections()) ?? []
             return PipelineRunner(binary: binary, deviceId: device,
                                   runner: ProcessCommandRunner(),
-                                  environment: HelperLocator.pipelineEnvironment(config: config))
+                                  environment: HelperLocator.pipelineEnvironment(config: config,
+                                                                                 connections: connections))
         }
         AppModel.shared = self
         // Refresh the list, index, and detail once a step finishes so the new
@@ -158,6 +160,20 @@ final class AppModel {
     /// hold for that session.
     func dismissPostStopCard() {
         justStoppedSession = nil
+    }
+
+    /// Re-runs the session's custom action steps (ADR-13): all failed, stale,
+    /// or orphaned mid-run ones, or a single step by id.
+    func runActions(_ session: Session, only stepID: String? = nil) {
+        if let stepID {
+            scheduler.enqueueActions(session, only: stepID)
+            return
+        }
+        for state in session.metadata.pipeline.steps ?? []
+        where state.status == StepState.failed || state.status == StepState.stale
+            || state.status == StepState.running {
+            scheduler.enqueueActions(session, only: state.stepID)
+        }
     }
 
     /// Renames a session by persisting a custom title (F9). An empty title clears
@@ -423,7 +439,13 @@ final class AppModel {
         appChecks.append(ScreenRecordingCheck())
         #endif
         let provider = (try? container.loadPipelineConfig())?.summaryProvider ?? "cli"
-        let checks = DiagnosticsRunner.standardChecks(containerRoot: root, summaryProvider: provider) + appChecks
+        // Automations (ADR-13) always need the local claude + npx, whatever the
+        // summary provider is.
+        let usesAutomations = ((try? container.loadPipelines())?.pipelines.contains { pipeline in
+            pipeline.steps.contains(where: \.enabled)
+        }) ?? false
+        let checks = DiagnosticsRunner.standardChecks(containerRoot: root, summaryProvider: provider,
+                                                      usesAutomations: usesAutomations) + appChecks
         let runner = DiagnosticsRunner(checks: checks)
         let results = await Task.detached { runner.runAll() }.value
         checkResults = results
@@ -436,7 +458,8 @@ final class AppModel {
         #if os(macOS)
         appChecks.append(ScreenRecordingCheck())
         #endif
-        let checks = DiagnosticsRunner.standardChecks(containerRoot: try? container.root()) + appChecks
+        let checks = DiagnosticsRunner.standardChecks(containerRoot: try? container.root(),
+                                                      usesAutomations: true) + appChecks
         return DiagnosticsRunner(checks: checks).remediation(for: id)
     }
 }

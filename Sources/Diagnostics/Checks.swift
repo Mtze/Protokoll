@@ -262,3 +262,24 @@ public struct ContainerWritableCheck: DiagnosticCheck {
         }
     }
 }
+
+/// `npx` launches the MCP servers automations use (ADR-13). Only listed when
+/// automations are configured; ships with Node.
+public struct NpxCheck: DiagnosticCheck {
+    public init() {}
+    public let id = CheckID.npx
+    public let titleKey = "diag.npx.title"
+    public let explanationKey = "diag.npx.explanation"
+    public var remediation: Remediation {
+        .autoFix(AutoFix(
+            titleKey: "diag.npx.fix",
+            command: ShellCommand("brew", ["install", "node"]),
+            bootstrap: Bootstrap(toolName: "brew", explanationKey: "diag.bootstrap.brew"),
+            manualInstructionsKey: "diag.npx.manual"
+        ))
+    }
+    public func run(runner: CommandRunning) -> CheckResult {
+        let result = resolves("npx", runner: runner)
+        return CheckResult(id: id, outcome: result.succeeded ? .passed : .failed, detail: result.succeeded ? result.stdout : result.stderr)
+    }
+}

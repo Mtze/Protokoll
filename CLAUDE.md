@@ -101,6 +101,22 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   materials exist. UX: post-stop card in the menubar popover (`PostStopCard`;
   auto-process holds via the notifier's `isHeld`), "Edit Materials…" in the row
   context menu.
+- **Action steps run via `ActionRunner`** (ADR-13): one `claude -p` per enabled
+  step (model = `summaryModel`), connection attached via a per-run 0600
+  `--mcp-config`, access via `--allowedTools` (`read` = the server's read-only
+  tools, `readWrite` = whole server; `Bash(<cmd>:*)` only when the step's
+  `allowedCommands` intersect the machine allowlist - double key). The scaffold
+  (`ActionPrompt`) owns marker-based idempotency
+  (`<!-- protokoll:<session>/<step>:begin/end -->`, replace not append) and
+  demands a tool-call report, archived at `steps/<id>.md`. **Status discipline:**
+  step failures land only in `pipeline.steps[]` (never session-level `.failed`),
+  a failed step doesn't abort later ones, `process-session` exits 0 when core
+  stages succeeded, `Pipeline.run` reconciles a stale `.failed` to `.done` when
+  both outputs exist, and a forced summarize marks done steps `stale` (external
+  re-runs stay manual). Scheduler: third actions slot; summarize chains into
+  actions only for never-completed (pending) steps. Detail view: step list with
+  per-step re-run + artifact sheet; Diagnostics checks claude + npx when any
+  pipeline has enabled steps.
 - **Audio is never denoised.** Spectral denoising measurably *raises* WER for
   large Whisper models (ICAART 2024: helps base/small, hurts medium/large).
   `transcribe.sh --preprocess safe` does only `highpass=f=80` plus one **static**

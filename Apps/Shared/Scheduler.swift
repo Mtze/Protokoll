@@ -16,15 +16,26 @@ final class ProcessingJob: Identifiable {
     let id = UUID()
     let sessionID: String
     let title: String
-    var step: PipelineStep
+    var step: PipelineRunStep
     var state: State = .queued
     /// Last progress line from the engine (shown in the UI).
     var progress: String = ""
 
-    init(sessionID: String, title: String, step: PipelineStep) {
+    init(sessionID: String, title: String, step: PipelineRunStep) {
         self.sessionID = sessionID
         self.title = title
         self.step = step
+    }
+}
+
+extension PipelineRunStep {
+    /// Localization key for job rows ("Transcribing" / "Summarizing" / "Actions").
+    var labelKey: String {
+        switch self {
+        case .transcribe: return "step.transcribe"
+        case .summarize: return "step.summarize"
+        case .actions, .action: return "step.actions"
+        }
     }
 }
 
@@ -47,6 +58,12 @@ final class Scheduler {
     // later default-force pump (which would see protocol.md and skip, breaking
     // N10 rotation).
     private var summarizeQueue: [(folder: URL, job: ProcessingJob, force: Bool)] = []
+    // Action steps (ADR-13) get their own slot: they are network/MCP-bound and
+    // can run for minutes - in the summarize slot they would starve other
+    // sessions' local summaries. Per-session ordering still holds via the
+    // summarize claim in the pipeline.
+    private var actionsBusy = false
+    private var actionsQueue: [(folder: URL, job: ProcessingJob, force: Bool)] = []
 
     private let container: Container
     private let makeRunner: @Sendable () -> PipelineRunner?
@@ -86,6 +103,34 @@ final class Scheduler {
         summarizeQueue.append((session.folder, job, force))
         AppLog.scheduler.info("job enqueued session=\(session.id, privacy: .public) step=summarize force=\(force, privacy: .public)")
         pumpSummarize()
+    }
+
+    /// Enqueues the session's custom action steps (ADR-13): all pending ones,
+    /// or one specific step when `only` is set (re-run of a failed/stale step).
+    func enqueueActions(_ session: Session, only stepID: String? = nil, force: Bool = false) {
+        let step: PipelineRunStep = stepID.map { .action($0) } ?? .actions
+        let job = ProcessingJob(sessionID: session.id, title: session.displayTitle, step: step)
+        jobs.append(job)
+        actionsQueue.append((session.folder, job, force))
+        AppLog.scheduler.info("job enqueued session=\(session.id, privacy: .public) step=\(step.argument, privacy: .public) force=\(force, privacy: .public)")
+        pumpActions()
+    }
+
+    /// Whether the session's resolved pipeline still has enabled steps that
+    /// never completed - drives the summarize -> actions chain. Stale/failed
+    /// steps are deliberately not auto-rerun (external writes stay manual).
+    private func hasPendingActions(_ session: Session) -> Bool {
+        let pipelines = (try? container.loadPipelines()) ?? PipelinesConfig()
+        let projects = (try? container.loadProjects()) ?? []
+        guard let pipeline = PipelineResolver.resolve(session: session.metadata,
+                                                      projects: projects, config: pipelines) else {
+            return false
+        }
+        let states = Dictionary(uniqueKeysWithValues:
+            (session.metadata.pipeline.steps ?? []).map { ($0.stepID, $0.status) })
+        return pipeline.steps.contains { step in
+            step.enabled && (states[step.id] ?? StepState.pending) == StepState.pending
+        }
     }
 
     // MARK: Pumps (two independent slots)
@@ -132,6 +177,12 @@ final class Scheduler {
             case .success:
                 job.state = .finished
                 AppLog.scheduler.info("job finished session=\(job.sessionID, privacy: .public) step=summarize")
+                // Chain into the pipeline's custom actions (ADR-13) when any
+                // enabled step has never completed.
+                if let session = try? self.container.store.load(folder: folder),
+                   self.hasPendingActions(session) {
+                    self.enqueueActions(session)
+                }
             case let .failure(message):
                 job.state = .failed(message)
                 AppLog.scheduler.error("job failed session=\(job.sessionID, privacy: .public) step=summarize: \(message, privacy: .public)")
@@ -141,13 +192,35 @@ final class Scheduler {
         }
     }
 
+    private func pumpActions() {
+        guard !actionsBusy, !actionsQueue.isEmpty else { return }
+        let (folder, job, force) = actionsQueue.removeFirst()
+        actionsBusy = true
+        job.state = .running
+        AppLog.scheduler.info("job started session=\(job.sessionID, privacy: .public) step=\(job.step.argument, privacy: .public)")
+        runStep(folder: folder, step: job.step, force: force, job: job) { [weak self] outcome in
+            guard let self else { return }
+            self.actionsBusy = false
+            switch outcome {
+            case .success:
+                job.state = .finished
+                AppLog.scheduler.info("job finished session=\(job.sessionID, privacy: .public) step=\(job.step.argument, privacy: .public)")
+            case let .failure(message):
+                job.state = .failed(message)
+                AppLog.scheduler.error("job failed session=\(job.sessionID, privacy: .public) step=\(job.step.argument, privacy: .public): \(message, privacy: .public)")
+            }
+            self.onFinished?()
+            self.pumpActions()
+        }
+    }
+
     private enum StepOutcome { case success; case failure(String) }
 
     /// Runs one step off the main actor (the subprocess call is blocking) and
     /// hops back to the main actor for UI updates.
     private func runStep(
         folder: URL,
-        step: PipelineStep,
+        step: PipelineRunStep,
         force: Bool = false,
         job: ProcessingJob,
         completion: @escaping @MainActor (StepOutcome) -> Void
@@ -156,11 +229,20 @@ final class Scheduler {
             completion(.failure(String(localized: "scheduler.error.noBinary")))
             return
         }
-        let runStep: PipelineRunStep = step == .transcribe ? .transcribe : .summarize
         Task.detached(priority: .userInitiated) {
+            // The secret files materialized for this run (ADR-9/ADR-13) are
+            // single-use: delete them as soon as the subprocess is done rather
+            // than waiting for the next stale-pruning pass.
+            defer {
+                for key in ["CONNECTION_KEYS_FILE", "SUMMARY_API_KEY_FILE"] {
+                    if let path = runner.environment[key] {
+                        try? FileManager.default.removeItem(atPath: path)
+                    }
+                }
+            }
             let outcome: StepOutcome
             do {
-                try runner.run(folder: folder, step: runStep, force: force) { line in
+                try runner.run(folder: folder, step: step, force: force) { line in
                     Task { @MainActor in job.progress = line }
                 }
                 outcome = .success

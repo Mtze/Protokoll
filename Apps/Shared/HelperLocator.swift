@@ -53,7 +53,8 @@ enum HelperLocator {
     /// When `config` selects an API summary provider (ADR-9), the stored API key
     /// is materialized to a 0600 file and its path injected as
     /// `SUMMARY_API_KEY_FILE` - the raw secret never enters the child env.
-    static func pipelineEnvironment(config: PipelineConfig? = nil) -> [String: String] {
+    static func pipelineEnvironment(config: PipelineConfig? = nil,
+                                    connections: [PlatformConnection] = []) -> [String: String] {
         var env: [String: String] = [:]
         let defaults = UserDefaults.standard
         // transcribe.sh: user override wins over the bundled/dev copy.
@@ -73,6 +74,12 @@ enum HelperLocator {
         if provider == "anthropic" || provider == "openai",
            let path = SummaryKeychain.materializeKeyFile(for: provider) {
             env["SUMMARY_API_KEY_FILE"] = path
+        }
+        // Automations (ADR-13): connection secrets + custom launch specs + the
+        // machine CLI allowlist, as one 0600 manifest path.
+        if !connections.isEmpty,
+           let path = ConnectionKeychain.materializeManifest(for: connections) {
+            env["CONNECTION_KEYS_FILE"] = path
         }
         return env
     }
