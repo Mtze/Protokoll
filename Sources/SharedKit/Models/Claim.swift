@@ -30,6 +30,22 @@ public struct Claim: Codable, Sendable, Equatable, Hashable {
         self.heartbeat = heartbeat
     }
 
+    /// Tolerant decode: an unknown `step` written by a newer build maps to
+    /// `.summarize` instead of failing the whole `session.json` (ADR-13
+    /// groundwork - old readers must keep loading files with future steps).
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        deviceId = try container.decode(String.self, forKey: .deviceId)
+        let raw = try container.decode(String.self, forKey: .step)
+        step = PipelineStep(rawValue: raw) ?? .summarize
+        startedAt = try container.decode(Date.self, forKey: .startedAt)
+        heartbeat = try container.decode(Date.self, forKey: .heartbeat)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case deviceId, step, startedAt, heartbeat
+    }
+
     /// How long a claim survives without a heartbeat before it is stale.
     public static let leaseDuration: TimeInterval = 120
 

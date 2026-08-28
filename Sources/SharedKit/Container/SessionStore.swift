@@ -150,6 +150,43 @@ public struct SessionStore: Sendable {
         return session
     }
 
+    // MARK: Action steps (ADR-13)
+
+    /// Replaces the whole recorded step list (used to seed/reset it before an
+    /// actions run; `nil` clears it).
+    @discardableResult
+    public func setStepStates(_ steps: [StepState]?, in folder: URL) throws -> Session {
+        var session = try load(folder: folder)
+        session.metadata.pipeline.steps = steps
+        try save(session)
+        return session
+    }
+
+    /// Upserts one step's state by `stepID` and persists.
+    @discardableResult
+    public func updateStepState(_ step: StepState, in folder: URL) throws -> Session {
+        var session = try load(folder: folder)
+        var steps = session.metadata.pipeline.steps ?? []
+        if let index = steps.firstIndex(where: { $0.stepID == step.stepID }) {
+            steps[index] = step
+        } else {
+            steps.append(step)
+        }
+        session.metadata.pipeline.steps = steps
+        try save(session)
+        return session
+    }
+
+    /// Writes an action step's local audit artifact (`steps/<stepID>.md`),
+    /// overwriting any previous run's report - artifacts are logs, N10
+    /// rotation applies to protocols only.
+    @discardableResult
+    public func writeStepArtifact(_ text: String, stepID: String, for session: Session) throws -> URL {
+        let url = session.stepArtifactURL(stepID: stepID)
+        try atomicWrite(Data(text.utf8), to: url)
+        return url
+    }
+
     // MARK: Atomic write helper
 
     func atomicWrite(_ data: Data, to url: URL) throws {

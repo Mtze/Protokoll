@@ -1,7 +1,7 @@
 import Foundation
 import SharedKit
 
-// process-session <folder> [--step transcribe|summarize|all] [--force]
+// process-session <folder> [--step transcribe|summarize|actions|action:<id>|all] [--force]
 //
 // Standalone pipeline CLI (ADR-1: the menubar app runs this as a subprocess).
 // Also runnable by hand for debugging or re-running an individual step (N6).
@@ -17,10 +17,11 @@ func fail(_ message: String) -> Never {
 
 func printUsage() {
     let usage = """
-    Usage: process-session <folder> [--step transcribe|summarize|all] [--force]
+    Usage: process-session <folder> [--step transcribe|summarize|actions|action:<id>|all] [--force]
 
       <folder>   Path to a session folder (contains session.json and audio/).
-      --step     Which step to run. Default: all.
+      --step     Which step to run. Default: all. `actions` runs the resolved
+                 pipeline's custom steps, `action:<id>` a single one (ADR-13).
       --force    Re-run a step even if its output already exists (N6, N10).
     """
     print(usage)
@@ -41,8 +42,8 @@ while index < arguments.count {
     let argument = arguments[index]
     switch argument {
     case "--step":
-        guard index + 1 < arguments.count, let step = PipelineStepSelection(rawValue: arguments[index + 1]) else {
-            fail("--step requires one of: transcribe, summarize, all")
+        guard index + 1 < arguments.count, let step = PipelineStepSelection(argument: arguments[index + 1]) else {
+            fail("--step requires one of: transcribe, summarize, actions, action:<id>, all")
         }
         stepSelection = step
         index += 2
@@ -82,7 +83,7 @@ let progress: @Sendable (String) -> Void = { line in
     FileHandle.standardError.write(Data("  \(line)\n".utf8))
 }
 
-AppLog.pipeline.info("process-session invoked step=\(stepSelection.rawValue, privacy: .public) force=\(force, privacy: .public) folder=\(AppLog.folderName(folder), privacy: .public)")
+AppLog.pipeline.info("process-session invoked step=\(stepSelection.argument, privacy: .public) force=\(force, privacy: .public) folder=\(AppLog.folderName(folder), privacy: .public)")
 
 do {
     let session = try pipeline.run(folder: folder, step: stepSelection, force: force, onProgress: progress)

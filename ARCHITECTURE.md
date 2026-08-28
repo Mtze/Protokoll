@@ -112,10 +112,18 @@ Meetings/                              (iCloud ubiquity container)
 │   │   ├── protocol.md               (aktuelles Protokoll)
 │   │   ├── protocol.v1.md            (überschriebene Versionen bleiben erhalten)
 │   │   ├── agenda.md                 (optional, falls vorhanden)
+│   │   ├── materials/                (abgerufene Material-Links, ADR-13)
+│   │   │   └── material.0.md
+│   │   ├── steps/                    (Audit-Artefakte der Custom-Aktionen, ADR-13)
+│   │   │   └── <step-id>.md
 │   │   └── session.json             (kanonische Metadaten)
 │   └── …
-└── projects/
-    └── projects.json                 (Projekt-/Tag-Definitionen)
+├── projects/
+│   └── projects.json                 (Projekt-/Tag-Definitionen)
+└── config/
+    ├── pipeline.json                 (Pipeline-Tuning, ADR-9)
+    ├── connections.json              (Plattform-Verbindungen ohne Secrets, ADR-13)
+    └── pipelines.json                (benutzerdefinierte Pipelines, ADR-13)
 ```
 
 Der Ordnername beginnt mit dem ISO-Zeitstempel (sortierbar) plus kurzer ID
@@ -671,3 +679,72 @@ liegt als `TranscriptTextLayout` in SharedKit und ist dort getestet.
   `ScrollView` legen.
 - watchOS hat keine solche Textview und bekommt eine einfache scrollbare
   Textdarstellung. Für den watchOS-Viewer (Issue #9) ist das ohnehin offen.
+
+### ADR-13 - Plattform-Automationen über die `claude`-CLI mit MCP-Servern
+
+**Status:** akzeptiert.
+
+**Entscheidung:** Sessions können **Material-Links** tragen (`materials` in
+`session.json`, verallgemeinertes F5): vor dem Summarize ruft die Pipeline jeden
+Link über einen read-only `claude -p`-Lauf mit dem MCP-Server der passenden
+Verbindung ab und legt ihn als `materials/<n>.md` ab; das Summarize-Prompt nutzt
+die Materialien als Kontext und füllt eine erkannte Agenda aus (F5). Nach dem
+Summarize laufen optionale, pro Pipeline konfigurierte **Aktionen**:
+Prompt-basierte Schritte, die per `claude -p` mit `--mcp-config` externe
+Plattformen lesen oder beschreiben (Outline-Agenda aktualisieren, Action Items
+nach Todoist). Transcribe und Summarize bleiben feste Stufen; es gibt bewusst
+keine frei sortierbare Step-Engine.
+
+- **Verbindungen** (Name, Art `outline`/`todoist`/`custom`, Basis-URL, nur
+  `https://`) liegen in `config/connections.json`, **Pipelines** (geordnete
+  Aktionsschritte mit Prompt, Zugriffsstufe, Eingaben) in
+  `config/pipelines.json` - beide tolerant dekodiert wie `pipeline.json`,
+  beide **ohne Geheimnisse und ohne Ausführbares**.
+- **Credentials liegen nur im macOS-Schlüsselbund** und erreichen den
+  Subprozess wie in ADR-9 als Pfad auf ein 0600-Manifest
+  (`CONNECTION_KEYS_FILE`); dort liegen auch die Launch-Specs für
+  `custom`-MCP-Server (lokale UserDefaults). Der Container synchronisiert via
+  iCloud - eine dort abgelegte Kommandozeile wäre Remote-Code-Execution auf
+  jedem Gerät.
+- Die pro Lauf erzeugte `--mcp-config`-Datei (mit Secrets im Server-Env) ist
+  eine 0600-Datei in einem privaten 0700-Temp-Verzeichnis, wird nach dem Lauf
+  gelöscht und bei jedem Start von verwaisten Resten bereinigt.
+- **Zugriffskontrolle pro Schritt:** `read` erlaubt nur die
+  Lese-Tools des MCP-Servers via `--allowedTools`, `readWrite` den ganzen
+  Server; `Bash` ist deaktiviert, außer ein Schritt deklariert Kommandos (z. B.
+  `td`), die **zusätzlich** auf einer maschinenlokalen Allowlist stehen
+  (doppelter Schlüssel: synchronisierte Deklaration allein gewährt nichts).
+- Jeder Schritt schreibt ein lokales **Audit-Artefakt** `steps/<id>.md`
+  (Report der Tool-Aufrufe, N3); externer Inhalt wird in
+  `<!-- protokoll:<session>/<step> -->`-Marker gefasst und bei Wiederholung
+  ersetzt statt angehängt (Idempotenz auf Prompt-Ebene).
+- **Statusmodell additiv:** `PipelineStatus` behält seine sechs Zustände
+  (`done` = Protokoll geschrieben); Aktionsfortschritt liegt in
+  `pipeline.steps[]` mit String-Status (`pending`/`running`/`done`/`failed`/
+  `stale`), Aktionen claimen unter `summarize`. Alte Builds dekodieren
+  `session.json` unverändert weiter. Fehlgeschlagene Aktionen setzen nie
+  `failed` auf Session-Ebene; ein erzwungenes Summarize markiert erledigte
+  Schritte `stale` (externe Re-Runs bleiben eine manuelle Entscheidung).
+- Ein fehlgeschlagener Material-Abruf lässt den Summarize-Schritt **hart
+  scheitern** (keine stille Qualitätsminderung); der Abruf läuft auf einem
+  schnellen Modell (`sonnet`), Aktionen auf dem konfigurierten `summaryModel`.
+
+**Kontext & Begründung:** Weicht von N2 (keine Uploads an Dritte) und von
+Plan-Entscheidung #5 (`claude -p` ohne Tools) ab - wie ADR-9 gilt: **opt-in,
+Standard aus**, Secrets nie im Container, `https://` erzwungen. Die MCP-Wahl
+hebelt das bestehende Server-Ökosystem (Outline, Todoist, Confluence u. a.)
+statt pro Plattform native Konnektoren zu pflegen.
+
+**Verworfene Alternativen:** native Swift-Konnektoren pro Plattform (mehr Code
+pro Plattform, kein MCP-Hebel); nativer HTTP-Abruf der Materialien (zweiter
+Mechanismus neben MCP, vom Nutzer bewusst abgewählt); frei sortierbare
+Step-Engine (Overkill gegenüber fester Spine + Aktionen, N6 bleibt einfach).
+
+**Konsequenz (bewusst):** MCP-Kindprozesse erhalten das Credential in ihrem Env
+(inhärent bei MCP-Env-Auth). Material-Abruf und Aktionen benötigen die
+`claude`-CLI auch dann, wenn der Summary-Anbieter eine API ist. `npx`-Kaltstarts
+laden Pakete nach (Netz nötig, Latenz). Gemischte alte/neue Builds können beim
+Re-Save von `session.json`/`projects.json` neue optionale Felder verlieren
+(selten, transient; alle Targets teilen SharedKit und aktualisieren gemeinsam).
+Idempotenz ist Prompt-Konvention, nicht transaktional - Audit-Artefakt plus
+Versionshistorie der Plattform sind der Prüfpfad.

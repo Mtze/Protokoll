@@ -26,6 +26,17 @@ public struct Session: Sendable, Equatable, Identifiable {
     public var protocolURL: URL { folder.appendingPathComponent("protocol.md") }
     public var agendaURL: URL { folder.appendingPathComponent("agenda.md") }
     public var metadataURL: URL { folder.appendingPathComponent("session.json") }
+    /// Fetched copies of the session's material links (ADR-13), one file per
+    /// entry in `metadata.materials`, in the same order.
+    public var materialsDirectory: URL { folder.appendingPathComponent("materials", isDirectory: true) }
+    public func materialURL(index: Int) -> URL {
+        materialsDirectory.appendingPathComponent("material.\(index).md")
+    }
+    /// Local audit artifacts of custom action steps (ADR-13), `steps/<id>.md`.
+    public var stepsDirectory: URL { folder.appendingPathComponent("steps", isDirectory: true) }
+    public func stepArtifactURL(stepID: String) -> URL {
+        stepsDirectory.appendingPathComponent("\(stepID).md")
+    }
 
     /// Path for the Nth rotated protocol version (`protocol.v1.md`, …), N10.
     public func rotatedProtocolURL(version: Int) -> URL {

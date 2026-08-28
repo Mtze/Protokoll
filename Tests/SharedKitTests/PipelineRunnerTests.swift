@@ -53,6 +53,27 @@ struct PipelineRunnerTests {
         #expect(fake.arguments == ["/x/sess", "--step", "summarize", "--force"])
     }
 
+    @Test func mapsActionRunStepsToStepArguments() throws {
+        let fake = FakeCommandRunner(result: CommandResult(exitCode: 0, stdout: "", stderr: ""))
+        try runner(fake).run(folder: URL(fileURLWithPath: "/x/sess"), step: PipelineRunStep.actions) { _ in }
+        #expect(fake.arguments == ["/x/sess", "--step", "actions"])
+        try runner(fake).run(folder: URL(fileURLWithPath: "/x/sess"), step: PipelineRunStep.action("abc"), force: true) { _ in }
+        #expect(fake.arguments == ["/x/sess", "--step", "action:abc", "--force"])
+    }
+
+    @Test func runStepArgumentParsingRoundTrips() {
+        #expect(PipelineRunStep(argument: "transcribe") == .transcribe)
+        #expect(PipelineRunStep(argument: "summarize") == .summarize)
+        #expect(PipelineRunStep(argument: "actions") == .actions)
+        #expect(PipelineRunStep(argument: "action:abc") == .action("abc"))
+        #expect(PipelineRunStep(argument: "action:") == nil)
+        #expect(PipelineRunStep(argument: "all") == nil)
+        #expect(PipelineRunStep(argument: "bogus") == nil)
+        for step: PipelineRunStep in [.transcribe, .summarize, .actions, .action("x")] {
+            #expect(PipelineRunStep(argument: step.argument) == step)
+        }
+    }
+
     @Test func streamsProgressLines() throws {
         final class Box: @unchecked Sendable { var lines: [String] = [] }
         let fake = FakeCommandRunner(result: CommandResult(exitCode: 0, stdout: "", stderr: ""),
