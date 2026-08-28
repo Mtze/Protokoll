@@ -36,6 +36,7 @@ The easiest way to get the Mac app onto any Mac:
 
 ```bash
 brew tap mtze/protokoll https://github.com/Mtze/Protokoll
+brew trust mtze/protokoll
 brew install --cask protokoll
 ```
 
@@ -45,13 +46,8 @@ won't resolve. Each tagged release (`v*`) publishes a zipped app to GitHub
 Releases and auto-bumps [`Casks/protokoll.rb`](Casks/protokoll.rb).
 
 Until the release is Developer ID-signed and notarized (see below), the app is
-unsigned and macOS Gatekeeper blocks the first launch. Either approve it under
-**System Settings > Privacy & Security** ("Open Anyway"), or install with
-quarantine skipped:
-
-```bash
-brew install --cask --no-quarantine protokoll
-```
+unsigned and macOS Gatekeeper blocks the first launch. Approve it under
+**System Settings > Privacy & Security** ("Open Anyway")
 
 ## Features
 
