@@ -186,11 +186,20 @@ private struct GeneralTab: View {
     @AppStorage(SettingsKeys.consentReminder) private var consentReminder = true
     @AppStorage(SettingsKeys.captureSystemAudio) private var captureSystemAudio = false
     @AppStorage(SettingsKeys.voiceProcessing) private var voiceProcessing = false
+    @AppStorage(SettingsKeys.preferredInputDeviceUID) private var inputDeviceUID = ""
     @AppStorage(SettingsKeys.defaultPlaybackSpeed) private var playbackSpeed = 1.0
+    @State private var inputDevices: [AudioInputDevice] = []
 
     var body: some View {
         Form {
             Section("settings.recording") {
+                Picker("settings.recording.inputDevice", selection: $inputDeviceUID) {
+                    Text("settings.recording.inputDevice.default").tag("")
+                    ForEach(inputDevices) { device in
+                        Text(verbatim: device.name).tag(device.uid)
+                    }
+                }
+                Text("settings.recording.inputDevice.help").font(.caption).foregroundStyle(.secondary)
                 Toggle("settings.consentReminder", isOn: $consentReminder)
                 Text("settings.consentReminder.help").font(.caption).foregroundStyle(.secondary)
                 Toggle("settings.systemAudio", isOn: $captureSystemAudio)
@@ -208,6 +217,7 @@ private struct GeneralTab: View {
         }
         .formStyle(.grouped)
         .settingsPane()
+        .onAppear { inputDevices = AudioInputDevices.available() }
     }
 }
 
@@ -456,6 +466,7 @@ enum SettingsKeys {
     static let consentReminder = "consentReminderEnabled"
     static let captureSystemAudio = "captureSystemAudioEnabled"
     static let voiceProcessing = "voiceProcessingEnabled"
+    static let preferredInputDeviceUID = "preferredInputDeviceUID"
     static let onboardingDone = "onboardingComplete"
     static let autoProcess = "autoProcessNewRecordings"
     static let notificationsEnabled = "notificationsEnabled"

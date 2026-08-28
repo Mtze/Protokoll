@@ -37,19 +37,26 @@ public struct RecordingIndicator: View {
     private let levels: [Float]
     private let startedAt: Date?
     private let compact: Bool
+    private let showDot: Bool
 
-    public init(levels: [Float], startedAt: Date?, compact: Bool = false) {
+    /// `showDot` draws the pulsing record dot. Turn it off where a red stop
+    /// button already sits right next to the indicator (the Mac library toolbar),
+    /// so there aren't two red circles that read as two stop buttons.
+    public init(levels: [Float], startedAt: Date?, compact: Bool = false, showDot: Bool = true) {
         self.levels = levels
         self.startedAt = startedAt
         self.compact = compact
+        self.showDot = showDot
     }
 
     public var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: "record.circle.fill")
-                .foregroundStyle(.red)
-                .symbolEffect(.pulse, options: .repeating)
-                .accessibilityLabel(Text("recording.active"))
+            if showDot {
+                Image(systemName: "record.circle.fill")
+                    .foregroundStyle(.red)
+                    .symbolEffect(.pulse, options: .repeating)
+                    .accessibilityLabel(Text("recording.active"))
+            }
             WaveformIndicator(levels: levels)
                 .frame(height: compact ? 18 : 24)
             if let startedAt {

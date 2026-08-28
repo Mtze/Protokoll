@@ -63,7 +63,7 @@ struct DiagnosticsView: View {
                           openSettings: { permissions.openSettings("Privacy_ScreenCapture") })
             permissionRow(icon: "bell.badge.fill", title: "onboarding.notify.title", state: permissions.notify,
                           request: { permissions.requestNotify() },
-                          openSettings: { permissions.openSettings("Privacy_Notifications") })
+                          openSettings: { permissions.openNotificationSettings() })
         }
         .padding(.bottom, 6)
     }

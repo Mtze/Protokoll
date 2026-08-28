@@ -65,6 +65,9 @@ brew install --cask --no-quarantine protokoll
 **Recording**
 - Microphone capture with a **live waveform** that reacts to input (mic *and*
   system audio), and crash-safe incremental capture (CAF → `mic.m4a`, ADR-3).
+- **Pick the input device** in Settings → General → Recording; the list covers
+  virtual and aggregate devices (enumerated via the CoreAudio HAL). Leave it on
+  *System Default* to follow the macOS input selection.
 - Optional **system-audio capture** (ScreenCaptureKit) for calls; mic + system
   are **mixed into one track** so the whole conversation is transcribed (ADR-7).
 - **Import an existing recording** (macOS): pick an audio file (m4a, mp3, wav,
@@ -112,7 +115,7 @@ brew install --cask --no-quarantine protokoll
 
 Menu items disable when nothing is selected; all labels are localized.
 
-**Settings** (tabbed): General (consent reminder, system audio, playback speed),
+**Settings** (tabbed): General (input device, consent reminder, system audio, playback speed),
 Transcription (language, domain vocabulary, model), Summary (language, model,
 custom instructions), Processing (auto-process, notifications), Advanced
 (container path, tool overrides). Pipeline settings persist to the container so
@@ -197,6 +200,36 @@ Notes:
   builds, which resets TCC grants - re-grant from Settings → Diagnostics.
 - For a signed, one-command install on any Mac, see *Releases* below /
   *Install via Homebrew* above.
+
+### Build & install locally (for testers)
+
+A `Makefile` at the repo root wraps the flow above so you don't have to remember
+the commands:
+
+```bash
+make build     # Release Protokoll.app into build/dd (ad-hoc signed, unsigned bundle)
+make install   # replace /Applications/Protokoll.app with the fresh build
+make run       # install, then open the app
+make dist      # zip the app as Protokoll.zip to hand to a tester
+make clean     # remove build/dd, Protokoll.zip, and the generated project
+make           # list the targets
+```
+
+`make install` assumes `/Applications` is writable by your admin user; if the
+copy fails it prints a hint to re-run with `sudo`.
+
+Runtime dependencies still have to be present on the machine that runs the app:
+`mlx-whisper` (`uv tool install mlx-whisper`) and the `claude` CLI (logged in via
+`claude login`). The bundled `process-session` helper and `transcribe.sh` ship
+inside the app; the Whisper engine and `claude` do not. The app's **Settings →
+Diagnostics** panel installs and checks them.
+
+Handing `Protokoll.zip` to a tester: the app is **ad-hoc signed, not notarized**,
+so Gatekeeper quarantines it on download. The tester either right-clicks the app
+and chooses **Open** once, or clears the flag with
+`xattr -dr com.apple.quarantine Protokoll.app`. For a signed, notarized install
+that needs none of this, use the Homebrew cask / release flow (see *Releases*
+below), not `make dist`.
 
 ### Configuration
 

@@ -48,6 +48,11 @@ struct SessionDetailView: View {
         .padding()
         .navigationTitle(session.displayTitle)
         .focusedSceneValue(\.detailActions, detailActions)
+        // When mic.m4a lands (recording just finished exporting), (re)load it so
+        // the player enables itself without the user switching panes and back.
+        .onChange(of: hasMicAudio) { _, available in
+            if available { audioModel.load(session.micAudioURL) }
+        }
     }
 
     /// Actions the menu-bar Session commands drive for this session. Rebuilt each
@@ -56,7 +61,11 @@ struct SessionDetailView: View {
         let action = SessionAction.forDetail(status: status, hasActiveJob: model.activeJob(for: session.id) != nil)
         let primary: DetailActions.Primary?
         switch action {
-        case .process: primary = .init(label: "action.process") { model.process(session) }
+        // Process needs a finalized mic.m4a. Right after Stop the session is
+        // already `.recorded` while the export is still running, so gate on the
+        // audio actually being on disk to avoid processing a partial file.
+        case .process where hasMicAudio: primary = .init(label: "action.process") { model.process(session) }
+        case .process: primary = nil
         case .retry: primary = .init(label: "action.retry") { model.retry(session) }
         case .regenerate: primary = .init(label: "action.regenerate") { model.regenerateProtocol(session) }
         case .none: primary = nil
@@ -167,10 +176,13 @@ struct SessionDetailView: View {
         HStack(spacing: 8) {
             switch SessionAction.forDetail(status: status, hasActiveJob: model.activeJob(for: session.id) != nil) {
             case .process:
+                // Disabled until mic.m4a is finalized (see detailActions) so a tap
+                // right after Stop can't process a half-exported file.
                 Button { model.process(session) } label: {
                     Label("action.process", systemImage: "gearshape.2")
                 }
                 .buttonStyle(.borderedProminent)
+                .disabled(!hasMicAudio)
                 .help("action.process")
             case .retry:
                 Button { model.retry(session) } label: {
