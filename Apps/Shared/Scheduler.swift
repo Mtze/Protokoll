@@ -156,10 +156,11 @@ final class Scheduler {
             completion(.failure(String(localized: "scheduler.error.noBinary")))
             return
         }
+        let runStep: PipelineRunStep = step == .transcribe ? .transcribe : .summarize
         Task.detached(priority: .userInitiated) {
             let outcome: StepOutcome
             do {
-                try runner.run(folder: folder, step: step, force: force) { line in
+                try runner.run(folder: folder, step: runStep, force: force) { line in
                     Task { @MainActor in job.progress = line }
                 }
                 outcome = .success

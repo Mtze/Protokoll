@@ -1,11 +1,37 @@
 import Foundation
 import SharedKit
 
-/// Which step(s) to run.
-public enum PipelineStepSelection: String, Sendable {
-    case transcribe
-    case summarize
+/// Which step(s) to run: everything, or one ``PipelineRunStep`` (including a
+/// single custom action, ADR-13).
+public enum PipelineStepSelection: Sendable, Equatable {
     case all
+    case only(PipelineRunStep)
+
+    public init?(argument: String) {
+        if argument == "all" {
+            self = .all
+        } else if let step = PipelineRunStep(argument: argument) {
+            self = .only(step)
+        } else {
+            return nil
+        }
+    }
+
+    /// Conveniences so call sites read like the old flat enum.
+    public static let transcribe: PipelineStepSelection = .only(.transcribe)
+    public static let summarize: PipelineStepSelection = .only(.summarize)
+    public static let actions: PipelineStepSelection = .only(.actions)
+
+    /// The CLI `--step` string, for logging and round-trips.
+    public var argument: String {
+        switch self {
+        case .all: return "all"
+        case .only(let step): return step.argument
+        }
+    }
+
+    var runsTranscribe: Bool { self == .all || self == .only(.transcribe) }
+    var runsSummarize: Bool { self == .all || self == .only(.summarize) }
 }
 
 /// Waits for an iCloud-hosted file to finish downloading before use (N7).
@@ -84,19 +110,23 @@ public struct Pipeline: Sendable {
         let store = container.store
         var session = try store.load(folder: folder)
 
-        if step == .transcribe || step == .all {
+        if step.runsTranscribe {
             let alreadyDone = FileManager.default.fileExists(atPath: session.transcriptURL.path)
             if force || !alreadyDone {
                 session = try runTranscribe(session: session, onProgress: onProgress)
             }
         }
 
-        if step == .summarize || step == .all {
+        if step.runsSummarize {
             let alreadyDone = FileManager.default.fileExists(atPath: session.protocolURL.path)
             if force || !alreadyDone {
                 session = try runSummarize(session: session, onProgress: onProgress)
             }
         }
+
+        // Custom action steps (ADR-13) land in a later milestone; the `actions`/
+        // `action:<id>` selections are already accepted so newer app builds can
+        // pass them without this binary erroring out.
 
         return session
     }

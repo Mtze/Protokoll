@@ -183,4 +183,36 @@ public struct Container: Sendable {
     public func hasCustomSummaryTemplate() -> Bool {
         (try? loadSummaryTemplate()) != nil
     }
+
+    // MARK: Automations (ADR-13)
+
+    /// Reads the platform connections, empty when unset (tolerant, like
+    /// ``loadProjects``). Credentials are never in this file - they live in the
+    /// Keychain and reach the pipeline via a local key manifest.
+    public func loadConnections() throws -> [PlatformConnection] {
+        let url = try configDirectory().appendingPathComponent("connections.json")
+        guard let data = try? Data(contentsOf: url) else { return [] }
+        return (try? SessionStore.decoder.decode([PlatformConnection].self, from: data)) ?? []
+    }
+
+    /// Atomically persists the platform connections.
+    public func saveConnections(_ connections: [PlatformConnection]) throws {
+        let url = try configDirectory().appendingPathComponent("connections.json")
+        let data = try SessionStore.encoder.encode(connections)
+        try store.atomicWrite(data, to: url)
+    }
+
+    /// Reads the user-defined pipelines, defaults when unset or unreadable.
+    public func loadPipelines() throws -> PipelinesConfig {
+        let url = try configDirectory().appendingPathComponent("pipelines.json")
+        guard let data = try? Data(contentsOf: url) else { return PipelinesConfig() }
+        return (try? SessionStore.decoder.decode(PipelinesConfig.self, from: data)) ?? PipelinesConfig()
+    }
+
+    /// Atomically persists the user-defined pipelines.
+    public func savePipelines(_ config: PipelinesConfig) throws {
+        let url = try configDirectory().appendingPathComponent("pipelines.json")
+        let data = try SessionStore.encoder.encode(config)
+        try store.atomicWrite(data, to: url)
+    }
 }

@@ -26,6 +26,30 @@ public struct Session: Sendable, Equatable, Identifiable {
     public var protocolURL: URL { folder.appendingPathComponent("protocol.md") }
     public var agendaURL: URL { folder.appendingPathComponent("agenda.md") }
     public var metadataURL: URL { folder.appendingPathComponent("session.json") }
+    /// Fetched copies of the session's material links (ADR-13), one file per
+    /// entry in `metadata.materials`, in the same order.
+    public var materialsDirectory: URL { folder.appendingPathComponent("materials", isDirectory: true) }
+    public func materialURL(index: Int) -> URL {
+        materialsDirectory.appendingPathComponent("material.\(index).md")
+    }
+    /// Local audit artifacts of custom action steps (ADR-13), `steps/<id>.md`.
+    public var stepsDirectory: URL { folder.appendingPathComponent("steps", isDirectory: true) }
+    public func stepArtifactURL(stepID: String) -> URL {
+        stepsDirectory.appendingPathComponent("\(Self.safeArtifactName(stepID)).md")
+    }
+
+    /// Step ids come from the synced container (`pipelines.json`) and must
+    /// never form a path: a crafted id like `../transcript` would otherwise
+    /// escape `steps/` and clobber protected session files (N10). Anything but
+    /// letters, digits, `-` and `_` is flattened; the app's UUID ids pass
+    /// through unchanged.
+    static func safeArtifactName(_ stepID: String) -> String {
+        let cleaned = String(stepID.map { character in
+            character.isLetter || character.isNumber || character == "-" || character == "_"
+                ? character : "_"
+        })
+        return cleaned.isEmpty ? "step" : cleaned
+    }
 
     /// Path for the Nth rotated protocol version (`protocol.v1.md`, …), N10.
     public func rotatedProtocolURL(version: Int) -> URL {
