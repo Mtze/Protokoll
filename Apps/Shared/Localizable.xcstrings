@@ -2303,13 +2303,57 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ist fertig, %2$lld Aktionen ausgeführt."
+            "value": "%1$@ ist fertig, %#@count@ ausgeführt."
+          },
+          "substitutions": {
+            "count": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Aktion wurde"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Aktionen wurden"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ is ready, %2$lld actions ran."
+            "value": "%1$@ is ready, %#@count@ ran."
+          },
+          "substitutions": {
+            "count": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg action"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg actions"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -2320,13 +2364,57 @@
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ ist fertig, aber %2$lld Aktionen sind fehlgeschlagen."
+            "value": "%1$@ ist fertig, aber %#@count@ fehlgeschlagen."
+          },
+          "substitutions": {
+            "count": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Aktion ist"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg Aktionen sind"
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "%1$@ is ready, but %2$lld actions failed."
+            "value": "%1$@ is ready, but %#@count@."
+          },
+          "substitutions": {
+            "count": {
+              "argNum": 2,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg action failed"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg actions failed"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

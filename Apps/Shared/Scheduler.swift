@@ -193,12 +193,17 @@ final class Scheduler {
                 job.state = .finished
                 AppLog.scheduler.info("job finished session=\(job.sessionID, privacy: .public) step=summarize")
                 // Chain into the pipeline's custom actions (ADR-13) when any
-                // enabled step has never completed.
-                if let session = try? self.container.store.load(folder: folder),
-                   self.hasPendingActions(session) {
-                    self.enqueueActions(session)
+                // enabled step has never completed. A session that cannot be
+                // reloaded is not a successful chain - it must not read as
+                // "done with no pending actions".
+                if let session = try? self.container.store.load(folder: folder) {
+                    if self.hasPendingActions(session) {
+                        self.enqueueActions(session)
+                    } else {
+                        self.chainEnded(for: job.sessionID, success: true)
+                    }
                 } else {
-                    self.chainEnded(for: job.sessionID, success: true)
+                    self.chainEnded(for: job.sessionID, success: false)
                 }
             case let .failure(message):
                 job.state = .failed(message)
