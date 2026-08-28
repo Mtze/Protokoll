@@ -2280,6 +2280,74 @@
         }
       }
     },
+    "notify.done.body %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ist fertig."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is ready."
+          }
+        }
+      }
+    },
+    "notify.done.body.actions %@ %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ist fertig, %2$lld Aktionen ausgeführt."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is ready, %2$lld actions ran."
+          }
+        }
+      }
+    },
+    "notify.done.body.failed %@ %lld": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ ist fertig, aber %2$lld Aktionen sind fehlgeschlagen."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ is ready, but %2$lld actions failed."
+          }
+        }
+      }
+    },
+    "notify.done.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verarbeitung abgeschlossen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Processing finished"
+          }
+        }
+      }
+    },
     "notify.new.body %@": {
       "extractionState": "manual",
       "localizations": {

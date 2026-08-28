@@ -116,7 +116,13 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   re-runs stay manual). Scheduler: third actions slot; summarize chains into
   actions only for never-completed (pending) steps. Detail view: step list with
   per-step re-run + artifact sheet; Diagnostics checks claude + npx when any
-  pipeline has enabled steps.
+  pipeline has enabled steps. `SessionNotifier` (renamed from
+  `NewSessionNotifier`) also posts the **completion notification**
+  (`SESSION_DONE`, success-only: `Scheduler.onSessionCompleted` fires when a
+  session's chain ends, and the app checks status `.done` fresh from disk -
+  failures stay in-app); tapping it selects the session via
+  `AppModel.pendingRevealSessionID`. With custom pipelines, the context menu's
+  Process is a picker (checkmark = resolved pipeline, choice persists).
 - **Audio is never denoised.** Spectral denoising measurably *raises* WER for
   large Whisper models (ICAART 2024: helps base/small, hurts medium/large).
   `transcribe.sh --preprocess safe` does only `highpass=f=80` plus one **static**

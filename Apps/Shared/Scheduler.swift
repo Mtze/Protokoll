@@ -72,6 +72,20 @@ final class Scheduler {
     /// the UI can reload sessions/index and reflect the new state.
     var onFinished: (@MainActor () -> Void)?
 
+    /// Called once when a session's whole chain ends (no follow-up job queued
+    /// or running for it), with whether the final job succeeded. Drives the
+    /// completion notification (F13 counterpart).
+    var onSessionCompleted: (@MainActor (_ sessionID: String, _ success: Bool) -> Void)?
+
+    /// Fires ``onSessionCompleted`` unless the session still has work queued
+    /// or running (the finishing job's state is already final here).
+    private func chainEnded(for sessionID: String, success: Bool) {
+        let stillWorking = jobs.contains {
+            $0.sessionID == sessionID && ($0.state == .queued || $0.state == .running)
+        }
+        if !stillWorking { onSessionCompleted?(sessionID, success) }
+    }
+
     init(container: Container, makeRunner: @escaping @Sendable () -> PipelineRunner?) {
         self.container = container
         self.makeRunner = makeRunner
@@ -158,6 +172,7 @@ final class Scheduler {
             case let .failure(message):
                 job.state = .failed(message)
                 AppLog.scheduler.error("job failed session=\(job.sessionID, privacy: .public) step=transcribe: \(message, privacy: .public)")
+                self.chainEnded(for: job.sessionID, success: false)
             }
             self.onFinished?()
             self.pumpTranscribe()
@@ -182,10 +197,13 @@ final class Scheduler {
                 if let session = try? self.container.store.load(folder: folder),
                    self.hasPendingActions(session) {
                     self.enqueueActions(session)
+                } else {
+                    self.chainEnded(for: job.sessionID, success: true)
                 }
             case let .failure(message):
                 job.state = .failed(message)
                 AppLog.scheduler.error("job failed session=\(job.sessionID, privacy: .public) step=summarize: \(message, privacy: .public)")
+                self.chainEnded(for: job.sessionID, success: false)
             }
             self.onFinished?()
             self.pumpSummarize()
@@ -205,9 +223,11 @@ final class Scheduler {
             case .success:
                 job.state = .finished
                 AppLog.scheduler.info("job finished session=\(job.sessionID, privacy: .public) step=\(job.step.argument, privacy: .public)")
+                self.chainEnded(for: job.sessionID, success: true)
             case let .failure(message):
                 job.state = .failed(message)
                 AppLog.scheduler.error("job failed session=\(job.sessionID, privacy: .public) step=\(job.step.argument, privacy: .public): \(message, privacy: .public)")
+                self.chainEnded(for: job.sessionID, success: false)
             }
             self.onFinished?()
             self.pumpActions()
