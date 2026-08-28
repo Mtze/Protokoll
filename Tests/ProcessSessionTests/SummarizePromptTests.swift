@@ -244,3 +244,45 @@ struct SummarizePromptTests {
         return call.arguments[i + 1]
     }
 }
+
+/// Materials handling (ADR-13, F5): the block rides in the user turn, the
+/// agenda directive is built-in (not part of the editable template), and the
+/// grounding carve-out only appears when materials exist.
+struct SummarizeMaterialsPromptTests {
+    @Test func userMessageCarriesMaterialsAndBuiltInDirective() {
+        let message = SummarizePrompt.userMessage(
+            transcript: "t", context: MeetingContext(),
+            bodyTemplate: "BODY", extra: "EXTRA",
+            materials: ["# Agenda\n- A", "ref doc"]
+        )
+        #expect(message.contains("<material index=\"1\">\n# Agenda\n- A\n</material>"))
+        #expect(message.contains("<material index=\"2\">\nref doc\n</material>"))
+        #expect(message.contains("the protocol is the filled-in agenda"))
+        // Order inside the instructions: template, materials directive, user
+        // extra, postamble last.
+        let body = message.range(of: "BODY")!.lowerBound
+        let directive = message.range(of: "filled-in agenda")!.lowerBound
+        let extra = message.range(of: "EXTRA")!.lowerBound
+        let postamble = message.range(of: "Reminder: your first line")!.lowerBound
+        #expect(body < directive && directive < extra && extra < postamble)
+    }
+
+    @Test func noMaterialsMeansNoBlockAndNoDirective() {
+        let message = SummarizePrompt.userMessage(
+            transcript: "t", context: MeetingContext(), bodyTemplate: "BODY", extra: nil
+        )
+        #expect(!message.contains("<materials>"))
+        #expect(!message.contains("filled-in agenda"))
+    }
+
+    @Test func groundingCarveOutOnlyWithMaterials() {
+        let with = SummarizePrompt.systemPrompt(currentTitle: nil, hasMaterials: true)
+        let without = SummarizePrompt.systemPrompt(currentTitle: nil)
+        #expect(with.contains("<materials> block is context the user attached"))
+        #expect(!without.contains("<materials>"))
+        // The transcript-only rules stay in both.
+        #expect(with.contains("no speaker labels"))
+        #expect(SummarizePrompt.reduceSystemPrompt(currentTitle: nil, hasMaterials: true)
+            .contains("<materials> block is context the user attached"))
+    }
+}

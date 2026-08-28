@@ -89,6 +89,18 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   (`ConnectionKeyManifest`, `CONNECTION_KEYS_FILE`). Pipeline choice resolves via
   `PipelineResolver`: session override > first assigned project > global default
   > built-in (transcribe + summarize, no actions).
+- **Session materials (ADR-13, generalized F5)**: `metadata.materials` is a URL
+  list; `MaterialsFetcher` fetches each link before summarize via a read-only
+  `claude -p` run (sonnet, `--strict-mcp-config`, matching connection's MCP
+  server) into `materials/<n>.md`, **hard-failing the stage** on any miss (no
+  silent quality degradation; the `PROTOKOLL_FETCH_ERROR:` sentinel keeps tool
+  errors out of the files). A manually placed `agenda.md` is always included.
+  The summarize prompt gets a `<materials>` block + a built-in agenda directive
+  (protocol = filled-in agenda) appended *after* the user template, and the
+  system-prompt contract gains a materials grounding carve-out only when
+  materials exist. UX: post-stop card in the menubar popover (`PostStopCard`;
+  auto-process holds via the notifier's `isHeld`), "Edit Materials…" in the row
+  context menu.
 - **Audio is never denoised.** Spectral denoising measurably *raises* WER for
   large Whisper models (ICAART 2024: helps base/small, hurts medium/large).
   `transcribe.sh --preprocess safe` does only `highpass=f=80` plus one **static**

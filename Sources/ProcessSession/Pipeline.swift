@@ -66,6 +66,7 @@ public struct Pipeline: Sendable {
     let container: Container
     let transcriber: Transcriber
     let summarizer: Summarizer
+    let materialsFetcher: MaterialsFetcher
     let waiter: ICloudDownloadWaiter
     let deviceId: String
 
@@ -94,6 +95,10 @@ public struct Pipeline: Sendable {
                                      summaryApiModel: config.summaryApiModel,
                                      summaryApiBaseURL: config.summaryApiBaseURL,
                                      summaryMaxTokens: config.summaryMaxTokens)
+        self.materialsFetcher = MaterialsFetcher(
+            runner: runner, tools: tools,
+            connections: (try? container.loadConnections()) ?? []
+        )
         self.waiter = ICloudDownloadWaiter()
         self.deviceId = deviceId
     }
@@ -120,7 +125,7 @@ public struct Pipeline: Sendable {
         if step.runsSummarize {
             let alreadyDone = FileManager.default.fileExists(atPath: session.protocolURL.path)
             if force || !alreadyDone {
-                session = try runSummarize(session: session, onProgress: onProgress)
+                session = try runSummarize(session: session, force: force, onProgress: onProgress)
             }
         }
 
@@ -155,7 +160,7 @@ public struct Pipeline: Sendable {
         }
     }
 
-    private func runSummarize(session: Session, onProgress: (@Sendable (String) -> Void)?) throws -> Session {
+    private func runSummarize(session: Session, force: Bool = false, onProgress: (@Sendable (String) -> Void)?) throws -> Session {
         let store = container.store
         let name = AppLog.folderName(session.folder)
         AppLog.pipeline.info("summarize start session=\(session.id, privacy: .public) folder=\(name, privacy: .public)")
@@ -164,7 +169,11 @@ public struct Pipeline: Sendable {
         _ = try store.setStatus(.summarizing, in: session.folder)
         do {
             var updated = try withHeartbeat(folder: session.folder) {
-                try summarizer.summarize(session: session, onProgress: onProgress)
+                // Materials first (ADR-13): a link the user attached but the
+                // pipeline cannot deliver fails the stage - no silent
+                // degradation of the protocol.
+                try materialsFetcher.fetchIfNeeded(session: session, force: force, onProgress: onProgress)
+                return try summarizer.summarize(session: session, onProgress: onProgress)
             }
             updated.metadata.pipeline.status = .done
             updated.metadata.pipeline.claim = nil

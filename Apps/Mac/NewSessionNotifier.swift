@@ -11,14 +11,22 @@ import UserNotifications
 final class NewSessionNotifier: NSObject, UNUserNotificationCenterDelegate {
     private let container: Container
     private let onProcess: (Session) -> Void
+    /// Sessions to leave alone *for now* without marking them known: the one
+    /// still recording and the one showing the post-stop materials card
+    /// (ADR-13) - once stopped, `mic.m4a` exists, so without this hold
+    /// auto-process would race the card the user is still filling in.
+    private let isHeld: (String) -> Bool
     private var knownIDs: Set<String> = []
     private var timer: Timer?
 
     private nonisolated static let actionProcess = "PROCESS"
     private nonisolated static let categoryNew = "NEW_SESSION"
 
-    init(container: Container, onProcess: @escaping (Session) -> Void) {
+    init(container: Container,
+         isHeld: @escaping (String) -> Bool = { _ in false },
+         onProcess: @escaping (Session) -> Void) {
         self.container = container
+        self.isHeld = isHeld
         self.onProcess = onProcess
         super.init()
     }
@@ -57,6 +65,10 @@ final class NewSessionNotifier: NSObject, UNUserNotificationCenterDelegate {
         // Notifications default on when the user hasn't set the toggle.
         let notificationsOn = defaults.object(forKey: SettingsKeys.notificationsEnabled) as? Bool ?? true
         for session in sessions where !knownIDs.contains(session.id) {
+            // Held sessions (recording in progress, post-stop card showing) are
+            // skipped without being marked known, so a later scan still
+            // evaluates them fresh.
+            if isHeld(session.id) { continue }
             // A live recording / in-progress import writes session.json as
             // .recorded before audio/mic.m4a exists; wait for the audio before
             // acting, and don't mark the session known yet so a later scan still
