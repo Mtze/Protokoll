@@ -1,6 +1,7 @@
 import AVFoundation
 import CoreGraphics
 import Observation
+import SharedKit
 import UserNotifications
 #if canImport(AppKit)
 import AppKit
@@ -37,10 +38,18 @@ final class PermissionsModel {
 
     func requestNotify() {
         Task {
-            let granted = (try? await UNUserNotificationCenter.current()
-                .requestAuthorization(options: [.alert, .sound])) ?? false
+            // requestAuthorization is what registers the app with the notification
+            // system (so it shows up in System Settings) and, when the status is
+            // not-determined, shows the prompt. Don't swallow failures silently.
+            var granted = false
+            do {
+                granted = try await UNUserNotificationCenter.current()
+                    .requestAuthorization(options: [.alert, .sound])
+            } catch {
+                AppLog.diagnostics.error("notification authorization request failed: \(AppLog.describe(error), privacy: .public)")
+            }
             notify = granted ? .granted : .denied
-            if !granted { openSettings("Privacy_Notifications") }
+            if !granted { openNotificationSettings() }
         }
     }
 
@@ -66,6 +75,16 @@ final class PermissionsModel {
     func openSettings(_ pane: String) {
         #if canImport(AppKit)
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?\(pane)") {
+            NSWorkspace.shared.open(url)
+        }
+        #endif
+    }
+
+    /// On macOS 13+ Notifications is its own top-level System Settings pane, not a
+    /// Privacy subpane, so it needs a dedicated URL rather than openSettings(_:).
+    func openNotificationSettings() {
+        #if canImport(AppKit)
+        if let url = URL(string: "x-apple.systempreferences:com.apple.Notifications-Settings.extension") {
             NSWorkspace.shared.open(url)
         }
         #endif
