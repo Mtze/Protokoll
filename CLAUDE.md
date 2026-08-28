@@ -76,6 +76,19 @@ watchOS. Apps own no data; the **files in the container are the source of truth*
   Mac) and reaches the pipeline as a 0600 key-file path (`SUMMARY_API_KEY_FILE`),
   never as a raw env var; standalone runs read
   `SUMMARY_API_KEY`/`ANTHROPIC_API_KEY`/`OPENAI_API_KEY`.
+- **Automations config follows the same split** (ADR-13). Platform connections
+  (`config/connections.json`) and user-defined pipelines (`config/pipelines.json`)
+  live in the container with tolerant decoding, edited in Settings →
+  **Automations** (`AutomationsSettingsView`, stores mirroring
+  `PipelineSettingsStore`). They hold **no secrets and nothing executable**:
+  connection API keys live in the Keychain (`ConnectionKeychain`, account =
+  connection id), custom MCP launch specs and the step CLI-command allowlist in
+  machine-local UserDefaults (`CustomMCPSpec`, `SettingsKeys.stepCommandAllowlist`)
+  - the container syncs via iCloud, so a synced command line would be RCE on
+  every device. Everything reaches `process-session` as one 0600 manifest file
+  (`ConnectionKeyManifest`, `CONNECTION_KEYS_FILE`). Pipeline choice resolves via
+  `PipelineResolver`: session override > first assigned project > global default
+  > built-in (transcribe + summarize, no actions).
 - **Audio is never denoised.** Spectral denoising measurably *raises* WER for
   large Whisper models (ICAART 2024: helps base/small, hurts medium/large).
   `transcribe.sh --preprocess safe` does only `highpass=f=80` plus one **static**

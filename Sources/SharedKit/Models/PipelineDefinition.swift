@@ -4,13 +4,16 @@ import Foundation
 /// as: session override (`stepInputs`) > ``defaultValue``. Values and step
 /// prompts may use template placeholders (`{materials}`, `{title}`, `{date}`,
 /// `{projects}`) that the pipeline substitutes from session metadata.
-public struct ActionInput: Codable, Sendable, Equatable, Hashable {
+public struct ActionInput: Codable, Sendable, Equatable, Identifiable, Hashable {
+    public var id: String
     public var key: String
     public var label: String
     public var defaultValue: String
     public var required: Bool
 
-    public init(key: String = "", label: String = "", defaultValue: String = "", required: Bool = false) {
+    public init(id: String = UUID().uuidString, key: String = "", label: String = "",
+                defaultValue: String = "", required: Bool = false) {
+        self.id = id
         self.key = key
         self.label = label
         self.defaultValue = defaultValue
@@ -20,6 +23,7 @@ public struct ActionInput: Codable, Sendable, Equatable, Hashable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let d = ActionInput()
+        id = (try? container.decodeIfPresent(String.self, forKey: .id)) ?? nil ?? d.id
         key = (try? container.decodeIfPresent(String.self, forKey: .key)) ?? nil ?? d.key
         label = (try? container.decodeIfPresent(String.self, forKey: .label)) ?? nil ?? d.label
         defaultValue = (try? container.decodeIfPresent(String.self, forKey: .defaultValue)) ?? nil ?? d.defaultValue
