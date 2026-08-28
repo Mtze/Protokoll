@@ -67,6 +67,9 @@ public struct Pipeline: Sendable {
     let transcriber: Transcriber
     let summarizer: Summarizer
     let materialsFetcher: MaterialsFetcher
+    let actionRunner: ActionRunner
+    let pipelinesConfig: PipelinesConfig
+    let projects: [Project]
     let waiter: ICloudDownloadWaiter
     let deviceId: String
 
@@ -95,9 +98,16 @@ public struct Pipeline: Sendable {
                                      summaryApiModel: config.summaryApiModel,
                                      summaryApiBaseURL: config.summaryApiBaseURL,
                                      summaryMaxTokens: config.summaryMaxTokens)
+        let connections = (try? container.loadConnections()) ?? []
         self.materialsFetcher = MaterialsFetcher(
-            runner: runner, tools: tools,
-            connections: (try? container.loadConnections()) ?? []
+            runner: runner, tools: tools, connections: connections
+        )
+        self.pipelinesConfig = (try? container.loadPipelines()) ?? PipelinesConfig()
+        self.projects = (try? container.loadProjects()) ?? []
+        self.actionRunner = ActionRunner(
+            runner: runner, tools: tools, store: container.store,
+            connections: connections, projects: self.projects,
+            model: config.summaryModel.isEmpty ? tools.claudeModel : config.summaryModel
         )
         self.waiter = ICloudDownloadWaiter()
         self.deviceId = deviceId
@@ -129,11 +139,62 @@ public struct Pipeline: Sendable {
             }
         }
 
-        // Custom action steps (ADR-13) land in a later milestone; the `actions`/
-        // `action:<id>` selections are already accepted so newer app builds can
-        // pass them without this binary erroring out.
+        // Custom action steps (ADR-13), after the core stages. `.all` runs the
+        // resolved pipeline's never-completed steps; explicit selections run
+        // what they name. Step failures live in `pipeline.steps[]` only.
+        let actionsOnly: String?
+        let runActions: Bool
+        switch step {
+        case .all, .only(.actions):
+            actionsOnly = nil
+            runActions = true
+        case let .only(.action(id)):
+            actionsOnly = id
+            runActions = true
+        default:
+            actionsOnly = nil
+            runActions = false
+        }
+        if runActions,
+           let pipeline = PipelineResolver.resolve(session: session.metadata,
+                                                   projects: projects, config: pipelinesConfig) {
+            session = try runActionStage(session: session, pipeline: pipeline,
+                                         only: actionsOnly,
+                                         force: force && step != .all,
+                                         onProgress: onProgress)
+        }
+
+        // Reconcile a stale `.failed`: if both core outputs exist and this run
+        // completed without throwing, the failure it records is from a previous
+        // run whose retry skipped every stage - restore `.done` so the session
+        // is not stuck red forever.
+        if case .failed = session.metadata.pipeline.status,
+           FileManager.default.fileExists(atPath: session.transcriptURL.path),
+           FileManager.default.fileExists(atPath: session.protocolURL.path) {
+            session = try store.setStatus(.done, in: session.folder)
+        }
 
         return session
+    }
+
+    /// Wraps the action steps in the summarize claim + heartbeat (they reuse
+    /// the existing claim vocabulary on purpose - old builds keep decoding
+    /// `session.json`, ADR-13).
+    private func runActionStage(
+        session: Session,
+        pipeline: PipelineDefinition,
+        only: String?,
+        force: Bool,
+        onProgress: (@Sendable (String) -> Void)?
+    ) throws -> Session {
+        let store = container.store
+        AppLog.pipeline.info("actions start session=\(session.id, privacy: .public) pipeline=\(pipeline.id, privacy: .public)")
+        _ = try store.acquireClaim(step: .summarize, deviceId: deviceId, in: session.folder)
+        defer { _ = try? store.releaseClaim(deviceId: deviceId, in: session.folder) }
+        return try withHeartbeat(folder: session.folder) {
+            try actionRunner.run(session: session, pipeline: pipeline,
+                                 only: only, force: force, onProgress: onProgress)
+        }
     }
 
     private func runTranscribe(session: Session, onProgress: (@Sendable (String) -> Void)?) throws -> Session {
@@ -177,6 +238,16 @@ public struct Pipeline: Sendable {
             }
             updated.metadata.pipeline.status = .done
             updated.metadata.pipeline.claim = nil
+            if force {
+                // The protocol just changed under previously completed steps:
+                // mark them stale. Re-running them (and their external writes)
+                // stays a manual decision (ADR-13).
+                updated.metadata.pipeline.steps = updated.metadata.pipeline.steps?.map { state in
+                    var state = state
+                    if state.status == StepState.done { state.status = StepState.stale }
+                    return state
+                }
+            }
             try store.save(updated)
             AppLog.pipeline.info("summarize done session=\(session.id, privacy: .public) duration=\(Date().timeIntervalSince(started), format: .fixed(precision: 1), privacy: .public)s")
             return updated

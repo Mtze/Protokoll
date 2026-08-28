@@ -167,6 +167,13 @@ struct LibraryView: View {
             EmptyView()
         }
 
+        if SessionAction.hasRerunnableSteps(status: session.metadata.pipeline.status,
+                                            steps: session.metadata.pipeline.steps) {
+            Button { model.runActions(session) } label: {
+                Label("step.rerunAll", systemImage: "sparkles")
+            }
+        }
+
         // Re-transcribe from the audio. Offered whenever a transcript exists and
         // nothing is running: useful after changing the language/vocabulary/model
         // or installing a faster, less hallucination-prone engine. For a session

@@ -17,4 +17,12 @@ public enum SessionAction: Equatable, Sendable {
         case .failed, .transcribing, .transcribed, .summarizing: return .retry
         }
     }
+
+    /// Whether a done session has action steps worth re-running (failed or
+    /// stale, ADR-13) - drives the "Re-run actions" affordance next to the
+    /// primary action.
+    public static func hasRerunnableSteps(status: PipelineStatus, steps: [StepState]?) -> Bool {
+        guard status == .done, let steps else { return false }
+        return steps.contains { $0.status == StepState.failed || $0.status == StepState.stale }
+    }
 }

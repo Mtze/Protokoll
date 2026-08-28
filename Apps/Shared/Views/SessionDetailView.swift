@@ -31,6 +31,7 @@ struct SessionDetailView: View {
         VStack(alignment: .leading, spacing: 14) {
             metadataSection
             processingSection
+            stepsSection
             if hasMicAudio {
                 GroupBox { audioPlayers.padding(4) }
                     // Seek keys fire only while the player holds focus, so they
@@ -120,6 +121,68 @@ struct SessionDetailView: View {
         }
     }
 
+    // MARK: Custom action steps (ADR-13)
+
+    @State private var artifactStep: StepState?
+
+    /// Per-step status of the session's custom actions, with the local audit
+    /// artifact one click away and a re-run for failed/stale steps.
+    @ViewBuilder private var stepsSection: some View {
+        if let steps = session.metadata.pipeline.steps, !steps.isEmpty {
+            GroupBox {
+                VStack(alignment: .leading, spacing: 6) {
+                    ForEach(steps) { state in
+                        HStack(spacing: 8) {
+                            Circle().fill(Self.stepColor(state.status)).frame(width: 8, height: 8)
+                            Button { artifactStep = state } label: {
+                                Text(state.name.isEmpty ? state.stepID : state.name).font(.callout)
+                            }
+                            .buttonStyle(.plain)
+                            .help("step.showReport")
+                            Self.stepStatusText(state.status).font(.caption).foregroundStyle(.secondary)
+                            if let message = state.message {
+                                Text(message).font(.caption).foregroundStyle(.red)
+                                    .lineLimit(1).truncationMode(.tail)
+                            }
+                            Spacer()
+                            if state.status == StepState.failed || state.status == StepState.stale {
+                                Button { model.runActions(session, only: state.stepID) } label: {
+                                    Image(systemName: "arrow.clockwise")
+                                }
+                                .buttonStyle(.borderless)
+                                .help("step.rerun")
+                            }
+                        }
+                    }
+                }
+                .padding(4)
+            }
+            .sheet(item: $artifactStep) { step in
+                StepArtifactView(session: session, step: step)
+            }
+        }
+    }
+
+    static func stepColor(_ status: String) -> Color {
+        switch status {
+        case StepState.done: return .green
+        case StepState.failed: return .red
+        case StepState.running: return .blue
+        case StepState.stale: return .orange
+        default: return .secondary.opacity(0.5)
+        }
+    }
+
+    /// Localized status label; an unknown status (newer build) shows verbatim.
+    static func stepStatusText(_ status: String) -> Text {
+        switch status {
+        case StepState.pending, StepState.running, StepState.done, StepState.failed, StepState.stale:
+            return Text(LocalizedStringKey("step.status.\(status)"))
+        default:
+            return Text(verbatim: status)
+        }
+    }
+
     // MARK: 1. Metadata + meta actions
 
     private var metadataSection: some View {
@@ -202,6 +265,12 @@ struct SessionDetailView: View {
                 .help("action.regenerate")
             case .none:
                 EmptyView()
+            }
+            if SessionAction.hasRerunnableSteps(status: status, steps: session.metadata.pipeline.steps) {
+                Button { model.runActions(session) } label: {
+                    Label("step.rerunAll", systemImage: "sparkles")
+                }
+                .help("step.rerunAll")
             }
             if !model.projects.isEmpty {
                 Menu {
@@ -318,3 +387,41 @@ struct SessionDetailView: View {
 #if canImport(AppKit)
 import AppKit
 #endif
+
+/// Sheet showing one action step's local audit artifact (`steps/<id>.md`,
+/// ADR-13): what the model did externally, tool calls and touched URLs.
+private struct StepArtifactView: View {
+    let session: Session
+    let step: StepState
+    @Environment(\.dismiss) private var dismiss
+
+    private var artifact: String {
+        (try? String(contentsOf: session.stepArtifactURL(stepID: step.stepID), encoding: .utf8))
+            ?? String(localized: "step.report.missing")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(step.name.isEmpty ? step.stepID : step.name).font(.headline)
+                Spacer()
+                Button { reveal() } label: { Label("action.reveal", systemImage: "folder") }
+                Button("step.done") { dismiss() }.keyboardShortcut(.defaultAction)
+            }
+            ScrollView {
+                Text(verbatim: artifact)
+                    .font(.callout.monospaced())
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        .padding()
+        .frame(minWidth: 480, minHeight: 320)
+    }
+
+    private func reveal() {
+        #if canImport(AppKit)
+        NSWorkspace.shared.activateFileViewerSelecting([session.stepArtifactURL(stepID: step.stepID)])
+        #endif
+    }
+}

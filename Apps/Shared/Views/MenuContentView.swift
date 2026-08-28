@@ -127,7 +127,7 @@ struct MenuContentView: View {
                     stateIcon(job.state)
                     Text(job.title).lineLimit(1).font(.callout)
                     Spacer()
-                    Text(LocalizedStringKey("step.\(job.step.rawValue)")).font(.caption2).foregroundStyle(.secondary)
+                    Text(LocalizedStringKey(job.step.labelKey)).font(.caption2).foregroundStyle(.secondary)
                 }
             }
         }

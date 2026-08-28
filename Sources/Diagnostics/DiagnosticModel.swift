@@ -9,6 +9,7 @@ public enum CheckID: String, Sendable, CaseIterable {
     case whisperEnginePerformance
     case whisperModel
     case ffmpeg
+    case npx
     case path
     case containerWritable
     case microphone
