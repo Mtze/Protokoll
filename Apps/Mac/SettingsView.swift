@@ -76,6 +76,14 @@ final class ProjectsStore {
     func save() { try? container.saveProjects(projects) }
     func add() { projects.append(Project(name: "", color: ProjectColor.palette.first ?? "#3B82F6")) }
     func delete(_ project: Project) { projects.removeAll { $0.id == project.id } }
+
+    /// Clears references to a deleted pipeline (ADR-13) so no project keeps a
+    /// dangling `pipelineID` and an invalid picker selection.
+    func clearPipeline(_ pipelineID: String) {
+        for index in projects.indices where projects[index].pipelineID == pipelineID {
+            projects[index].pipelineID = nil
+        }
+    }
 }
 
 /// App settings, organized into native preference tabs. App-behavior toggles are
@@ -87,12 +95,16 @@ struct SettingsView: View {
     @State private var store: PipelineSettingsStore
     @State private var projectsStore: ProjectsStore
     @State private var templateStore: SummaryTemplateStore
+    @State private var connectionsStore: ConnectionsStore
+    @State private var pipelinesStore: PipelinesStore
 
     init(container: Container) {
         self.container = container
         _store = State(wrappedValue: PipelineSettingsStore(container: container))
         _projectsStore = State(wrappedValue: ProjectsStore(container: container))
         _templateStore = State(wrappedValue: SummaryTemplateStore(container: container))
+        _connectionsStore = State(wrappedValue: ConnectionsStore(container: container))
+        _pipelinesStore = State(wrappedValue: PipelinesStore(container: container))
     }
 
     var body: some View {
@@ -103,8 +115,11 @@ struct SettingsView: View {
                 .tabItem { Label("settings.tab.transcription", systemImage: "waveform") }
             SummaryTab(store: store, templateStore: templateStore)
                 .tabItem { Label("settings.tab.summary", systemImage: "doc.text") }
-            ProjectsTab(store: projectsStore)
+            ProjectsTab(store: projectsStore, pipelines: pipelinesStore.config.pipelines)
                 .tabItem { Label("settings.tab.projects", systemImage: "tag") }
+            AutomationsTab(connectionsStore: connectionsStore, pipelinesStore: pipelinesStore,
+                           projectsStore: projectsStore)
+                .tabItem { Label("settings.tab.automations", systemImage: "sparkles") }
             ProcessingTab()
                 .tabItem { Label("settings.tab.processing", systemImage: "gearshape.2") }
             DiagnosticsSettingsTab()
@@ -119,6 +134,8 @@ struct SettingsView: View {
             projectsStore.save()
             model.reloadProjects()
         }
+        .onChange(of: connectionsStore.connections) { connectionsStore.save() }
+        .onChange(of: pipelinesStore.config) { pipelinesStore.save() }
     }
 }
 
@@ -126,6 +143,7 @@ struct SettingsView: View {
 
 private struct ProjectsTab: View {
     @Bindable var store: ProjectsStore
+    let pipelines: [PipelineDefinition]
 
     var body: some View {
         Form {
@@ -141,6 +159,17 @@ private struct ProjectsTab: View {
                             .help("project.delete")
                         }
                         SwatchPicker(selection: $project.color)
+                        if !pipelines.isEmpty {
+                            Picker("project.pipeline", selection: Binding(
+                                get: { project.pipelineID ?? "" },
+                                set: { project.pipelineID = $0.isEmpty ? nil : $0 }
+                            )) {
+                                Text("pipeline.builtin").tag("")
+                                ForEach(pipelines) { pipeline in
+                                    Text(pipeline.name).tag(pipeline.id)
+                                }
+                            }
+                        }
                     }
                     .padding(.vertical, 2)
                 }
@@ -462,4 +491,5 @@ enum SettingsKeys {
     static let defaultPlaybackSpeed = "defaultPlaybackSpeed"
     static let claudeBinOverride = "claudeBinaryPath"
     static let transcribeShOverride = "transcribeScriptPath"
+    static let stepCommandAllowlist = "stepCommandAllowlist"
 }

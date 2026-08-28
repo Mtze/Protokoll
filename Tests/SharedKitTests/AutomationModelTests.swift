@@ -171,6 +171,17 @@ struct AutomationModelTests {
         #expect(loaded.metadata.pipeline.steps == nil)
     }
 
+    @Test func connectionKeyManifestRoundTripsAndReportsEmptiness() throws {
+        #expect(ConnectionKeyManifest().isEmpty)
+        let manifest = ConnectionKeyManifest(
+            connections: ["c1": .init(key: "sk-x", command: "npx", arguments: ["-y", "srv"], keyEnvVar: "K")],
+            allowedCommands: ["td"]
+        )
+        #expect(!manifest.isEmpty)
+        let data = try JSONEncoder().encode(manifest)
+        #expect(try JSONDecoder().decode(ConnectionKeyManifest.self, from: data) == manifest)
+    }
+
     @Test func writeStepArtifactCreatesFile() throws {
         let container = makeContainer()
         let session = try container.createSession(device: .mac)

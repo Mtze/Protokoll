@@ -212,6 +212,15 @@ default, a chronological account of the meeting. Settings > Summary edits it, an
 regardless of what the file says (ADR-10), and previous protocols are kept as
 `protocol.vN.md`, so an edit that turns out badly is always recoverable.
 
+**Automations** (ADR-13): Settings > Automations manages platform connections
+(Outline, Todoist, or a custom MCP server) and custom pipelines whose action
+steps run after summarize. Connections live in `<container>/config/connections.json`
+and pipelines in `<container>/config/pipelines.json` - both without secrets.
+Connection API keys are stored in the macOS Keychain; custom MCP launch commands
+and the step CLI-command allowlist stay in this Mac's local defaults (the
+container syncs, executable config must not). The app hands all of it to
+`process-session` as one short-lived 0600 manifest file (`CONNECTION_KEYS_FILE`).
+
 Environment overrides for dev / standalone runs:
 
 | Variable | Purpose |
@@ -221,6 +230,7 @@ Environment overrides for dev / standalone runs:
 | `CLAUDE_BIN` | Path to the `claude` CLI (summary provider `cli`). |
 | `SUMMARY_API_KEY_FILE` | Path to a file holding the summary-provider API key (the app injects this; the raw key never sits in the env). |
 | `SUMMARY_API_KEY` | Summary-provider API key for standalone runs (fallback: `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`). |
+| `CONNECTION_KEYS_FILE` | Path to the connection key manifest for automations (the app injects this; standalone runs can use `CONNECTION_KEY_<ID>` per connection instead). |
 | `MN_CONTAINER_ROOT` | Override the container folder (dev/tests). |
 | `MN_REPO_ROOT` | Repo root for the app's dev helper/asset fallbacks. |
 
