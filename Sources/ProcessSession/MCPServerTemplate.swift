@@ -27,10 +27,11 @@ enum MCPServerTemplate {
         /// `--allowedTools` entries granting the whole server.
         var allTools: [String] { ["mcp__\(name)"] }
 
-        /// `--allowedTools` entries for read-only access; falls back to the
-        /// whole server only when no read-only subset is known.
+        /// `--allowedTools` entries for read-only access. Fails **closed**: a
+        /// server without a known read-only subset (custom) yields no tools at
+        /// all - read access must never silently widen to the whole server.
         var readTools: [String] {
-            readOnlyTools?.map { "mcp__\(name)__\($0)" } ?? allTools
+            readOnlyTools?.map { "mcp__\(name)__\($0)" } ?? []
         }
     }
 

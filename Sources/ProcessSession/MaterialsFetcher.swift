@@ -4,6 +4,7 @@ import SharedKit
 public enum MaterialsFetchError: Error, LocalizedError, Equatable {
     case noMatchingConnection(String)
     case notLaunchable(String)
+    case noReadOnlyTools(String)
     case fetchFailed(url: String, reason: String)
 
     public var errorDescription: String? {
@@ -12,6 +13,8 @@ public enum MaterialsFetchError: Error, LocalizedError, Equatable {
             return "No connection matches the material link \(url). Add one under Settings > Automations."
         case let .notLaunchable(url):
             return "The connection for \(url) has no MCP launch configuration on this machine."
+        case let .noReadOnlyTools(url):
+            return "The connection for \(url) has no known read-only tool set; materials can only be fetched from known platform kinds."
         case let .fetchFailed(url, reason):
             return "Fetching material \(url) failed: \(reason)"
         }
@@ -63,7 +66,10 @@ public struct MaterialsFetcher: Sendable {
                                                 withIntermediateDirectories: true)
         for (index, link) in links.enumerated() {
             let destination = session.materialURL(index: index)
-            if !force, FileManager.default.fileExists(atPath: destination.path) { continue }
+            // A cache hit must be for the *same link*: after the user edits or
+            // reorders materials, an index may point at a file fetched from a
+            // different source, which would silently poison the summary.
+            if !force, Self.storedSource(at: destination) == link { continue }
             onProgress?("fetching material \(index + 1)/\(links.count)")
             let content = try fetch(link: link, onProgress: onProgress)
             try write(content, source: link, to: destination)
@@ -80,12 +86,24 @@ public struct MaterialsFetcher: Sendable {
         }
     }
 
+    /// The `source:` recorded in an already-fetched material file, or nil.
+    static func storedSource(at url: URL) -> String? {
+        guard let document = try? String(contentsOf: url, encoding: .utf8) else { return nil }
+        return Frontmatter.split(document).frontmatter["source"]
+    }
+
     private func fetch(link: String, onProgress: (@Sendable (String) -> Void)?) throws -> String {
         guard let connection = connection(for: link) else {
             throw MaterialsFetchError.noMatchingConnection(link)
         }
         guard let server = MCPServerTemplate.server(for: connection, entry: secrets.entry(for: connection)) else {
             throw MaterialsFetchError.notLaunchable(link)
+        }
+        // The fetch runs under a read-only contract; a connection kind without
+        // a known read-only tool subset (custom servers) must fail closed here
+        // rather than be granted the whole server.
+        guard server.readOnlyTools != nil else {
+            throw MaterialsFetchError.noReadOnlyTools(link)
         }
         let configURL = try MCPServerTemplate.writeConfig(for: server)
         defer { try? FileManager.default.removeItem(at: configURL) }

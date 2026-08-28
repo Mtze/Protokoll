@@ -94,6 +94,49 @@ struct MaterialsFetcherTests {
         #expect(runner.invocations.count == 2)
     }
 
+    @Test func editedLinkInvalidatesTheCachedMaterial() throws {
+        let (container, session) = try makeSession(materials: ["https://outline.example.org/doc/a"])
+        let runner = FakeRunner(stdout: "content A")
+        try fetcher(runner).fetchIfNeeded(session: session)
+        #expect(runner.invocations.count == 1)
+
+        // Replace the link at the same index: the cached file's source no
+        // longer matches, so a non-forced run must refetch.
+        var updated = session
+        updated.metadata.materials = ["https://outline.example.org/doc/b"]
+        try container.store.save(updated)
+        let reloaded = try container.store.load(folder: session.folder)
+        runner.stdout = "content B"
+        try fetcher(runner).fetchIfNeeded(session: reloaded)
+        #expect(runner.invocations.count == 2)
+        let written = try String(contentsOf: session.materialURL(index: 0), encoding: .utf8)
+        #expect(written.contains("source: https://outline.example.org/doc/b"))
+        #expect(written.contains("content B"))
+    }
+
+    @Test func customConnectionsAreRejectedForFetching() throws {
+        let custom = PlatformConnection(id: "c1", name: "Custom", kind: PlatformConnection.kindCustom,
+                                        baseURL: "https://wiki.example.org")
+        let (_, session) = try makeSession(materials: ["https://wiki.example.org/x"])
+        let runner = FakeRunner(stdout: "content")
+        // The manifest carries a launch spec, so the server *could* start; the
+        // fetch must still fail closed because no read-only tool set exists.
+        let manifest = ConnectionKeyManifest(connections: ["c1": .init(key: "k", command: "npx",
+                                                                       arguments: ["-y", "srv"],
+                                                                       keyEnvVar: "K")])
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("mn-custom-\(UUID().uuidString).json")
+        try JSONEncoder().encode(manifest).write(to: file)
+        let fetcher = MaterialsFetcher(
+            runner: runner, tools: ToolLocator(environment: [:]), connections: [custom],
+            secrets: ConnectionSecrets(environment: ["CONNECTION_KEYS_FILE": file.path])
+        )
+        #expect(throws: MaterialsFetchError.noReadOnlyTools("https://wiki.example.org/x")) {
+            try fetcher.fetchIfNeeded(session: session)
+        }
+        #expect(runner.invocations.isEmpty)
+    }
+
     @Test func noMatchingConnectionFailsTheStage() throws {
         let (_, session) = try makeSession(materials: ["https://confluence.example.org/x"])
         let runner = FakeRunner(stdout: "content")

@@ -203,6 +203,10 @@ final class AppModel {
             health = .red
             return
         }
+        // A still-showing post-stop card is stale once a new recording starts:
+        // dismiss it explicitly so its session re-enters the normal
+        // notification/auto-process path instead of losing its hold silently.
+        justStoppedSession = nil
         do {
             let session = try container.createSession(device: .mac)
             // Opt-in OS echo cancellation on the mic path (Settings > Recording).
