@@ -25,7 +25,7 @@ struct MenuContentView: View {
             }
 
             if let error = model.systemAudioError {
-                SystemAudioBanner(message: error)
+                SystemAudioBanner(message: error) { model.clearSystemAudioError() }
             }
 
             if let error = model.importError {

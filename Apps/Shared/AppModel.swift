@@ -285,6 +285,9 @@ final class AppModel {
     /// Dismisses the import-error alert.
     func clearImportError() { importError = nil }
 
+    /// Dismisses the system-audio / screen-recording warning banner.
+    func clearSystemAudioError() { systemAudioError = nil }
+
     // MARK: Recording meter
 
     private func startLevelMonitoring() {

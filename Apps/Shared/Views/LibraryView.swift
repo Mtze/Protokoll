@@ -40,7 +40,12 @@ struct LibraryView: View {
     }
 
     var body: some View {
-        NavigationSplitView {
+        // Banners live in the layout flow above the split view (not in a top
+        // safe-area inset, which floated over both columns and overlapped their
+        // content). This pushes the sidebar and detail down so both stay readable.
+        VStack(spacing: 0) {
+            topBanners
+            NavigationSplitView {
             sidebar
         } detail: {
             if let selection, let session = model.sessions.first(where: { $0.id == selection }) {
@@ -53,6 +58,12 @@ struct LibraryView: View {
             }
         }
         .searchable(text: $searchText, prompt: Text("library.search.prompt"))
+        // Focus the freshly created session when a recording starts (from the
+        // toolbar or the menu bar), so the detail pane follows the new recording
+        // rather than staying on whatever was selected before.
+        .onChange(of: model.activeRecordingID) { _, newID in
+            if let newID { selection = newID }
+        }
         .focusedSceneValue(\.recordAction, recordTapped)
         .focusedSceneValue(\.importAction, { showingImporter = true })
         .fileImporter(isPresented: $showingImporter,
@@ -76,22 +87,6 @@ struct LibraryView: View {
         .sheet(isPresented: $showOnboarding) {
             OnboardingView(dismiss: { showOnboarding = false })
         }
-        .safeAreaInset(edge: .top) {
-            VStack(spacing: 0) {
-                if let error = model.systemAudioError {
-                    SystemAudioBanner(message: error)
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.regularMaterial)
-                }
-                if let warning = model.inputClippedWarning {
-                    InputClippedBanner(message: warning) { model.inputClippedWarning = nil }
-                        .padding(8)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(.regularMaterial)
-                }
-            }
-        }
         .toolbar {
             ToolbarItem(placement: .navigation) { recordButton }
             if model.isRecording {
@@ -109,6 +104,26 @@ struct LibraryView: View {
                                  sessionToRename: $sessionToRename,
                                  sessionToRetranscribe: $sessionToRetranscribe,
                                  renameText: $renameText))
+        }
+    }
+
+    /// The screen-recording / clipping warning banners, stacked above the split
+    /// view so their space is reserved and content is never hidden behind them.
+    @ViewBuilder private var topBanners: some View {
+        VStack(spacing: 0) {
+            if let error = model.systemAudioError {
+                SystemAudioBanner(message: error) { model.clearSystemAudioError() }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.regularMaterial)
+            }
+            if let warning = model.inputClippedWarning {
+                InputClippedBanner(message: warning) { model.inputClippedWarning = nil }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(.regularMaterial)
+            }
+        }
     }
 
     /// The session list (sidebar column), extracted to keep `body` type-checkable.
@@ -290,8 +305,15 @@ struct LibraryView: View {
                 // and block a second tap (see `.disabled` below).
                 Label("menu.stopping", systemImage: "stop.circle")
             } else {
-                Label(model.isRecording ? "menu.stop" : "menu.record",
-                      systemImage: model.isRecording ? "stop.circle.fill" : "record.circle")
+                // Colour the symbol explicitly: a toolbar button's `.tint` does not
+                // reliably turn the SF Symbol red, and the stop button should read
+                // clearly as "stop" while recording.
+                Label {
+                    Text(model.isRecording ? "menu.stop" : "menu.record")
+                } icon: {
+                    Image(systemName: model.isRecording ? "stop.circle.fill" : "record.circle")
+                        .foregroundStyle(model.isRecording ? Color.red : Color.accentColor)
+                }
             }
         }
         .tint(model.isRecording ? .red : .accentColor)
@@ -427,9 +449,11 @@ private struct RecordingToolbarIndicator: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
+        // No dot: the red stop button sits right next to this in the toolbar, so a
+        // second red circle would read as a second stop button.
         RecordingIndicator(levels: model.recordingLevels,
                            startedAt: model.recordingStartedAt,
-                           compact: true)
+                           compact: true, showDot: false)
             .frame(width: 180, height: 22)
     }
 }
@@ -458,16 +482,22 @@ struct InputClippedBanner: View {
 /// Screen Recording settings pane.
 struct SystemAudioBanner: View {
     let message: String
+    var dismiss: () -> Void
 
     var body: some View {
-        Button { Self.openScreenRecordingSettings() } label: {
-            Label(message, systemImage: "speaker.slash.fill")
-                .font(.caption)
-                .foregroundStyle(.orange)
-                .multilineTextAlignment(.leading)
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Button { Self.openScreenRecordingSettings() } label: {
+                Label(message, systemImage: "speaker.slash.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .multilineTextAlignment(.leading)
+            }
+            .buttonStyle(.plain)
+            .help("systemaudio.openSettings")
+            Spacer(minLength: 8)
+            Button("action.dismiss", action: dismiss)
+                .buttonStyle(.borderless)
         }
-        .buttonStyle(.plain)
-        .help("systemaudio.openSettings")
     }
 
     static func openScreenRecordingSettings() {
