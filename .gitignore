@@ -8,6 +8,9 @@ build/
 *.o
 *.swiftmodule
 
+# `make dist` output (local tester handoff, never committed)
+/Protokoll.zip
+
 # XcodeGen output (project is generated, not committed)
 # (kept explicit so the generated .xcodeproj never lands in git)
 

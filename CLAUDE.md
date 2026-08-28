@@ -126,6 +126,11 @@ xcodebuild -project Protokoll.xcodeproj -scheme Protokoll-Mac \
   -destination 'platform=macOS' build CODE_SIGNING_ALLOWED=NO
 ```
 
+A root `Makefile` wraps this for local dev + tester handoff: `make build`
+(Release into `build/dd`), `make install` (into `/Applications`), `make dist`
+(zip an ad-hoc-signed, non-notarized app), `make run`, `make clean`. It is not a
+replacement for the signed Homebrew cask / `release-app` flow.
+
 Dev env overrides: see the table in `README.md`. Deployment floors: macOS 14 /
 iOS 17 / watchOS 10. Git: commit each working part, work on a branch, **rebase
 before pushing**, never force-push; `.worktrees/` is gitignored.
