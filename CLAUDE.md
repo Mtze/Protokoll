@@ -150,9 +150,13 @@ before pushing**, never force-push; `.worktrees/` is gitignored.
 - Recording is **one combined track** (ADR-7): mic + optional system audio are
   mixed into `mic.m4a` on stop, which is what gets transcribed. Screen Recording
   permission is required for system audio; failures surface, never silent.
-  `stop()` writes `mic.m4a` to a `.partial` sibling and **atomically renames** it,
-  so the player / pipeline / `NewSessionNotifier` never observe a half-exported
-  file (a visible partial file left the audio player stuck disabled). The input
+  Stopping is two-phase so it feels instant: `Recorder.stopCapture()` stops the
+  engine and closes the CAF **synchronously** (returns at once), then
+  `Recorder.finalizeAudio(...)` runs the slow CAF->m4a export/mix **in the
+  background** (off the actor), writing `mic.m4a` to a `.partial` sibling and
+  **atomically renaming** it - so the player / pipeline / `NewSessionNotifier`
+  never observe a half-exported file (a visible partial file left the audio
+  player stuck disabled), and the stop button never blocks on the export. The input
   **device** is selectable in Settings (`SettingsKeys.preferredInputDeviceUID`,
   empty = system default): `AudioInputDevices` enumerates input-capable devices
   via the CoreAudio HAL and `Recorder.start(...inputDeviceUID:)` binds
