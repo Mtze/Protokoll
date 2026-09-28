@@ -268,6 +268,18 @@ private struct SummaryTab: View {
     /// The Keychain account for the currently selected API provider.
     private var keyProvider: String { store.config.summaryProvider == "openai" ? "openai" : "anthropic" }
     private var isAPI: Bool { store.config.summaryProvider != "cli" }
+    /// The pipeline also resolves a key from the environment (mirrors
+    /// `SummaryAPI.resolveKey`), so don't warn about a missing key when one is set
+    /// there even though the Settings field is empty.
+    private var hasEnvKey: Bool {
+        let env = ProcessInfo.processInfo.environment
+        func set(_ name: String) -> Bool { (env[name]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false) }
+        if set("SUMMARY_API_KEY_FILE") || set("SUMMARY_API_KEY") { return true }
+        return set(store.config.summaryProvider == "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY")
+    }
+    private var apiKeyMissing: Bool {
+        apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !hasEnvKey
+    }
     private var baseURLInvalid: Bool {
         let value = store.config.summaryApiBaseURL.trimmingCharacters(in: .whitespacesAndNewlines)
         return !value.isEmpty && !value.lowercased().hasPrefix("https://")
@@ -298,6 +310,12 @@ private struct SummaryTab: View {
             if isAPI {
                 Section("settings.summary.api") {
                     SecureField("settings.summary.api.key", text: $apiKey)
+                    if apiKeyMissing {
+                        // Without a key every recording's summary step fails; make
+                        // that obvious here instead of only in a failed session.
+                        Label("settings.summary.api.key.missing", systemImage: "exclamationmark.triangle")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
                     TextField("settings.summary.api.model", text: $store.config.summaryApiModel,
                               prompt: Text(verbatim: store.config.summaryProvider == "anthropic"
                                            ? "claude-sonnet-4-5" : "gpt-4o"))

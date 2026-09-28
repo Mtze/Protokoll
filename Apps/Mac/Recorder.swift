@@ -165,10 +165,13 @@ actor Recorder {
         }
     }
 
-    /// Stops capture, finalizes the CAF, and produces `mic.m4a` - mixing in the
-    /// system-audio track when present (ADR-7) so the transcript covers the whole
-    /// call, not just the mic. Returns the session with updated `endedAt`/`duration`.
-    func stop(mixSystemAudio: Bool = false) async throws -> Session {
+    /// Stops capturing **immediately**: removes the tap, stops the engine, and
+    /// closes the CAF writer, then returns the session with `endedAt`/`duration`
+    /// set. The slow CAF->m4a export is deliberately *not* done here - call
+    /// ``finalizeAudio(session:mixSystemAudio:)`` for that, off the stop button's
+    /// critical path, so stopping feels instant (the 100 MB export of a long
+    /// meeting used to block the button for seconds).
+    func stopCapture() throws -> Session {
         guard isRecording, var session, let startedAt else {
             throw RecorderError.engineFailure(String(localized: "recorder.error.notRecording"))
         }
@@ -189,9 +192,23 @@ actor Recorder {
         }
         didClip = clipped
 
-        // Produce mic.m4a via a temp file and an atomic rename, so the player,
-        // pipeline, and NewSessionNotifier never observe a half-written export
-        // (a partial mic.m4a would leave the audio player stuck disabled).
+        let ended = Date()
+        session.metadata.endedAt = ended
+        session.metadata.duration = ended.timeIntervalSince(startedAt)
+        session.metadata.audioTracks = [.mic]
+        self.session = nil
+        self.startedAt = nil
+        AppLog.recording.info("recording capture stopped session=\(session.id, privacy: .public) duration=\(session.metadata.duration ?? 0, format: .fixed(precision: 1), privacy: .public)s")
+        return session
+    }
+
+    /// Produces `mic.m4a` from the captured CAF - mixing in the system-audio
+    /// track when present (ADR-7) so the transcript covers the whole call, not
+    /// just the mic. Writes via a temp file and an atomic rename, so the player,
+    /// pipeline, and `NewSessionNotifier` never observe a half-written export.
+    /// `nonisolated` so it runs off the actor: it touches only the session's file
+    /// URLs, never the engine, so a new recording can start while it runs.
+    nonisolated static func finalizeAudio(session: Session, mixSystemAudio: Bool = false) async throws {
         let finalURL = session.micAudioURL
         let partialURL = finalURL.appendingPathExtension("partial")
         try? FileManager.default.removeItem(at: partialURL)
@@ -202,20 +219,12 @@ actor Recorder {
             try? FileManager.default.removeItem(at: systemURL)
         } else {
             AppLog.recording.info("converting CAF to m4a session=\(session.id, privacy: .public)")
-            try await Self.convertCAFToM4A(caf: session.micCaptureURL, m4a: partialURL)
+            try await convertCAFToM4A(caf: session.micCaptureURL, m4a: partialURL)
         }
         try? FileManager.default.removeItem(at: finalURL)
         try FileManager.default.moveItem(at: partialURL, to: finalURL)
         try? FileManager.default.removeItem(at: session.micCaptureURL)
-
-        let ended = Date()
-        session.metadata.endedAt = ended
-        session.metadata.duration = ended.timeIntervalSince(startedAt)
-        session.metadata.audioTracks = [.mic]
-        self.session = nil
-        self.startedAt = nil
-        AppLog.recording.info("recording stopped session=\(session.id, privacy: .public) duration=\(session.metadata.duration ?? 0, format: .fixed(precision: 1), privacy: .public)s")
-        return session
+        AppLog.recording.info("audio finalized session=\(session.id, privacy: .public)")
     }
 
     /// Recovers a crashed recording: a `mic.caf` with no `mic.m4a` is converted
@@ -229,8 +238,11 @@ actor Recorder {
             guard fileManager.fileExists(atPath: caf.path), !fileManager.fileExists(atPath: m4a.path) else { continue }
             AppLog.recording.info("recovering orphaned CAF session=\(session.id, privacy: .public)")
             do {
-                try await convertCAFToM4A(caf: caf, m4a: m4a)
-                try? fileManager.removeItem(at: caf)
+                // Mix in the system-audio track if it survived too, so a recording
+                // interrupted before finalize still yields the full combined m4a
+                // (ADR-7), not a mic-only file with an orphaned system.caf.
+                let hasSystem = fileManager.fileExists(atPath: session.systemAudioURL.path)
+                try await finalizeAudio(session: session, mixSystemAudio: hasSystem)
             } catch {
                 // Leave the CAF in place; better a raw file than nothing (N5).
                 AppLog.recording.error("orphan recovery failed session=\(session.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")
