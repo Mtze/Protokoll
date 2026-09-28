@@ -2977,6 +2977,23 @@
         }
       }
     },
+    "settings.summary.api.key.missing": {
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kein API-Schlüssel gesetzt - Zusammenfassungen schlagen fehl, bis du einen hinterlegst oder auf \"Lokales claude\" wechselst."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No API key set - summaries will fail until you add one or switch to Local claude."
+          }
+        }
+      }
+    },
     "settings.summary.api.model": {
       "extractionState": "manual",
       "localizations": {

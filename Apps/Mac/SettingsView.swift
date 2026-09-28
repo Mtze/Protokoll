@@ -298,6 +298,12 @@ private struct SummaryTab: View {
             if isAPI {
                 Section("settings.summary.api") {
                     SecureField("settings.summary.api.key", text: $apiKey)
+                    if apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        // Without a key every recording's summary step fails; make
+                        // that obvious here instead of only in a failed session.
+                        Label("settings.summary.api.key.missing", systemImage: "exclamationmark.triangle")
+                            .font(.caption).foregroundStyle(.orange)
+                    }
                     TextField("settings.summary.api.model", text: $store.config.summaryApiModel,
                               prompt: Text(verbatim: store.config.summaryProvider == "anthropic"
                                            ? "claude-sonnet-4-5" : "gpt-4o"))
