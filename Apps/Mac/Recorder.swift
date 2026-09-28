@@ -238,8 +238,11 @@ actor Recorder {
             guard fileManager.fileExists(atPath: caf.path), !fileManager.fileExists(atPath: m4a.path) else { continue }
             AppLog.recording.info("recovering orphaned CAF session=\(session.id, privacy: .public)")
             do {
-                try await convertCAFToM4A(caf: caf, m4a: m4a)
-                try? fileManager.removeItem(at: caf)
+                // Mix in the system-audio track if it survived too, so a recording
+                // interrupted before finalize still yields the full combined m4a
+                // (ADR-7), not a mic-only file with an orphaned system.caf.
+                let hasSystem = fileManager.fileExists(atPath: session.systemAudioURL.path)
+                try await finalizeAudio(session: session, mixSystemAudio: hasSystem)
             } catch {
                 // Leave the CAF in place; better a raw file than nothing (N5).
                 AppLog.recording.error("orphan recovery failed session=\(session.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")

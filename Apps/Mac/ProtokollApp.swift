@@ -49,7 +49,9 @@ struct ProtokollApp: App {
 /// warn before terminating so an in-flight transcription isn't killed silently.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard AppModel.shared?.scheduler.hasActiveWork == true else { return .terminateNow }
+        let busy = AppModel.shared?.scheduler.hasActiveWork == true
+            || (AppModel.shared?.pendingFinalizations ?? 0) > 0
+        guard busy else { return .terminateNow }
         let alert = NSAlert()
         alert.messageText = String(localized: "quit.confirm.title")
         alert.informativeText = String(localized: "quit.confirm.message")

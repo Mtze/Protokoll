@@ -21,6 +21,10 @@ final class AppModel {
     /// re-enter `stopRecording` during the multi-second export (which would throw
     /// `notRecording`). Cleared even if the export fails.
     private(set) var isStopping = false
+    /// Background CAF->m4a exports still running after a stop. The quit gate waits
+    /// on this so an immediate quit doesn't kill a recording's finalization, and
+    /// it is decremented even when the export fails.
+    private(set) var pendingFinalizations = 0
     private(set) var activeRecordingID: String?
 
     // Live recording meter (N4 visible indicator).
@@ -213,48 +217,61 @@ final class AppModel {
             }
         }
         #endif
+        // Stop capturing immediately - the engine stops at once. The slow CAF->m4a
+        // export runs in the background (below), so the stop button frees up right
+        // away instead of sitting on "Stopping..." for the seconds a long meeting's
+        // export takes.
+        let stopped: Session
         do {
-            // Stop capturing immediately - the engine stops at once. The slow
-            // CAF->m4a export runs in the background (below), so the stop button
-            // frees up right away instead of sitting on "Stopping..." for the
-            // seconds a long meeting's export takes.
-            let session = try await recorder.stopCapture()
-            var stored = session
-            stored.metadata.pipeline.status = .recorded
-            try container.store.save(stored)
-            #if os(macOS)
-            // Clipping cannot be repaired after the fact, so say so now rather
-            // than let it silently cost transcription accuracy.
-            if await recorder.didClip {
-                inputClippedWarning = String(localized: "recording.warning.clipped")
-            }
-            #endif
-            isRecording = false
-            activeRecordingID = nil
-            stopLevelMonitoring()
-            isStopping = false
-            reloadSessions()
-
-            // Finalize (convert/mix into mic.m4a) off the critical path. The audio
-            // player and Process action already gate on mic.m4a existing, so they
-            // light up once this finishes and the list reloads.
-            let finalizeSession = stored
-            let mixSystem = systemProduced
-            Task { [weak self] in
-                do {
-                    try await Recorder.finalizeAudio(session: finalizeSession, mixSystemAudio: mixSystem)
-                } catch {
-                    AppLog.recording.error("audio finalize failed session=\(finalizeSession.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")
-                }
-                self?.reloadSessions()
-            }
+            stopped = try await recorder.stopCapture()
         } catch {
-            // stopCapture failed (e.g. never actually recording); reset UI state.
+            // Never actually recording / engine failure: nothing was captured, so
+            // just reset UI state.
             isRecording = false
             activeRecordingID = nil
             stopLevelMonitoring()
             isStopping = false
-            reloadSessions()
+            return
+        }
+
+        // The recording is on disk now (mic.caf), so it MUST be finalized whatever
+        // happens next - persisting metadata below is best-effort and its failure
+        // must not skip the CAF->m4a export.
+        var stored = stopped
+        stored.metadata.pipeline.status = .recorded
+        do {
+            try container.store.save(stored)
+        } catch {
+            AppLog.recording.error("saving stopped session failed session=\(stored.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")
+        }
+        #if os(macOS)
+        // Clipping cannot be repaired after the fact, so say so now rather than let
+        // it silently cost transcription accuracy.
+        if await recorder.didClip {
+            inputClippedWarning = String(localized: "recording.warning.clipped")
+        }
+        #endif
+        isRecording = false
+        activeRecordingID = nil
+        stopLevelMonitoring()
+        isStopping = false
+        reloadSessions()
+
+        // Finalize (convert/mix into mic.m4a) off the critical path, tracked via
+        // pendingFinalizations so the quit gate waits on it. The audio player and
+        // Process action gate on mic.m4a existing, so they light up once this
+        // finishes and the list reloads.
+        let finalizeSession = stopped
+        let mixSystem = systemProduced
+        pendingFinalizations += 1
+        Task { [weak self] in
+            do {
+                try await Recorder.finalizeAudio(session: finalizeSession, mixSystemAudio: mixSystem)
+            } catch {
+                AppLog.recording.error("audio finalize failed session=\(finalizeSession.id, privacy: .public): \(AppLog.describe(error), privacy: .public)")
+            }
+            self?.pendingFinalizations -= 1
+            self?.reloadSessions()
         }
     }
 
@@ -342,6 +359,15 @@ final class AppModel {
     // MARK: Processing
 
     func process(_ session: Session) {
+        // A just-stopped session is `.recorded` while its audio still finalizes in
+        // the background; enqueueing then would fail transcription on a missing
+        // mic.m4a. Guard every manual entry point (NewSessionNotifier already waits
+        // for the file); the session processes once finalize completes and the user
+        // triggers it again, or via auto-process.
+        guard FileManager.default.fileExists(atPath: session.micAudioURL.path) else {
+            AppLog.recording.info("process skipped: audio not finalized yet session=\(session.id, privacy: .public)")
+            return
+        }
         scheduler.enqueueProcess(session)
     }
 
